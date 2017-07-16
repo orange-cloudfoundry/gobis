@@ -129,9 +129,9 @@ func main(){
 }
 ```
 
-You can see doc [DefaultHandlerConfig](https://godoc.org/github.com/orange-cloudfoundry/gobis/handlers) to know more about possible parameters.
+You can see doc [DefaultHandlerConfig](https://godoc.org/github.com/orange-cloudfoundry/gobis/handlers#DefaultHandlerConfig) to know more about possible parameters.
 
-You can also see doc [ProxyRoute](https://godoc.org/github.com/orange-cloudfoundry/gobis/models) to see available options for routes.
+You can also see doc [ProxyRoute](https://godoc.org/github.com/orange-cloudfoundry/gobis/models#ProxyRoute) to see available options for routes.
 
 ### Example with your own router and middlewares
 
@@ -236,7 +236,7 @@ func main(){
 
 Add cors headers to response
 
-See godoc for [CorsOptions](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares) to know more about parameters.
+See godoc for [CorsOptions](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares#CorsOptions) to know more about parameters.
 
 #### Use programmatically
 
