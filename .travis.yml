@@ -1,0 +1,9 @@
+langage: go
+go:
+- 1.8
+
+install:
+- go get github.com/onsi/ginkgo/ginkgo
+- go get github.com/onsi/gomega
+
+script: go test -v ./... -args -ginkgo.randomizeAllSpecs -ginkgo.trace
