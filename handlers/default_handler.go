@@ -25,57 +25,57 @@ type DefaultHandlerConfig struct {
 	ProtectedHeaders []string `json:"protected_headers" yaml:"protected_headers"`
 }
 type DefaultHandler struct {
-	config        DefaultHandlerConfig
-	routerFactory proxy.RouterFactory
+	port      int
+	host      string
+	muxRouter *mux.Router
 }
 
-func NewDefaultHandler(config DefaultHandlerConfig) GobisHandler {
-	proxy.SetProtectedHeaders(config.ProtectedHeaders)
-	return &DefaultHandler{
-		config: config,
-		routerFactory: proxy.NewRouterFactory(),
-	}
+func NewDefaultHandler(config DefaultHandlerConfig) (GobisHandler, error) {
+	return NewDefaultHandlerWithRouterFactory(config, proxy.NewRouterFactory())
 }
-func NewDefaultHandlerWithRouterFactory(config DefaultHandlerConfig, routerFactory proxy.RouterFactory) GobisHandler {
+func NewDefaultHandlerWithRouterFactory(config DefaultHandlerConfig, routerFactory proxy.RouterFactory) (GobisHandler, error) {
 	proxy.SetProtectedHeaders(config.ProtectedHeaders)
-	return &DefaultHandler{
-		config: config,
-		routerFactory: routerFactory,
+	muxRouter, err := generateMuxRouter(config, routerFactory)
+	if err != nil {
+		return nil, err
 	}
+	return &DefaultHandler{
+		port: config.Port,
+		host: config.Host,
+		muxRouter: muxRouter,
+	}, nil
 }
 func (h *DefaultHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	var err error
-	var rtr *mux.Router
-	log.Debug("orange-cloudfoundry/gobis/handlers: Creating mux router for routes ...")
-	if h.config.ForwardedUrl == nil {
-		rtr, err = h.routerFactory.CreateMuxRouter(h.config.Routes, h.config.StartPath)
-	} else {
-		rtr, err = h.routerFactory.CreateMuxRouterRouteService(
-			h.config.Routes,
-			h.config.StartPath,
-			h.config.ForwardedUrl,
-		)
-	}
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500 - Something bad happened with router: " + err.Error()))
-		log.Errorf("github.com/orange-cloudfoundry/gobis/handlers: Error when creating router: %s", err.Error())
-		return
-	}
-	log.Debug("orange-cloudfoundry/gobis/handlers: Finished creating mux router for routes.")
-	rtr.ServeHTTP(w, req)
-
+	h.muxRouter.ServeHTTP(w, req)
 }
 
 func (h DefaultHandler) GetServerAddr() string {
-	port := h.config.Port
+	port := h.port
 	if port == 0 {
 		port = 9080
 	}
-	host := h.config.Host
+	host := h.host
 	if host == "" {
 		host = "127.0.0.1"
 	}
 	return fmt.Sprintf("%s:%d", host, port)
+}
+func generateMuxRouter(config DefaultHandlerConfig, routerFactory proxy.RouterFactory) (*mux.Router, error) {
+	var err error
+	var rtr *mux.Router
+	log.Debug("orange-cloudfoundry/gobis/handlers: Creating mux router for routes ...")
+	if config.ForwardedUrl == nil {
+		rtr, err = routerFactory.CreateMuxRouter(config.Routes, config.StartPath)
+	} else {
+		rtr, err = routerFactory.CreateMuxRouterRouteService(
+			config.Routes,
+			config.StartPath,
+			config.ForwardedUrl,
+		)
+	}
+	if err != nil {
+		return nil, err
+	}
+	log.Debug("orange-cloudfoundry/gobis/handlers: Finished creating mux router for routes.")
+	return rtr, nil
 }

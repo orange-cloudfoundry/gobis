@@ -94,6 +94,37 @@ var _ = Describe("RouterFactory", func() {
 			Expect(methods[0]).Should(Equal("GET"))
 
 		})
+		It("should create a mux router with parent routes", func() {
+			parentMuxRouter := mux.NewRouter()
+			parentMuxRouter.HandleFunc("/parent", func(w http.ResponseWriter, req *http.Request) {
+
+			})
+			routes := []models.ProxyRoute{
+				{
+					Path: "/app1/**",
+					Url: "http://my.proxified.api",
+					Methods: []string{"GET"},
+				},
+			}
+			muxFactory := NewRouterFactoryWithMuxRouter(parentMuxRouter)
+			rtr, err := muxFactory.CreateMuxRouter(routes, "")
+			Expect(err).NotTo(HaveOccurred())
+			var r *mux.Route
+			index := 0
+			rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+				r = route
+				tpl, _ := route.GetPathTemplate()
+				if index == 0 {
+					Expect(tpl).Should(Equal("/parent"))
+				} else {
+					Expect(tpl).Should(Equal(routes[index - 1].MuxRoute()))
+				}
+				index++
+				return nil
+			})
+			Expect(index).Should(Equal(2))
+
+		})
 	})
 	Context("CreateMuxRouterRouteService", func() {
 		It("should create a mux router with all routes and the route for forwarded url", func() {

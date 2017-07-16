@@ -124,7 +124,10 @@ func main(){
                 },
         }
         log.SetLevel(log.DebugLevel) // set verbosity to debug for logs
-        gobisHandler := handlers.NewDefaultHandler(configHandler)
+        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+        if err != nil {
+                panic(err)
+        }
         return http.ListenAndServe(":8080", gobisHandler)
 }
 ```
@@ -147,7 +150,6 @@ import (
 )
 func main(){
         configHandler := handlers.DefaultHandlerConfig{
-                StartPath: "/gobis",
                 Routes: []models.ProxyRoute{
                     {
                         Name: "myapi",
@@ -156,13 +158,16 @@ func main(){
                     },
                 },
         }
-        gobisHandler := handlers.NewDefaultHandlerWithRouterFactory(
-                    configHandler,
-                    proxy.NewRouterFactory(middlewares.Cors),
-                )
         rtr := mux.NewRouter()
+        gobisHandler, err := handlers.NewDefaultHandlerWithRouterFactory(
+                    configHandler,
+                    proxy.NewRouterFactoryWithMuxRouter(rtr, middlewares.Cors),
+                )
+        if err != nil {
+                panic(err)
+        }
         rtr.HandleFunc("/gobis/{d:.*}", gobisHandler)
-        return http.ListenAndServe(":8080", gobisHandler)
+        return http.ListenAndServe(":8080", rtr)
 }
 ```
 
@@ -222,10 +227,13 @@ func main(){
                 },
         }
         log.SetLevel(log.DebugLevel) // set verbosity to debug for logs
-        gobisHandler := handlers.NewDefaultHandlerWithRouterFactory(
+        gobisHandler, err := handlers.NewDefaultHandlerWithRouterFactory(
                     configHandler,
                     proxy.NewRouterFactory(traceMiddleware),
                 )
+        if err != nil {
+                panic(err)
+        }
         return http.ListenAndServe(":8080", gobisHandler)
 }
 ```
@@ -263,7 +271,7 @@ func main(){
                     },
                 },
         }
-        gobisHandler := handlers.NewDefaultHandler(configHandler)
+        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
         // create your server
 }
 ```

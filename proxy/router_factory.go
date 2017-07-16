@@ -25,6 +25,7 @@ type RouterMiddlewareFunc func(models.ProxyRoute, http.Handler) http.Handler
 type RouterFactoryService struct {
 	CreateTransportFunc CreateTransportFunc
 	Middlewares         []RouterMiddlewareFunc
+	MuxRouter           *mux.Router
 }
 
 func DefaultRouterMiddlewares() []RouterMiddlewareFunc {
@@ -41,6 +42,19 @@ func NewRouterFactory(middlewares ...RouterMiddlewareFunc) RouterFactory {
 			return NewRouteTransport(proxyRoute)
 		},
 		Middlewares: middlewares,
+		MuxRouter: mux.NewRouter(),
+	}
+}
+func NewRouterFactoryWithMuxRouter(muxRouter *mux.Router, middlewares ...RouterMiddlewareFunc) RouterFactory {
+	if len(middlewares) == 0 {
+		middlewares = append(middlewares, DefaultRouterMiddlewares()...)
+	}
+	return &RouterFactoryService{
+		CreateTransportFunc: func(proxyRoute models.ProxyRoute) http.RoundTripper {
+			return NewRouteTransport(proxyRoute)
+		},
+		Middlewares: middlewares,
+		MuxRouter: muxRouter,
 	}
 }
 
@@ -65,7 +79,7 @@ func (r RouterFactoryService) CreateMuxRouterRouteService(proxyRoutes []models.P
 func (r RouterFactoryService) CreateMuxRouter(proxyRoutes []models.ProxyRoute, startPath string) (*mux.Router, error) {
 	log.Debug("github.com/orange-cloudfoundry/proxy: Creating handlers ...")
 	startPath = strings.TrimSuffix(startPath, "/")
-	rtr := mux.NewRouter()
+	rtr := r.MuxRouter
 	for _, proxyRoute := range proxyRoutes {
 		log.Debugf("orange-cloudfoundry/gobis/proxy: Creating handler for route '%s' ...", proxyRoute.Name)
 		proxyHandler, err := r.CreateForwardHandler(proxyRoute)

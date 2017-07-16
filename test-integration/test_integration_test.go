@@ -87,7 +87,7 @@ var _ = Describe("TestIntegration", func() {
 			},
 		}
 		BeforeEach(func() {
-			gobisHandler = handlers.NewDefaultHandlerWithRouterFactory(config, routerFactory)
+			gobisHandler, _ = handlers.NewDefaultHandlerWithRouterFactory(config, routerFactory)
 			for _, route := range config.Routes {
 				httpmock.RegisterResponder(
 					"GET",

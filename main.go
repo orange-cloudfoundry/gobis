@@ -82,7 +82,10 @@ func runServer(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	gobisHandler := handlers.NewDefaultHandler(conf)
+	gobisHandler, err := handlers.NewDefaultHandler(conf)
+	if err != nil {
+		return err
+	}
 	servAddr := gobisHandler.GetServerAddr()
 	log.Infof("Serving gobis server on address '%s'", servAddr)
 	return http.ListenAndServe(servAddr, gobisHandler)
