@@ -89,14 +89,14 @@ func runServer(c *cli.Context) error {
 	gobisHandler, err := handlers.NewDefaultHandlerWithRouterFactory(
 		conf,
 		proxy.NewRouterFactory(
-			middlewares.Trace,
 			middlewares.Cors,
-			middlewares.CircuitBreaker,
-			middlewares.ConnLimit,
-			middlewares.RateLimit,
-			casbin.Casbin,
-			middlewares.BasicAuth,
 			middlewares.Ldap,
+			middlewares.BasicAuth,
+			casbin.Casbin,
+			middlewares.CircuitBreaker,
+			middlewares.RateLimit,
+			middlewares.ConnLimit,
+			middlewares.Trace,
 		),
 	)
 	if err != nil {

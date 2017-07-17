@@ -119,9 +119,11 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute models.ProxyRoute)
 		ForwardRequest(proxyRoute, req, restPath)
 		httpHandler.ServeHTTP(w, req)
 	})
+
 	var handler http.Handler
 	handler = forwardHandler
-	for _, middleware := range r.Middlewares {
+	for i := len(r.Middlewares) - 1; i >= 0; i-- {
+		middleware := r.Middlewares[i]
 		funcName := utils.GetFunctionName(middleware)
 		entry.Debugf("orange-cloudfoundry/gobis/proxy: Adding %s middleware ...", funcName)
 		handler, err = middleware(proxyRoute, handler)

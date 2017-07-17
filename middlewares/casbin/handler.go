@@ -38,10 +38,13 @@ func (h CasbinHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func (h CasbinHandler) CheckPermission(e *casbin.Enforcer, r *http.Request) bool {
 	user, _, _ := r.BasicAuth()
 	method := r.Method
-	path := "/"
+	path := ""
 	vars := mux.Vars(r)
 	if vars != nil {
 		path = vars[models.MUX_REST_VAR_KEY]
+	}
+	if path == "" {
+		path = "/"
 	}
 	return e.Enforce(user, path, method)
 }
