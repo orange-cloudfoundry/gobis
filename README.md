@@ -16,6 +16,7 @@ If you set your `PATH` with `$GOPATH/bin/` you should have now a `gobis` binary 
 
 The standalone server will make available theses middlewares:
 - [basic auth](#basic-auth)
+- [circuit breaker](#circuit-breaker)
 - [conn limit](#conn-limit)
 - [cors](#cors)
 - [rate limit](#rate-limit)
@@ -294,6 +295,55 @@ extra_params:
     user: user
     password: password
 ```
+
+### Circuit breaker
+
+Hystrix-style circuit breaker
+
+See godoc for [CircuitBreakerOptions](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares#CircuitBreakerOptions) to know more about parameters.
+
+#### Use programmatically
+
+```go
+package main
+import (
+        "github.com/orange-cloudfoundry/gobis/handlers"
+        "github.com/orange-cloudfoundry/gobis/models"
+        "github.com/orange-cloudfoundry/gobis/utils"
+        "github.com/orange-cloudfoundry/gobis/middlewares"
+)
+func main(){
+        configHandler := handlers.DefaultHandlerConfig{
+                Routes: []models.ProxyRoute{
+                    {
+                        Name: "myapi",
+                        Path: "/app/**",
+                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                        ExtraParams: utils.InterfaceToMap(middlewares.CircuitBreakerConfig{
+                                CircuitBreaker: &middlewares.CircuitBreakerOptions{
+                                        Enable: true,
+                                        Expression: "NetworkErrorRatio() < 0.5",
+                                        FallbackUrl: "http://my.fallback.com",
+                                },
+                        }),
+                    },
+                },
+        }
+        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+        // create your server
+}
+```
+
+#### Use in config file
+
+```yaml
+extra_params:
+  circuit_breaker:
+    enable: true
+    expression: NetworkErrorRatio() < 0.5
+    fallback_url: http://my.fallback.com
+```
+
 
 ### Conn limit
 
