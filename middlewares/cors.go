@@ -8,7 +8,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-type CorsStruct struct {
+type CorsConfig struct {
 	Cors *CorsOptions `mapstructure:"cors" json:"cors" yaml:"cors"`
 }
 type CorsOptions struct {
@@ -42,7 +42,7 @@ type CorsOptions struct {
 }
 
 func Cors(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
-	var corsStruct CorsStruct
+	var corsStruct CorsConfig
 	mapstructure.Decode(proxyRoute.ExtraParams, &corsStruct)
 	corsOptions := corsStruct.Cors
 	if corsOptions == nil {
@@ -60,6 +60,6 @@ func Cors(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
 		MaxAge: corsOptions.MaxAge,
 		OptionsPassthrough: corsOptions.OptionsPassthrough,
 	})
-	log.Debug("github.com/orange-cloudfoundry/proxy: Adding cors to response.")
+	log.Debug("orange-cloudfoundry/gobis/middlewares: Adding cors to response.")
 	return corsHandler.Handler(handler)
 }

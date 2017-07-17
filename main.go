@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"fmt"
 	"strings"
+	"github.com/orange-cloudfoundry/gobis/proxy"
+	"github.com/orange-cloudfoundry/gobis/middlewares"
 )
 
 func main() {
@@ -82,7 +84,10 @@ func runServer(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	gobisHandler, err := handlers.NewDefaultHandler(conf)
+	gobisHandler, err := handlers.NewDefaultHandlerWithRouterFactory(
+		conf,
+		proxy.NewRouterFactory(middlewares.Cors, middlewares.Trace),
+	)
 	if err != nil {
 		return err
 	}

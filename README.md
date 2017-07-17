@@ -115,7 +115,7 @@ func main(){
                         Name: "myapi",
                         Path: "/app/**",
                         Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                        ExtraParams: utils.InterfaceToMap(middlewares.CorsStruct{
+                        ExtraParams: utils.InterfaceToMap(middlewares.CorsConfig{
                                 Cors: &middlewares.CorsOptions{
                                         AllowedOrigins: []string{"http://localhost"},
                                 },
@@ -263,7 +263,7 @@ func main(){
                         Name: "myapi",
                         Path: "/app/**",
                         Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                        ExtraParams: utils.InterfaceToMap(middlewares.CorsStruct{
+                        ExtraParams: utils.InterfaceToMap(middlewares.CorsConfig{
                                 Cors: &middlewares.CorsOptions{
                                         AllowedOrigins: []string{"http://localhost"},
                                 },

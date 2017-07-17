@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"github.com/vulcand/oxy/buffer"
 	"strings"
-	"github.com/orange-cloudfoundry/gobis/middlewares"
 )
 
 type RouterFactory interface {
@@ -28,27 +27,10 @@ type RouterFactoryService struct {
 	MuxRouter           *mux.Router
 }
 
-func DefaultRouterMiddlewares() []RouterMiddlewareFunc {
-	return []RouterMiddlewareFunc{
-		middlewares.Cors,
-	}
-}
 func NewRouterFactory(middlewares ...RouterMiddlewareFunc) RouterFactory {
-	if len(middlewares) == 0 {
-		middlewares = append(middlewares, DefaultRouterMiddlewares()...)
-	}
-	return &RouterFactoryService{
-		CreateTransportFunc: func(proxyRoute models.ProxyRoute) http.RoundTripper {
-			return NewRouteTransport(proxyRoute)
-		},
-		Middlewares: middlewares,
-		MuxRouter: mux.NewRouter(),
-	}
+	return NewRouterFactoryWithMuxRouter(mux.NewRouter(), middlewares...)
 }
 func NewRouterFactoryWithMuxRouter(muxRouter *mux.Router, middlewares ...RouterMiddlewareFunc) RouterFactory {
-	if len(middlewares) == 0 {
-		middlewares = append(middlewares, DefaultRouterMiddlewares()...)
-	}
 	return &RouterFactoryService{
 		CreateTransportFunc: func(proxyRoute models.ProxyRoute) http.RoundTripper {
 			return NewRouteTransport(proxyRoute)

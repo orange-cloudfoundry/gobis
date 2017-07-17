@@ -25,27 +25,27 @@ var _ = Describe("RouterFactory", func() {
 		})
 		It("should set request url to forwarded url", func() {
 			ForwardRequest(models.ProxyRoute{
-				Url: "http://my.proxified.api",
+				UpstreamUrls: "http://my.proxified.api",
 			}, request, "/path")
 			Expect(request.URL.String()).Should(Equal("http://my.proxified.api/path"))
 		})
 		It("should merge query parameters", func() {
 			request.URL, _ = url.Parse("http://localhost?key1=val1")
 			ForwardRequest(models.ProxyRoute{
-				Url: "http://my.proxified.api?key2=val2",
+				UpstreamUrls: "http://my.proxified.api?key2=val2",
 			}, request, "")
 			Expect(request.URL.String()).Should(Equal("http://my.proxified.api?key1=val1&key2=val2"))
 		})
 		It("should add path to forwarded url path", func() {
 			ForwardRequest(models.ProxyRoute{
-				Url: "http://my.proxified.api/root",
+				UpstreamUrls: "http://my.proxified.api/root",
 			}, request, "/path")
 			Expect(request.URL.String()).Should(Equal("http://my.proxified.api/root/path"))
 		})
 		It("should add basic auth when set on url to forward", func() {
 			Expect(request.Header.Get("Authorization")).Should(BeEmpty())
 			ForwardRequest(models.ProxyRoute{
-				Url: "http://user:password@my.proxified.api",
+				UpstreamUrls: "http://user:password@my.proxified.api",
 			}, request, "")
 			Expect(request.Header.Get("Authorization")).ShouldNot(BeEmpty())
 		})
@@ -55,11 +55,11 @@ var _ = Describe("RouterFactory", func() {
 			routes := []models.ProxyRoute{
 				{
 					Path: "/app1/**",
-					Url: "http://my.proxified.api",
+					UpstreamUrls: "http://my.proxified.api",
 				},
 				{
 					Path: "/app2/**",
-					Url: "http://my.second.proxified.api",
+					UpstreamUrls: "http://my.second.proxified.api",
 				},
 			}
 			rtr, err := factory.CreateMuxRouter(routes, "")
@@ -78,7 +78,7 @@ var _ = Describe("RouterFactory", func() {
 			routes := []models.ProxyRoute{
 				{
 					Path: "/app1/**",
-					Url: "http://my.proxified.api",
+					UpstreamUrls: "http://my.proxified.api",
 					Methods: []string{"GET"},
 				},
 			}
@@ -102,7 +102,7 @@ var _ = Describe("RouterFactory", func() {
 			routes := []models.ProxyRoute{
 				{
 					Path: "/app1/**",
-					Url: "http://my.proxified.api",
+					UpstreamUrls: "http://my.proxified.api",
 					Methods: []string{"GET"},
 				},
 			}

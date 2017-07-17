@@ -21,19 +21,19 @@ type ProxyRoute struct {
 	//   - appending /* will only make requests available in first level of upstream
 	//   - appending /** will pass everything to upstream
 	// e.g.: /app/**
-	Path               string `json:"path" yaml:"path"`
+	Path             string `json:"path" yaml:"path"`
 	// Upstream url where all request will be redirected
 	// Query parameters can be passed, e.g.: http://localhost?param=1
 	// User and password are given as basic auth too (this is not recommended to use it), e.g.: http://user:password@localhost
-	Url                string `json:"url" yaml:"url"`
+	Url              string `json:"url" yaml:"url"`
 	// List of headers which should not be sent to upstream
-	SensitiveHeaders   []string `json:"sensitive_headers" yaml:"sensitive_headers"`
+	SensitiveHeaders []string `json:"sensitive_headers" yaml:"sensitive_headers"`
 	// List of http methods allowed (Default: all methods are accepted)
-	Methods            []string `json:"methods" yaml:"methods"`
+	Methods          []string `json:"methods" yaml:"methods"`
 	// An url to an http proxy to make requests to upstream pass to this
-	HttpProxy          string `json:"http_proxy" yaml:"http_proxy"`
+	HttpProxy        string `json:"http_proxy" yaml:"http_proxy"`
 	// An url to an https proxy to make requests to upstream pass to this
-	HttpsProxy         string `json:"https_proxy" yaml:"https_proxy"`
+	HttpsProxy       string `json:"https_proxy" yaml:"https_proxy"`
 	// Force to never use proxy even proxy from environment variables
 	NoProxy            bool `json:"no_proxy" yaml:"no_proxy"`
 	// By default response from upstream are buffered, it can be issue when sending big files
