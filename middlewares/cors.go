@@ -42,10 +42,11 @@ type CorsOptions struct {
 }
 
 func Cors(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
+	entry := log.WithField("route_name", proxyRoute.Name)
 	var corsStruct CorsConfig
 	err := mapstructure.Decode(proxyRoute.ExtraParams, &corsStruct)
 	if err != nil {
-		log.Errorf("orange-cloudfoundry/gobis/middlewares: Adding cors failed: "+ err.Error())
+		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding cors middleware failed: " + err.Error())
 		return handler
 	}
 	corsOptions := corsStruct.Cors
@@ -64,6 +65,6 @@ func Cors(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
 		MaxAge: corsOptions.MaxAge,
 		OptionsPassthrough: corsOptions.OptionsPassthrough,
 	})
-	log.Debug("orange-cloudfoundry/gobis/middlewares: Adding cors to response.")
+	entry.Debug("orange-cloudfoundry/gobis/middlewares: Adding cors middleware.")
 	return corsHandler.Handler(handler)
 }

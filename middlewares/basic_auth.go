@@ -17,16 +17,17 @@ type BasicAuthOptions struct {
 }
 
 func BasicAuth(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
+	entry := log.WithField("route_name", proxyRoute.Name)
 	var config BasicAuthConfig
 	err := mapstructure.Decode(proxyRoute.ExtraParams, &config)
 	if err != nil {
-		log.Errorf("orange-cloudfoundry/gobis/middlewares: Adding basic auth failed: " + err.Error())
+		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding basic auth middleware failed: " + err.Error())
 		return handler
 	}
 	options := config.BasicAuth
 	if options == nil {
 		return handler
 	}
-	log.Debug("orange-cloudfoundry/gobis/middlewares: Adding basic auth to route.")
+	entry.Debug("orange-cloudfoundry/gobis/middlewares: Adding basic auth middleware.")
 	return httpauth.SimpleBasicAuth(options.User, options.Password)(handler)
 }

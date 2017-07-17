@@ -47,7 +47,7 @@ var _ = Describe("ProxyRoute", func() {
 		It("should complain when no name is provided", func() {
 			route := ProxyRoute{
 				Path: "/app/**",
-				UpstreamUrls: "http://my.proxified.api",
+				Url: "http://my.proxified.api",
 			}
 			err := route.Check()
 			Expect(err).Should(HaveOccurred())
@@ -56,7 +56,7 @@ var _ = Describe("ProxyRoute", func() {
 		It("should complain when no path is provided", func() {
 			route := ProxyRoute{
 				Name: "myroute",
-				UpstreamUrls: "http://my.proxified.api",
+				Url: "http://my.proxified.api",
 			}
 			err := route.Check()
 			Expect(err).Should(HaveOccurred())
@@ -75,7 +75,7 @@ var _ = Describe("ProxyRoute", func() {
 			route := ProxyRoute{
 				Name: "my route",
 				Path: "/app/**",
-				UpstreamUrls: "http://localhost",
+				Url: "http://localhost",
 			}
 			err := route.Check()
 			Expect(err).Should(HaveOccurred())
@@ -85,7 +85,7 @@ var _ = Describe("ProxyRoute", func() {
 			route := ProxyRoute{
 				Name: "my route",
 				Path: "/app/**",
-				UpstreamUrls: "http://127.0.0.1",
+				Url: "http://127.0.0.1",
 			}
 			err := route.Check()
 			Expect(err).Should(HaveOccurred())
@@ -96,7 +96,7 @@ var _ = Describe("ProxyRoute", func() {
 				route := ProxyRoute{
 					Name: "my route",
 					Path: "/**",
-					UpstreamUrls: "http://my.proxified.api",
+					Url: "http://my.proxified.api",
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
@@ -106,7 +106,7 @@ var _ = Describe("ProxyRoute", func() {
 				route := ProxyRoute{
 					Name: "my route",
 					Path: "/*",
-					UpstreamUrls: "http://my.proxified.api",
+					Url: "http://my.proxified.api",
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
@@ -116,7 +116,7 @@ var _ = Describe("ProxyRoute", func() {
 				route := ProxyRoute{
 					Name: "my route",
 					Path: "/app/*",
-					UpstreamUrls: "http://my.proxified.api",
+					Url: "http://my.proxified.api",
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
@@ -126,7 +126,7 @@ var _ = Describe("ProxyRoute", func() {
 				route := ProxyRoute{
 					Name: "my route",
 					Path: "/app/**",
-					UpstreamUrls: "http://my.proxified.api",
+					Url: "http://my.proxified.api",
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
@@ -136,7 +136,7 @@ var _ = Describe("ProxyRoute", func() {
 				route := ProxyRoute{
 					Name: "my route",
 					Path: "/*/app",
-					UpstreamUrls: "http://my.proxified.api",
+					Url: "http://my.proxified.api",
 				}
 				err := route.Check()
 				Expect(err).Should(HaveOccurred())
@@ -146,7 +146,7 @@ var _ = Describe("ProxyRoute", func() {
 				route := ProxyRoute{
 					Name: "my route",
 					Path: "/app/***",
-					UpstreamUrls: "http://my.proxified.api",
+					Url: "http://my.proxified.api",
 				}
 				err := route.Check()
 				Expect(err).Should(HaveOccurred())

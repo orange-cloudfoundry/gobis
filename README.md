@@ -14,6 +14,15 @@ If you set your `PATH` with `$GOPATH/bin/` you should have now a `gobis` binary 
 
 ## Running standalone server
 
+The standalone server will make available theses middlewares:
+- [basic auth](#basic-auth)
+- [conn limit](#conn-limit)
+- [cors](#cors)
+- [rate limit](#rate-limit)
+- [trace](#trace)
+
+**Note**: To enable them in your route see parameters to set on each ones
+
 ### Commands
 
 ```
@@ -240,7 +249,97 @@ func main(){
 
 ## Available middlewares
 
-### Cors (Used by default)
+### Basic auth
+
+Add basic auth to upstream
+
+See godoc for [BasicAuthOptions](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares#BasicAuthOptions) to know more about parameters.
+
+#### Use programmatically
+
+```go
+package main
+import (
+        "github.com/orange-cloudfoundry/gobis/handlers"
+        "github.com/orange-cloudfoundry/gobis/models"
+        "github.com/orange-cloudfoundry/gobis/utils"
+        "github.com/orange-cloudfoundry/gobis/middlewares"
+)
+func main(){
+        configHandler := handlers.DefaultHandlerConfig{
+                Routes: []models.ProxyRoute{
+                    {
+                        Name: "myapi",
+                        Path: "/app/**",
+                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                        ExtraParams: utils.InterfaceToMap(middlewares.BasicAuthConfig{
+                                BasicAuth: &middlewares.BasicAuthOptions{
+                                        User: "user",
+                                        Password: "password",
+                                },
+                        }),
+                    },
+                },
+        }
+        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+        // create your server
+}
+```
+
+#### Use in config file
+
+```yaml
+extra_params:
+  basic_auth:
+    user: user
+    password: password
+```
+
+### Conn limit
+
+Limit number of simultaneous connection
+
+See godoc for [ConnLimitOptions](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares#ConnLimitOptions) to know more about parameters.
+
+#### Use programmatically
+
+```go
+package main
+import (
+        "github.com/orange-cloudfoundry/gobis/handlers"
+        "github.com/orange-cloudfoundry/gobis/models"
+        "github.com/orange-cloudfoundry/gobis/utils"
+        "github.com/orange-cloudfoundry/gobis/middlewares"
+)
+func main(){
+        configHandler := handlers.DefaultHandlerConfig{
+                Routes: []models.ProxyRoute{
+                    {
+                        Name: "myapi",
+                        Path: "/app/**",
+                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                        ExtraParams: utils.InterfaceToMap(middlewares.ConnLimitConfig{
+                                ConnLimit: &middlewares.ConnLimitOptions{
+                                        Enable: true,
+                                },
+                        }),
+                    },
+                },
+        }
+        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+        // create your server
+}
+```
+
+#### Use in config file
+
+```yaml
+extra_params:
+  conn_limit:
+    enable: true
+```
+
+### Cors
 
 Add cors headers to response
 
@@ -284,6 +383,94 @@ extra_params:
     max_age: 12
     allowed_origins:
     - http://localhost
+```
+
+### Rate limit
+
+Limit number of request in period of time
+
+See godoc for [RateLimitOptions](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares#RateLimitOptions) to know more about parameters.
+
+#### Use programmatically
+
+```go
+package main
+import (
+        "github.com/orange-cloudfoundry/gobis/handlers"
+        "github.com/orange-cloudfoundry/gobis/models"
+        "github.com/orange-cloudfoundry/gobis/utils"
+        "github.com/orange-cloudfoundry/gobis/middlewares"
+)
+func main(){
+        configHandler := handlers.DefaultHandlerConfig{
+                Routes: []models.ProxyRoute{
+                    {
+                        Name: "myapi",
+                        Path: "/app/**",
+                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                        ExtraParams: utils.InterfaceToMap(middlewares.RateLimitConfig{
+                                RateLimit: &middlewares.RateLimitOptions{
+                                        Enable: true,
+                                },
+                        }),
+                    },
+                },
+        }
+        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+        // create your server
+}
+```
+
+#### Use in config file
+
+```yaml
+extra_params:
+  rate_limit:
+    enable: true
+```
+
+### Trace
+
+Structured request and response logger
+
+See godoc for [TraceOptions](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares#TraceOptions) to know more about parameters.
+
+#### Use programmatically
+
+```go
+package main
+import (
+        "github.com/orange-cloudfoundry/gobis/handlers"
+        "github.com/orange-cloudfoundry/gobis/models"
+        "github.com/orange-cloudfoundry/gobis/utils"
+        "github.com/orange-cloudfoundry/gobis/middlewares"
+)
+func main(){
+        configHandler := handlers.DefaultHandlerConfig{
+                Routes: []models.ProxyRoute{
+                    {
+                        Name: "myapi",
+                        Path: "/app/**",
+                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                        ExtraParams: utils.InterfaceToMap(middlewares.TraceConfig{
+                                Trace: &middlewares.TraceOptions{
+                                        Enable: true,
+                                },
+                        }),
+                    },
+                },
+        }
+        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+        // create your server
+}
+```
+
+#### Use in config file
+
+```yaml
+extra_params:
+  trace:
+    enable: true
 ```
 
 ## Why this name ?
