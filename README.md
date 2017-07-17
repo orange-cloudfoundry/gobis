@@ -99,7 +99,7 @@ routes:
       - http://localhost
 ```
 
-2. Run `gobis` and server is now started
+2. Run `gobis` in your terminal and server is now started
 
 ## Use in your project
 
