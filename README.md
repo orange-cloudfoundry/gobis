@@ -19,6 +19,7 @@ The standalone server will make available theses middlewares:
 - [circuit breaker](#circuit-breaker)
 - [conn limit](#conn-limit)
 - [cors](#cors)
+- [ldap](#ldap)
 - [rate limit](#rate-limit)
 - [trace](#trace)
 
@@ -442,6 +443,69 @@ extra_params:
     allowed_origins:
     - http://localhost
 ```
+
+### Ldap
+
+Add basic authentiation based on ldap to upstream
+
+See godoc for [LdapOptions](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares#LdapOptions) to know more about parameters.
+
+#### Use programmatically
+
+```go
+package main
+import (
+        "github.com/orange-cloudfoundry/gobis/handlers"
+        "github.com/orange-cloudfoundry/gobis/models"
+        "github.com/orange-cloudfoundry/gobis/utils"
+        "github.com/orange-cloudfoundry/gobis/middlewares"
+)
+func main(){
+        configHandler := handlers.DefaultHandlerConfig{
+                Routes: []models.ProxyRoute{
+                    {
+                        Name: "myapi",
+                        Path: "/app/**",
+                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                        ExtraParams: utils.InterfaceToMap(middlewares.LdapConfig{
+                                Ldap: &middlewares.LdapOptions{
+                                        Enable: true,
+                                        BindDn: "uid=readonly,dc=com",
+                                        BindPassword: "password",
+                                        Address: "ldap.example.com:636",
+                                        InsecureSkipVerify: true,
+                                        UseSsl: true,
+                                        SearchBaseDns: "dc=example,dc=com",
+                                        SearchFilter: "(objectClass=organizationalPerson)&(uid=%s)",
+                                        GroupSearchBaseDns: "ou=Group,dc=example,dc=com",
+                                        GroupSearchFilter: "(&(objectClass=posixGroup)(memberUid=%s))",
+                                },
+                        }),
+                    },
+                },
+        }
+        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+        // create your server
+}
+```
+
+#### Use in config file
+
+```yaml
+extra_params:
+  ldap:
+    enable: true
+    bind_dn: uid=readonly,dc=com
+    bind_password: password
+    address: ldap.example.com:636
+    insecure_skip_verify: true
+    use_ssl: true
+    search_base_dns: dc=example,dc=com
+    search_filter: (objectClass=organizationalPerson)&(uid=%s)
+    group_search_base_dns: ou=Group,dc=example,dc=com
+    group_search_filter: (&(objectClass=posixGroup)(memberUid=%s))
+```
+
 
 ### Rate limit
 

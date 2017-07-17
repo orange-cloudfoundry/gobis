@@ -3,6 +3,12 @@
 	"ignore": "test github.com/onsi",
 	"package": [
 		{
+			"checksumSHA1": "7zXH6eGpKqFhH+maVPVXS8Yd+kQ=",
+			"path": "github.com/ArthurHlt/github-blob-sender/Godeps/_workspace/src/golang.org/x/net/context",
+			"revision": "b3a3f680f3a3d02d2a677322b24a13aa63d2a2f6",
+			"revisionTime": "2015-11-28T23:01:40Z"
+		},
+		{
 			"checksumSHA1": "7gK+lSShSu1NRw83/A95BcgMqsI=",
 			"path": "github.com/codahale/hdrhistogram",
 			"revision": "3a0bb77429bd3a61596f5e8a3172445844342120",
@@ -147,10 +153,22 @@
 			"revisionTime": "2015-12-11T01:34:15Z"
 		},
 		{
+			"checksumSHA1": "xsaHqy6/sonLV6xIxTNh4FfkWbU=",
+			"path": "gopkg.in/asn1-ber.v1",
+			"revision": "379148ca0225df7a432012b8df0355c2a2063ac0",
+			"revisionTime": "2017-05-11T16:59:59Z"
+		},
+		{
 			"checksumSHA1": "Wx2FYL6OLgZ/9PF1nb+hhNoXcTo=",
 			"path": "gopkg.in/jarcoal/httpmock.v1",
 			"revision": "cf52904a3cf0f78f199ecade6a6df8e245d5b25a",
 			"revisionTime": "2017-04-12T08:57:02Z"
+		},
+		{
+			"checksumSHA1": "itYnRitfdzJjy2mZlvJ+hCJZvtY=",
+			"path": "gopkg.in/ldap.v2",
+			"revision": "8168ee085ee43257585e50c6441aadf54ecb2c9f",
+			"revisionTime": "2016-12-01T20:47:33Z"
 		},
 		{
 			"checksumSHA1": "YsB2DChSV9HxdzHaKATllAUKWSI=",
