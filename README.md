@@ -52,9 +52,9 @@ GLOBAL OPTIONS:
 1. Create a `gobis-config.yml` file where you want to run your server, following this schema:
 
 ```yaml
-# Host where server should listen (default to 127.0.0.1) 
+# Host where server should listen (default to 0.0.0.0) 
 host: 127.0.0.1 # you can either set 0.0.0.0
-# Port where server should listen
+# Port where server should listen, if empty it will look for PORT env var and if not found it will be listen on 9080
 port: 8080
 # List of headers which cannot be removed by `sensitive_headers`
 protected_headers: []

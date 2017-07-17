@@ -12,6 +12,7 @@ import (
 	"strings"
 	"github.com/orange-cloudfoundry/gobis/proxy"
 	"github.com/orange-cloudfoundry/gobis/middlewares"
+	"strconv"
 )
 
 func main() {
@@ -110,6 +111,10 @@ func loadConfig(path string) (handlers.DefaultHandlerConfig, error) {
 	err = yaml.Unmarshal(dat, &conf)
 	if err != nil {
 		return handlers.DefaultHandlerConfig{}, err
+	}
+	if conf.Port == 0 {
+		port, _ := strconv.Atoi(os.Getenv("PORT"))
+		conf.Port = port
 	}
 	if len(conf.Routes) == 0 {
 		return conf, fmt.Errorf("You must configure routes in your config file")

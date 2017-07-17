@@ -56,7 +56,7 @@ func (h DefaultHandler) GetServerAddr() string {
 	}
 	host := h.host
 	if host == "" {
-		host = "127.0.0.1"
+		host = "0.0.0.0"
 	}
 	return fmt.Sprintf("%s:%d", host, port)
 }
