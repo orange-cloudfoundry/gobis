@@ -54,10 +54,12 @@ var _ = Describe("RouterFactory", func() {
 		It("should create a mux router with all routes", func() {
 			routes := []models.ProxyRoute{
 				{
+					Name: "app1",
 					Path: "/app1/**",
 					Url: "http://my.proxified.api",
 				},
 				{
+					Name: "app2",
 					Path: "/app2/**",
 					Url: "http://my.second.proxified.api",
 				},
@@ -68,6 +70,7 @@ var _ = Describe("RouterFactory", func() {
 			rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 				tpl, _ := route.GetPathTemplate()
 				Expect(tpl).Should(Equal(routes[index].MuxRoute()))
+				Expect(route.GetName()).Should(Equal(routes[index].Name))
 				index++
 				return nil
 			})
@@ -77,6 +80,7 @@ var _ = Describe("RouterFactory", func() {
 		It("should create a mux router methods set if route resquested it", func() {
 			routes := []models.ProxyRoute{
 				{
+					Name: "app1",
 					Path: "/app1/**",
 					Url: "http://my.proxified.api",
 					Methods: []string{"GET"},
@@ -101,6 +105,7 @@ var _ = Describe("RouterFactory", func() {
 			})
 			routes := []models.ProxyRoute{
 				{
+					Name: "app1",
 					Path: "/app1/**",
 					Url: "http://my.proxified.api",
 					Methods: []string{"GET"},
@@ -130,10 +135,12 @@ var _ = Describe("RouterFactory", func() {
 		It("should create a mux router with all routes and the route for forwarded url", func() {
 			routes := []models.ProxyRoute{
 				{
+					Name: "app1",
 					Path: "/app1/**",
 					Url: "http://my.proxified.api",
 				},
 				{
+					Name: "app2",
 					Path: "/app2/**",
 					Url: "http://my.second.proxified.api",
 				},

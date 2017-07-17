@@ -68,7 +68,7 @@ func (r RouterFactoryService) CreateMuxRouter(proxyRoutes []models.ProxyRoute, s
 		if err != nil {
 			return nil, err
 		}
-		routeMux := rtr.HandleFunc(startPath + proxyRoute.MuxRoute(), proxyHandler)
+		routeMux := rtr.HandleFunc(startPath + proxyRoute.MuxRoute(), proxyHandler).Name(proxyRoute.Name)
 		if len(proxyRoute.Methods) > 0 {
 			routeMux.Methods(proxyRoute.Methods...)
 		}
