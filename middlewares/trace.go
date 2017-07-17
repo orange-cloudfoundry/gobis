@@ -10,7 +10,7 @@ import (
 )
 
 type TraceConfig struct {
-	Trace *TraceOptions `mapstructure:"trace" json:"cors" yaml:"trace"`
+	Trace *TraceOptions `mapstructure:"trace" json:"trace" yaml:"trace"`
 }
 type TraceOptions struct {
 	// enable request and response capture

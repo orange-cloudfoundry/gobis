@@ -86,7 +86,11 @@ func runServer(c *cli.Context) error {
 	}
 	gobisHandler, err := handlers.NewDefaultHandlerWithRouterFactory(
 		conf,
-		proxy.NewRouterFactory(middlewares.Cors, middlewares.Trace),
+		proxy.NewRouterFactory(
+			middlewares.BasicAuth,
+			middlewares.Cors,
+			middlewares.Trace,
+		),
 	)
 	if err != nil {
 		return err
