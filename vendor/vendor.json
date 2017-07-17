@@ -3,6 +3,12 @@
 	"ignore": "test github.com/onsi",
 	"package": [
 		{
+			"checksumSHA1": "7gK+lSShSu1NRw83/A95BcgMqsI=",
+			"path": "github.com/codahale/hdrhistogram",
+			"revision": "3a0bb77429bd3a61596f5e8a3172445844342120",
+			"revisionTime": "2016-10-10T02:54:55Z"
+		},
+		{
 			"checksumSHA1": "gC4yFu+0Iqb71rzQZVbGSKqsK6U=",
 			"path": "github.com/goji/httpauth",
 			"revision": "2da839ab0f4df05a6db5eb277995589dadbd4fb9",
@@ -75,6 +81,12 @@
 			"revisionTime": "2017-07-10T21:29:25Z"
 		},
 		{
+			"checksumSHA1": "RJ1fxFjNb7bpXgM8KatX7/mQQ6A=",
+			"path": "github.com/vulcand/oxy/cbreaker",
+			"revision": "ddc324225ef568955a8a177086a00f5bfa95896e",
+			"revisionTime": "2017-07-10T21:29:25Z"
+		},
+		{
 			"checksumSHA1": "Kg6JiO1nlBNnMYcD//GbLCMDEyI=",
 			"path": "github.com/vulcand/oxy/connlimit",
 			"revision": "ddc324225ef568955a8a177086a00f5bfa95896e",
@@ -83,6 +95,12 @@
 		{
 			"checksumSHA1": "3DZWkRIF6mEMNiasCloGEdBT5u4=",
 			"path": "github.com/vulcand/oxy/forward",
+			"revision": "ddc324225ef568955a8a177086a00f5bfa95896e",
+			"revisionTime": "2017-07-10T21:29:25Z"
+		},
+		{
+			"checksumSHA1": "ZciUfQ/vdh19UZTiaG6/NNkVMv8=",
+			"path": "github.com/vulcand/oxy/memmetrics",
 			"revision": "ddc324225ef568955a8a177086a00f5bfa95896e",
 			"revisionTime": "2017-07-10T21:29:25Z"
 		},
