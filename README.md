@@ -251,7 +251,7 @@ func main(){
 
 Add basic auth to upstream
 
-See godoc for [BasicAuthOptions](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares#BasicAuthOptions) to know more about parameters.
+See godoc for [BasicAuthOption](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares#BasicAuthOption) to know more about parameters.
 
 #### Use programmatically
 
@@ -272,8 +272,15 @@ func main(){
                         Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
                         ExtraParams: utils.InterfaceToMap(middlewares.BasicAuthConfig{
                                 BasicAuth: &middlewares.BasicAuthOptions{
-                                        User: "user",
-                                        Password: "password",
+                                        {
+                                                User: "user",
+                                                Password: "$2y$12$AHKssZrkmcG2pmom.rvy2OMsV8HpMHHcRIEY158LgZIkrA0BFvFQq", // equal password
+                                                Crypted: true, // hashed by bcrypt, you can use https://github.com/gibsjose/bcrypt-hash command to crypt a password
+                                        },
+                                        {
+                                                User: "user2",
+                                                Password: "mypassword",
+                                        },
                                 },
                         }),
                     },
@@ -289,15 +296,19 @@ func main(){
 ```yaml
 extra_params:
   basic_auth:
-    user: user
-    password: password
+  - user: user
+    password: $2y$12$AHKssZrkmcG2pmom.rvy2OMsV8HpMHHcRIEY158LgZIkrA0BFvFQq # equal password
+    crypted: true # hashed by bcrypt, you can use https://github.com/gibsjose/bcrypt-hash command to crypt a password
+  - user: user2
+    password: mypassword # equal password
 ```
+
 
 ### Circuit breaker
 
 Hystrix-style circuit breaker
 
-See godoc for [CircuitBreakerOptions](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares#CircuitBreakerOptions) to know more about parameters.
+See godoc for [CircuitBreakerOption](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares#CircuitBreakerOption) to know more about parameters.
 
 #### Use programmatically
 
