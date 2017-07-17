@@ -4,10 +4,10 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/orange-cloudfoundry/gobis/models"
 	"net/http"
-	log "github.com/sirupsen/logrus"
 	"github.com/vulcand/oxy/cbreaker"
 	"github.com/orange-cloudfoundry/gobis/proxy"
 	"time"
+	"fmt"
 )
 
 type CircuitBreakerConfig struct {
@@ -33,25 +33,21 @@ type CircuitBreakerOptions struct {
 	CheckPeriod      int64 `mapstructure:"check_period" json:"check_period" yaml:"check_period"`
 }
 
-func CircuitBreaker(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
-	entry := log.WithField("route_name", proxyRoute.Name)
+func CircuitBreaker(proxyRoute models.ProxyRoute, handler http.Handler) (http.Handler, error) {
 	var config CircuitBreakerConfig
 	err := mapstructure.Decode(proxyRoute.ExtraParams, &config)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding circuit breaker middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
 	options := config.CircuitBreaker
 	if options == nil || !options.Enable {
-		return handler
+		return handler, nil
 	}
 	if options.Expression == "" {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding circuit breaker middleware failed: expression can't be empty")
-		return handler
+		return handler, fmt.Errorf("expression can't be empty")
 	}
 	if options.FallbackUrl == "" {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding circuit breaker middleware failed: fallback url can't be empty")
-		return handler
+		return handler, fmt.Errorf("fallback url can't be empty")
 	}
 	routerFactory := proxy.NewRouterFactory()
 	proxyRoute.Url = options.FallbackUrl
@@ -60,8 +56,7 @@ func CircuitBreaker(proxyRoute models.ProxyRoute, handler http.Handler) http.Han
 	proxyRoute.Name = proxyRoute.Name + " fallback"
 	fallbackHandler, err := routerFactory.CreateForwardHandler(proxyRoute)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding circuit breaker middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
 	cbreakerOptions := []cbreaker.CircuitBreakerOption{cbreaker.Fallback(fallbackHandler)}
 	if options.FallbackDuration > 0 {
@@ -84,10 +79,8 @@ func CircuitBreaker(proxyRoute models.ProxyRoute, handler http.Handler) http.Han
 	}
 	finalHandler, err := cbreaker.New(handler, options.Expression, cbreakerOptions...)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding circuit breaker middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
 
-	entry.Debug("orange-cloudfoundry/gobis/middlewares:: Adding circuit breaker middleware.")
-	return finalHandler
+	return finalHandler, nil
 }

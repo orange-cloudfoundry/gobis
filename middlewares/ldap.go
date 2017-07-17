@@ -11,7 +11,6 @@ import (
 	"os"
 	"github.com/goji/httpauth"
 	"github.com/ArthurHlt/github-blob-sender/Godeps/_workspace/src/golang.org/x/net/context"
-	"strings"
 )
 
 const (
@@ -128,26 +127,22 @@ func (l LdapAuth) LoadLdapGroup(user string, conn *ldap.Conn, req *http.Request)
 	groups := make([]string, 0)
 
 	for _, entry := range sr.Entries {
-		groups = append(groups, l.sanitizeGroupName(entry.GetAttributeValue(l.MemberOf)))
+		groups = append(groups, entry.GetAttributeValue(l.MemberOf))
 	}
 
 	*req = *req.WithContext(context.WithValue(req.Context(), GroupContextKey, groups))
 	return nil
 }
-func (l LdapAuth) sanitizeGroupName(groupName string) string {
-	return strings.Replace(groupName, ",", "_", -1)
-}
-func Ldap(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
-	entry := log.WithField("route_name", proxyRoute.Name)
+
+func Ldap(proxyRoute models.ProxyRoute, handler http.Handler) (http.Handler, error) {
 	var config LdapConfig
 	err := mapstructure.Decode(proxyRoute.ExtraParams, &config)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding ldap middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
 	options := config.Ldap
 	if options == nil || !options.Enable {
-		return handler
+		return handler, nil
 	}
 	if options.BindDn == "" {
 		options.BindDn = os.Getenv(LDAP_BIND_DN_KEY)
@@ -159,12 +154,10 @@ func Ldap(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
 		options.Address = os.Getenv(LDAP_BIND_ADDRESS)
 	}
 	if options.BindDn == "" || options.BindPassword == "" {
-		entry.Error("orange-cloudfoundry/gobis/middlewares: Adding ldap middleware failed: bind dn and bind password can't be empty")
-		return handler
+		return handler, fmt.Errorf("bind dn and bind password can't be empty")
 	}
 	if options.Address == "" {
-		entry.Error("orange-cloudfoundry/gobis/middlewares: Adding ldap middleware failed: address can't be empty")
-		return handler
+		return handler, fmt.Errorf("address can't be empty")
 	}
 	if options.SearchBaseDns == "" {
 		options.SearchBaseDns = "dc=com"
@@ -176,8 +169,7 @@ func Ldap(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
 		options.MemberOf = "memberOf"
 	}
 	ldapAuth := NewLdapAuth(*options)
-	entry.Debug("orange-cloudfoundry/gobis/middlewares: Adding ldap middleware.")
 	return httpauth.BasicAuth(httpauth.AuthOptions{
 		AuthFunc: ldapAuth.LdapAuth,
-	})(handler)
+	})(handler), nil
 }

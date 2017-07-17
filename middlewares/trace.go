@@ -4,7 +4,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/orange-cloudfoundry/gobis/models"
 	"net/http"
-	log "github.com/sirupsen/logrus"
 	"github.com/vulcand/oxy/trace"
 	"os"
 )
@@ -21,17 +20,15 @@ type TraceOptions struct {
 	ResponseHeaders []string `mapstructure:"response_headers" json:"response_headers" yaml:"response_headers"`
 }
 
-func Trace(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
-	entry := log.WithField("route_name", proxyRoute.Name)
+func Trace(proxyRoute models.ProxyRoute, handler http.Handler) (http.Handler, error) {
 	var config TraceConfig
 	err := mapstructure.Decode(proxyRoute.ExtraParams, &config)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding trace middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
 	options := config.Trace
 	if options == nil || !options.Enable {
-		return handler
+		return handler, nil
 	}
 	traceOptions := make([]trace.Option, 0)
 	if len(options.RequestHeaders) == 0 {
@@ -42,9 +39,7 @@ func Trace(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
 	}
 	traceHandler, err := trace.New(handler, os.Stdout, traceOptions...)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding trace middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
-	entry.Debug("orange-cloudfoundry/gobis/middlewares:: Adding trace middleware.")
-	return traceHandler
+	return traceHandler, err
 }

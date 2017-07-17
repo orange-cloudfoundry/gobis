@@ -4,7 +4,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/orange-cloudfoundry/gobis/models"
 	"net/http"
-	log "github.com/sirupsen/logrus"
 	"github.com/vulcand/oxy/connlimit"
 	"github.com/vulcand/oxy/utils"
 )
@@ -23,17 +22,15 @@ type ConnLimitOptions struct {
 	SourceIdentifier string `mapstructure:"source_identifier" json:"source_identifier" yaml:"source_identifier"`
 }
 
-func ConnLimit(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
-	entry := log.WithField("route_name", proxyRoute.Name)
+func ConnLimit(proxyRoute models.ProxyRoute, handler http.Handler) (http.Handler, error) {
 	var config ConnLimitConfig
 	err := mapstructure.Decode(proxyRoute.ExtraParams, &config)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding conn limit middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
 	options := config.ConnLimit
 	if options == nil || !options.Enable {
-		return handler
+		return handler, nil
 	}
 	if options.SourceIdentifier == "" {
 		options.SourceIdentifier = "client.ip"
@@ -43,15 +40,11 @@ func ConnLimit(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler 
 	}
 	extractor, err := utils.NewExtractor(options.SourceIdentifier)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding conn limit middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
 	finalHandler, err := connlimit.New(handler, extractor, options.Limit)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding conn limit middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
-
-	entry.Debug("orange-cloudfoundry/gobis/middlewares:: Adding conn limit middleware.")
-	return finalHandler
+	return finalHandler, nil
 }

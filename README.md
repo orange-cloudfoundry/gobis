@@ -208,13 +208,13 @@ import (
 type TraceConfig struct{
       EnableTrace string  `mapstructure:"enable_trace" json:"enable_trace" yaml:"enable_trace"`
 }
-func traceMiddleware(proxyRoute models.ProxyRoute, parentHandler http.Handler) http.Handler {
+func traceMiddleware(proxyRoute models.ProxyRoute, parentHandler http.Handler) (http.Handler, error) {
         var traceConfig TraceConfig
         mapstructure.Decode(proxyRoute.ExtraParams, &traceConfig)
         if !traceConfig.EnableTrace {
-            return parentHandler
+            return parentHandler, nil
         }
-        return TraceHandler(parentHandler)
+        return TraceHandler(parentHandler), nil
 }
 
 func TraceHandler(h http.Handler) http.Handler {

@@ -2,6 +2,9 @@ package utils
 
 import (
 	"gopkg.in/yaml.v2"
+	"runtime"
+	"reflect"
+	"strings"
 )
 
 func InterfaceToMap(is ...interface{}) map[string]interface{} {
@@ -22,4 +25,9 @@ func interfaceToMap(i interface{}) map[string]interface{} {
 	var m map[string]interface{}
 	yaml.Unmarshal(b, &m)
 	return m
+}
+func GetFunctionName(i interface{}) string {
+	fullName := runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+	splittedName := strings.Split(fullName, ".")
+	return splittedName[len(splittedName) - 1]
 }

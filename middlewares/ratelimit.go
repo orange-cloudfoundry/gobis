@@ -4,7 +4,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/orange-cloudfoundry/gobis/models"
 	"net/http"
-	log "github.com/sirupsen/logrus"
 	"github.com/vulcand/oxy/ratelimit"
 	"github.com/vulcand/oxy/utils"
 	"time"
@@ -23,20 +22,19 @@ type RateLimitOptions struct {
 	// Identify request source to limit the source
 	// possible value are 'client.ip', 'request.host' or 'request.header.X-My-Header-Name'
 	// (default: client.ip)
+	// better value can be request.header.authorization to do rate limiting by user (you will need to use an auth middleware)
 	SourceIdentifier string `mapstructure:"source_identifier" json:"source_identifier" yaml:"source_identifier"`
 }
 
-func RateLimit(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
-	entry := log.WithField("route_name", proxyRoute.Name)
+func RateLimit(proxyRoute models.ProxyRoute, handler http.Handler) (http.Handler, error) {
 	var config RateLimitConfig
 	err := mapstructure.Decode(proxyRoute.ExtraParams, &config)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding rate limit middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
 	options := config.RateLimit
 	if options == nil || !options.Enable {
-		return handler
+		return handler, nil
 	}
 	if options.SourceIdentifier == "" {
 		options.SourceIdentifier = "client.ip"
@@ -49,17 +47,13 @@ func RateLimit(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler 
 	}
 	extractor, err := utils.NewExtractor(options.SourceIdentifier)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding rate limit middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
 	rateSet := ratelimit.NewRateSet()
 	rateSet.Add(time.Second * time.Duration(options.ResetTime), 1, options.Limit)
 	limitHandler, err := ratelimit.New(handler, extractor, rateSet)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding rate limit middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
-
-	entry.Debug("orange-cloudfoundry/gobis/middlewares:: Adding rate limit middleware.")
-	return limitHandler
+	return limitHandler, nil
 }

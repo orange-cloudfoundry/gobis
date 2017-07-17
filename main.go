@@ -13,6 +13,7 @@ import (
 	"github.com/orange-cloudfoundry/gobis/proxy"
 	"github.com/orange-cloudfoundry/gobis/middlewares"
 	"strconv"
+	"github.com/orange-cloudfoundry/gobis/middlewares/casbin"
 )
 
 func main() {
@@ -93,6 +94,7 @@ func runServer(c *cli.Context) error {
 			middlewares.CircuitBreaker,
 			middlewares.ConnLimit,
 			middlewares.RateLimit,
+			casbin.Casbin,
 			middlewares.BasicAuth,
 			middlewares.Ldap,
 		),

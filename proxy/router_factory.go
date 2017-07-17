@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"github.com/vulcand/oxy/buffer"
 	"strings"
+	"github.com/orange-cloudfoundry/gobis/utils"
+	"fmt"
 )
 
 type RouterFactory interface {
@@ -19,12 +21,16 @@ type RouterFactory interface {
 }
 
 type CreateTransportFunc func(models.ProxyRoute) http.RoundTripper
-type RouterMiddlewareFunc func(models.ProxyRoute, http.Handler) http.Handler
 
 type RouterFactoryService struct {
 	CreateTransportFunc CreateTransportFunc
 	Middlewares         []RouterMiddlewareFunc
 	MuxRouter           *mux.Router
+}
+type ErrMiddleware string
+
+func (e ErrMiddleware) Error() string {
+	return string(e)
 }
 
 func NewRouterFactory(middlewares ...RouterMiddlewareFunc) RouterFactory {
@@ -63,7 +69,8 @@ func (r RouterFactoryService) CreateMuxRouter(proxyRoutes []models.ProxyRoute, s
 	startPath = strings.TrimSuffix(startPath, "/")
 	rtr := r.MuxRouter
 	for _, proxyRoute := range proxyRoutes {
-		log.Debugf("orange-cloudfoundry/gobis/proxy: Creating handler for route '%s' ...", proxyRoute.Name)
+		entry := log.WithField("route_name", proxyRoute.Name)
+		entry.Debug("orange-cloudfoundry/gobis/proxy: Creating handler ...")
 		proxyHandler, err := r.CreateForwardHandler(proxyRoute)
 		if err != nil {
 			return nil, err
@@ -72,19 +79,20 @@ func (r RouterFactoryService) CreateMuxRouter(proxyRoutes []models.ProxyRoute, s
 		if len(proxyRoute.Methods) > 0 {
 			routeMux.Methods(proxyRoute.Methods...)
 		}
-		log.Debugf("orange-cloudfoundry/gobis/proxy: Finished handler for route '%s' ...", proxyRoute.Name)
+		entry.Debug("orange-cloudfoundry/gobis/proxy: Finished handler .")
 	}
 	log.Debug("orange-cloudfoundry/gobis/proxy: Finished creating handlers ...")
 	return rtr, nil
 }
 func (r RouterFactoryService) CreateHttpHandler(proxyRoute models.ProxyRoute) (http.Handler, error) {
+	entry := log.WithField("route_name", proxyRoute.Name)
 	var err error
 	var fwd *forward.Forwarder
 	if !proxyRoute.NoBuffer {
-		log.Debugf("orange-cloudfoundry/gobis/proxy: Handler for route '%s' will use buffer.", proxyRoute.Name)
+		entry.Debug("orange-cloudfoundry/gobis/proxy: Handler for route will use buffer.")
 		fwd, err = forward.New(forward.RoundTripper(r.CreateTransportFunc(proxyRoute)))
 	} else {
-		log.Debugf("orange-cloudfoundry/gobis/proxy: Handler for route '%s' will use direct stream.", proxyRoute.Name)
+		entry.Debug("orange-cloudfoundry/gobis/proxy: Handler for route will use direct stream.")
 		fwd, err = forward.New(forward.RoundTripper(r.CreateTransportFunc(proxyRoute)), forward.Stream(true))
 	}
 	if err != nil {
@@ -97,20 +105,33 @@ func (r RouterFactoryService) CreateHttpHandler(proxyRoute models.ProxyRoute) (h
 }
 
 func (r RouterFactoryService) CreateForwardHandler(proxyRoute models.ProxyRoute) (http.HandlerFunc, error) {
-	handler, err := r.CreateHttpHandler(proxyRoute)
+	entry := log.WithField("route_name", proxyRoute.Name)
+	httpHandler, err := r.CreateHttpHandler(proxyRoute)
 	if err != nil {
 		return nil, err
 	}
-	for _, middleware := range r.Middlewares {
-		handler = middleware(proxyRoute, handler)
-	}
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	forwardHandler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		restPath := ""
 		vars := mux.Vars(req)
 		if vars != nil {
 			restPath = vars[models.MUX_REST_VAR_KEY]
 		}
 		ForwardRequest(proxyRoute, req, restPath)
+		httpHandler.ServeHTTP(w, req)
+	})
+	var handler http.Handler
+	handler = forwardHandler
+	for _, middleware := range r.Middlewares {
+		funcName := utils.GetFunctionName(middleware)
+		entry.Debugf("orange-cloudfoundry/gobis/proxy: Adding %s middleware ...", funcName)
+		handler, err = middleware(proxyRoute, handler)
+		if err != nil {
+			return nil, ErrMiddleware(fmt.Sprintf("Failed to add middleware %s: %s", funcName, err.Error()))
+		}
+		entry.Debugf("orange-cloudfoundry/gobis/proxy: Finished adding %s middleware.", funcName)
+
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		handler.ServeHTTP(w, req)
 	}), nil
 }

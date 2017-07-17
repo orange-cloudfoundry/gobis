@@ -4,7 +4,6 @@ import (
 	"github.com/orange-cloudfoundry/gobis/models"
 	"net/http"
 	"github.com/rs/cors"
-	log "github.com/sirupsen/logrus"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -41,17 +40,15 @@ type CorsOptions struct {
 	OptionsPassthrough bool `mapstructure:"options_passthrough" json:"options_passthrough" yaml:"options_passthrough"`
 }
 
-func Cors(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
-	entry := log.WithField("route_name", proxyRoute.Name)
+func Cors(proxyRoute models.ProxyRoute, handler http.Handler) (http.Handler, error) {
 	var corsStruct CorsConfig
 	err := mapstructure.Decode(proxyRoute.ExtraParams, &corsStruct)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding cors middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
 	corsOptions := corsStruct.Cors
 	if corsOptions == nil {
-		return handler
+		return handler, nil
 	}
 	if len(corsOptions.AllowedMethods) == 0 {
 		corsOptions.AllowedMethods = []string{"GET", "POST"}
@@ -65,6 +62,5 @@ func Cors(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
 		MaxAge: corsOptions.MaxAge,
 		OptionsPassthrough: corsOptions.OptionsPassthrough,
 	})
-	entry.Debug("orange-cloudfoundry/gobis/middlewares: Adding cors middleware.")
-	return corsHandler.Handler(handler)
+	return corsHandler.Handler(handler), nil
 }

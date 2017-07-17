@@ -9,6 +9,48 @@
 			"revisionTime": "2015-11-28T23:01:40Z"
 		},
 		{
+			"checksumSHA1": "RdLpGsVVVdIonqHIdQWDUtflkoo=",
+			"path": "github.com/Knetic/govaluate",
+			"revision": "ecff4eed5a1b9d98d7f4795c732fb24ad55e6fc8",
+			"revisionTime": "2017-07-09T17:38:11Z"
+		},
+		{
+			"checksumSHA1": "//lkjYDCG/q/488zx7OE1F+cTRM=",
+			"path": "github.com/casbin/casbin",
+			"revision": "6f8f9d7af0b7140910f23fc9c8a0ef7cfbedb55c",
+			"revisionTime": "2017-07-17T03:25:01Z"
+		},
+		{
+			"checksumSHA1": "BXKY680lIrk01sP/PMxnr9s2meA=",
+			"path": "github.com/casbin/casbin/config",
+			"revision": "6f8f9d7af0b7140910f23fc9c8a0ef7cfbedb55c",
+			"revisionTime": "2017-07-17T03:25:01Z"
+		},
+		{
+			"checksumSHA1": "6xzBsJTELlx+7l2IlwehZj+TUfg=",
+			"path": "github.com/casbin/casbin/model",
+			"revision": "6f8f9d7af0b7140910f23fc9c8a0ef7cfbedb55c",
+			"revisionTime": "2017-07-17T03:25:01Z"
+		},
+		{
+			"checksumSHA1": "MhOXZ34V89boTOvVyopVI9VUMhY=",
+			"path": "github.com/casbin/casbin/persist",
+			"revision": "6f8f9d7af0b7140910f23fc9c8a0ef7cfbedb55c",
+			"revisionTime": "2017-07-17T03:25:01Z"
+		},
+		{
+			"checksumSHA1": "fG39jhUcP7IQEHnktxydCPMwDLg=",
+			"path": "github.com/casbin/casbin/rbac",
+			"revision": "6f8f9d7af0b7140910f23fc9c8a0ef7cfbedb55c",
+			"revisionTime": "2017-07-17T03:25:01Z"
+		},
+		{
+			"checksumSHA1": "Luf5UCU9jDANHTqtEk8MBny2+2E=",
+			"path": "github.com/casbin/casbin/util",
+			"revision": "6f8f9d7af0b7140910f23fc9c8a0ef7cfbedb55c",
+			"revisionTime": "2017-07-17T03:25:01Z"
+		},
+		{
 			"checksumSHA1": "7gK+lSShSu1NRw83/A95BcgMqsI=",
 			"path": "github.com/codahale/hdrhistogram",
 			"revision": "3a0bb77429bd3a61596f5e8a3172445844342120",

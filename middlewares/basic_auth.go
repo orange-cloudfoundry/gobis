@@ -59,19 +59,16 @@ func (b BasicAuthOptions) findByUser(user string) BasicAuthOption {
 	}
 	return BasicAuthOption{}
 }
-func BasicAuth(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
-	entry := log.WithField("route_name", proxyRoute.Name)
+func BasicAuth(proxyRoute models.ProxyRoute, handler http.Handler) (http.Handler, error) {
 	var config BasicAuthConfig
 	err := mapstructure.Decode(proxyRoute.ExtraParams, &config)
 	if err != nil {
-		entry.Errorf("orange-cloudfoundry/gobis/middlewares: Adding basic auth middleware failed: " + err.Error())
-		return handler
+		return handler, err
 	}
 	if len(config.BasicAuth) == 0 {
-		return handler
+		return handler, nil
 	}
-	entry.Debug("orange-cloudfoundry/gobis/middlewares: Adding basic auth middleware.")
 	return httpauth.BasicAuth(httpauth.AuthOptions{
 		AuthFunc: config.BasicAuth.Auth,
-	})(handler)
+	})(handler), nil
 }
