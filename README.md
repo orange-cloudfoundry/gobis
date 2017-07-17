@@ -90,16 +90,13 @@ routes:
   methods: []
   # Set to true to not check ssl certificates from upstream (not recommended)
   insecure_skip_verify: false
-  
-  
-# It was made to pass arbitrary params to use it after in gobis middlewares
-# Here you can set cors parameters for cors middleware (see doc relative to middlewares)
-##
-#  extra_params:
-#    cors:
-#      max_age: 12
-#      allowed_origins:
-#      - http://localhost
+  # It was made to pass arbitrary params to use it after in gobis middlewares
+  # Here you can set cors parameters for cors middleware (see doc relative to middlewares)
+  extra_params:
+    cors:
+      max_age: 12
+      allowed_origins:
+      - http://localhost
 ```
 
 2. Run `gobis` and server is now started
