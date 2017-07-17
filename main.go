@@ -88,6 +88,7 @@ func runServer(c *cli.Context) error {
 		conf,
 		proxy.NewRouterFactory(
 			middlewares.BasicAuth,
+			middlewares.RateLimit,
 			middlewares.Cors,
 			middlewares.Trace,
 		),

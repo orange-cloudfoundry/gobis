@@ -23,7 +23,11 @@ type TraceOptions struct {
 
 func Trace(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
 	var config TraceConfig
-	mapstructure.Decode(proxyRoute.ExtraParams, &config)
+	err := mapstructure.Decode(proxyRoute.ExtraParams, &config)
+	if err != nil {
+		log.Errorf("orange-cloudfoundry/gobis/middlewares: Adding trace failed: " + err.Error())
+		return handler
+	}
 	options := config.Trace
 	if options == nil || !options.Enabled {
 		return handler
@@ -35,8 +39,11 @@ func Trace(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
 	if len(options.ResponseHeaders) == 0 {
 		traceOptions = append(traceOptions, trace.ResponseHeaders(options.ResponseHeaders...))
 	}
-	traceHandler, _ := trace.New(handler, os.Stdout, traceOptions...)
-
+	traceHandler, err := trace.New(handler, os.Stdout, traceOptions...)
+	if err != nil {
+		log.Errorf("orange-cloudfoundry/gobis/middlewares: Adding trace failed: " + err.Error())
+		return handler
+	}
 	log.Debug("orange-cloudfoundry/gobis/middlewares:: Adding trace middleware to capture request.")
 	return traceHandler
 }

@@ -18,7 +18,11 @@ type BasicAuthOptions struct {
 
 func BasicAuth(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
 	var config BasicAuthConfig
-	mapstructure.Decode(proxyRoute.ExtraParams, &config)
+	err := mapstructure.Decode(proxyRoute.ExtraParams, &config)
+	if err != nil {
+		log.Errorf("orange-cloudfoundry/gobis/middlewares: Adding basic auth failed: " + err.Error())
+		return handler
+	}
 	options := config.BasicAuth
 	if options == nil {
 		return handler

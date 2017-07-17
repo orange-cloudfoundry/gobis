@@ -43,7 +43,11 @@ type CorsOptions struct {
 
 func Cors(proxyRoute models.ProxyRoute, handler http.Handler) http.Handler {
 	var corsStruct CorsConfig
-	mapstructure.Decode(proxyRoute.ExtraParams, &corsStruct)
+	err := mapstructure.Decode(proxyRoute.ExtraParams, &corsStruct)
+	if err != nil {
+		log.Errorf("orange-cloudfoundry/gobis/middlewares: Adding cors failed: "+ err.Error())
+		return handler
+	}
 	corsOptions := corsStruct.Cors
 	if corsOptions == nil {
 		return handler
