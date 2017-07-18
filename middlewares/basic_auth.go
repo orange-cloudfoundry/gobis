@@ -25,6 +25,7 @@ type BasicAuthOption struct {
 
 func (b BasicAuthOptions) Auth(user string, password string, req *http.Request) bool {
 	ctx.DirtHeader(req, "Authorization")
+	ctx.AddContextValue(req, UsernameContextKey, user)
 	foundUser := b.findByUser(user)
 	if foundUser.User == "" {
 		return false

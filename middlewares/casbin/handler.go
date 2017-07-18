@@ -8,6 +8,8 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/gorilla/mux"
 	"strings"
+	"github.com/orange-cloudfoundry/gobis/proxy/ctx"
+	"github.com/orange-cloudfoundry/gobis/middlewares"
 )
 
 type CasbinHandler struct {
@@ -37,7 +39,8 @@ func (h CasbinHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // CheckPermission checks the user/method/path combination from the request.
 // Returns true (permission granted) or false (permission forbidden)
 func (h CasbinHandler) CheckPermission(e *casbin.Enforcer, r *http.Request) bool {
-	user, _, _ := r.BasicAuth()
+	var user string
+	ctx.InjectContextValue(r, middlewares.UsernameContextKey, &user)
 	method := r.Method
 	path := ""
 	vars := mux.Vars(r)

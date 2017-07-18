@@ -5,7 +5,6 @@ import (
 	"github.com/orange-cloudfoundry/gobis/models"
 	"net/http"
 	"github.com/vulcand/oxy/ratelimit"
-	"github.com/vulcand/oxy/utils"
 	"time"
 )
 
@@ -21,8 +20,7 @@ type RateLimitOptions struct {
 	ResetTime        int64 `mapstructure:"reset_time" json:"reset_time" yaml:"reset_time"`
 	// Identify request source to limit the source
 	// possible value are 'client.ip', 'request.host' or 'request.header.X-My-Header-Name'
-	// (default: client.ip)
-	// better value can be request.header.authorization to do rate limiting by user (you will need to use an auth middleware)
+	// if empty and a context `middlewares.UsernameContextKey` exists the source will be set to this content (this allow to conn limit by username from auth middleware)
 	SourceIdentifier string `mapstructure:"source_identifier" json:"source_identifier" yaml:"source_identifier"`
 }
 
@@ -36,16 +34,13 @@ func RateLimit(proxyRoute models.ProxyRoute, handler http.Handler) (http.Handler
 	if options == nil || !options.Enable {
 		return handler, nil
 	}
-	if options.SourceIdentifier == "" {
-		options.SourceIdentifier = "client.ip"
-	}
 	if options.ResetTime == 0 {
 		options.ResetTime = int64(1800)
 	}
 	if options.Limit == 0 {
 		options.Limit = int64(5000)
 	}
-	extractor, err := utils.NewExtractor(options.SourceIdentifier)
+	extractor, err := NewGobisSourceExtractor(options.SourceIdentifier)
 	if err != nil {
 		return handler, err
 	}

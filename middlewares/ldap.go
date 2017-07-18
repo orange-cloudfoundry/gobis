@@ -10,7 +10,6 @@ import (
 	"github.com/orange-cloudfoundry/gobis/models"
 	"os"
 	"github.com/goji/httpauth"
-	"github.com/ArthurHlt/github-blob-sender/Godeps/_workspace/src/golang.org/x/net/context"
 	"github.com/orange-cloudfoundry/gobis/proxy/ctx"
 )
 
@@ -109,6 +108,7 @@ func (l LdapAuth) LdapAuth(user, password string, req *http.Request) bool {
 		log.Errorf("orange-cloudfoundry/gobis/middlewares: invalid ldap group search for '%s': %s", l.Address, err.Error())
 		return false
 	}
+	ctx.AddContextValue(req, UsernameContextKey, user)
 	return true
 }
 func (l LdapAuth) LoadLdapGroup(user string, conn *ldap.Conn, req *http.Request) error {
@@ -131,8 +131,7 @@ func (l LdapAuth) LoadLdapGroup(user string, conn *ldap.Conn, req *http.Request)
 	for _, entry := range sr.Entries {
 		groups = append(groups, entry.GetAttributeValue(l.MemberOf))
 	}
-
-	*req = *req.WithContext(context.WithValue(req.Context(), GroupContextKey, groups))
+	ctx.AddContextValue(req, GroupContextKey, groups)
 	return nil
 }
 

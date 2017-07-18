@@ -4,6 +4,7 @@ import (
 	"github.com/casbin/casbin/model"
 	"net/http"
 	"github.com/orange-cloudfoundry/gobis/middlewares"
+	"github.com/orange-cloudfoundry/gobis/proxy/ctx"
 )
 
 type GobisAdapter struct {
@@ -47,11 +48,8 @@ func (a *GobisAdapter) AddPoliciesFromRequest(req *http.Request) {
 	if user == "" {
 		return
 	}
-	ctxGroupVal := req.Context().Value(middlewares.GroupContextKey)
-	if ctxGroupVal == nil {
-		return
-	}
-	groups := ctxGroupVal.([]string)
+	groups := make([]string, 0)
+	ctx.InjectContextValue(req, middlewares.GroupContextKey, &groups)
 	for _, group := range groups {
 		a.AddPolicies(CasbinPolicy{
 			Type: "g",
@@ -59,12 +57,8 @@ func (a *GobisAdapter) AddPoliciesFromRequest(req *http.Request) {
 			Obj: group,
 		})
 	}
-
-	ctxPolicyVal := req.Context().Value(PolicyContextKey)
-	if ctxPolicyVal == nil {
-		return
-	}
-	ctxPolicies := ctxPolicyVal.([]CasbinPolicy)
+	ctxPolicies := make([]CasbinPolicy, 0)
+	ctx.InjectContextValue(req, PolicyContextKey, &ctxPolicies)
 	for _, ctxPolicy := range ctxPolicies {
 		a.AddPolicies(ctxPolicy)
 	}

@@ -5,7 +5,6 @@ import (
 	"github.com/orange-cloudfoundry/gobis/models"
 	"net/http"
 	"github.com/vulcand/oxy/connlimit"
-	"github.com/vulcand/oxy/utils"
 )
 
 type ConnLimitConfig struct {
@@ -19,6 +18,7 @@ type ConnLimitOptions struct {
 	// Identify request source to limit the source
 	// possible value are 'client.ip', 'request.host' or 'request.header.X-My-Header-Name'
 	// (default: client.ip)
+	// if empty and a context `middlewares.UsernameContextKey` exists the source will be set to this content (this allow to conn limit by username from auth middleware)
 	SourceIdentifier string `mapstructure:"source_identifier" json:"source_identifier" yaml:"source_identifier"`
 }
 
@@ -32,13 +32,10 @@ func ConnLimit(proxyRoute models.ProxyRoute, handler http.Handler) (http.Handler
 	if options == nil || !options.Enable {
 		return handler, nil
 	}
-	if options.SourceIdentifier == "" {
-		options.SourceIdentifier = "client.ip"
-	}
 	if options.Limit == 0 {
 		options.Limit = int64(20)
 	}
-	extractor, err := utils.NewExtractor(options.SourceIdentifier)
+	extractor, err := NewGobisSourceExtractor(options.SourceIdentifier)
 	if err != nil {
 		return handler, err
 	}
