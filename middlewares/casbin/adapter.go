@@ -55,9 +55,12 @@ func (a *GobisAdapter) AddPoliciesFromRequest(req *http.Request) {
 			Obj: group,
 		})
 	}
-	ctxPolicies := make([]CasbinPolicy, 0)
+	var ctxPolicies *[]CasbinPolicy
 	ctx.InjectContextValue(req, PolicyContextKey, &ctxPolicies)
-	for _, ctxPolicy := range ctxPolicies {
+	if ctxPolicies == nil {
+		return
+	}
+	for _, ctxPolicy := range *ctxPolicies {
 		a.AddPolicies(ctxPolicy)
 	}
 }
