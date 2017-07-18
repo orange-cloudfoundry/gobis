@@ -288,6 +288,7 @@ configHandler := handlers.DefaultHandlerConfig{
                                 {
                                         User: "user2",
                                         Password: "mypassword",
+                                        Groups: []string{"admin"}
                                 },
                         },
                 }),
@@ -308,7 +309,12 @@ extra_params:
     crypted: true # hashed by bcrypt, you can use https://github.com/gibsjose/bcrypt-hash command to crypt a password
   - user: user2
     password: mypassword # equal password
+    groups: [admin]
 ```
+
+#### Tips
+
+By setting groups it will allow others middleware to find groups for the current user by using [context groups](https://godoc.org/github.com/orange-cloudfoundry/gobis/proxy/ctx#Groups)
 
 ### Casbin
 
@@ -359,9 +365,9 @@ extra_params:
 
 #### Tips
 
-- It will load as role policies all groups found in context `middlewares.GroupContextKey` 
+- It will load as role policies all groups found by using [context groups](https://godoc.org/github.com/orange-cloudfoundry/gobis/proxy/ctx#Groups)
 this allow you, if you use ldap middleware, to pass a group name found as a `sub` (e.g.: `sub: myUserGroupName`)
-- It will also load all policies found in context `casbin.PolicyContextKey` this allow other middleware to add their own policies
+- It will also load all policies found in context key `casbin.PolicyContextKey` this allow other middleware to add their own policies
 
 ### Circuit breaker
 
@@ -531,7 +537,7 @@ extra_params:
 #### Tips
 
 If `GroupSearchBaseDns` and `GroupSearchFilter` params are set the middleware will pass in context 
-the list of group accessible by other middlewares by doing `req.Context().Value(middlewares.GroupContextKey)`
+the list of group accessible by other middlewares by using [context groups](https://godoc.org/github.com/orange-cloudfoundry/gobis/proxy/ctx#Groups)
 
 ### Rate limit
 

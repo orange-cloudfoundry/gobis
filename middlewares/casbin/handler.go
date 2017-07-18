@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"strings"
 	"github.com/orange-cloudfoundry/gobis/proxy/ctx"
-	"github.com/orange-cloudfoundry/gobis/middlewares"
+	log "github.com/sirupsen/logrus"
 )
 
 type CasbinHandler struct {
@@ -39,8 +39,7 @@ func (h CasbinHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // CheckPermission checks the user/method/path combination from the request.
 // Returns true (permission granted) or false (permission forbidden)
 func (h CasbinHandler) CheckPermission(e *casbin.Enforcer, r *http.Request) bool {
-	var user string
-	ctx.InjectContextValue(r, middlewares.UsernameContextKey, &user)
+	user := ctx.Username(r)
 	method := r.Method
 	path := ""
 	vars := mux.Vars(r)
@@ -57,7 +56,8 @@ func newEnforcer(adapter persist.Adapter, modelConfText string) *casbin.Enforcer
 	}
 	modelConf := casbin.NewModel()
 	modelConf.LoadModelFromText(modelConfText)
-	return casbin.NewEnforcer(modelConf, adapter, false)
+	enableLog := log.GetLevel() == log.DebugLevel
+	return casbin.NewEnforcer(modelConf, adapter, enableLog)
 }
 
 func Casbin(proxyRoute models.ProxyRoute, handler http.Handler) (http.Handler, error) {

@@ -20,16 +20,18 @@ type BasicAuthConfig struct {
 type BasicAuthOption struct {
 	User     string `mapstructure:"user" json:"user" yaml:"user"`
 	Password string `mapstructure:"password" json:"password" yaml:"password"`
+	Groups   []string `mapstructure:"groups" json:"groups" yaml:"groups"`
 	Crypted  bool `mapstructure:"crypted" json:"crypted" yaml:"crypted"`
 }
 
 func (b BasicAuthOptions) Auth(user string, password string, req *http.Request) bool {
 	ctx.DirtHeader(req, "Authorization")
-	ctx.AddContextValue(req, UsernameContextKey, user)
+	ctx.SetUsername(req, user)
 	foundUser := b.findByUser(user)
 	if foundUser.User == "" {
 		return false
 	}
+	ctx.AddGroups(req, foundUser.Groups...)
 	// Compare the supplied credentials to those set in our options
 	if foundUser.Crypted {
 		err := bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(password))

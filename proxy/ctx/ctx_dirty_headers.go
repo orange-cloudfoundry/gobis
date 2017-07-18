@@ -4,7 +4,6 @@ package ctx
 
 import (
 	"net/http"
-	"context"
 	"strings"
 )
 
@@ -15,36 +14,45 @@ const (
 type GobisContextKey int
 
 func DirtHeader(req *http.Request, header string, oldValues ...string) {
+	var dirtyHeaders map[string]string = make(map[string]string)
 	header = sanitizeHeaderName(header)
-	dirtyHeaders := GetDirtyHeaders(req)
 	oldValue := ""
 	if len(oldValues) > 0 {
 		oldValue = oldValues[0]
 	}
+	dirtyHeadersPtr := DirtyHeaders(req)
+	if dirtyHeadersPtr == nil {
+		dirtyHeaders[header] = oldValue
+		AddContextValue(req, dirtyHeadersKey, &dirtyHeaders)
+		return
+	}
+	dirtyHeaders = *dirtyHeadersPtr
 	dirtyHeaders[header] = oldValue
-	*req = *req.WithContext(context.WithValue(req.Context(), dirtyHeadersKey, dirtyHeaders))
+	*dirtyHeadersPtr = dirtyHeaders
 }
 func IsDirtyHeader(req *http.Request, header string) bool {
 	header = sanitizeHeaderName(header)
-	dirtyHeaders := GetDirtyHeaders(req)
+	dirtyHeadersPtr := DirtyHeaders(req)
+	if dirtyHeadersPtr == nil {
+		return false
+	}
+	dirtyHeaders := *dirtyHeadersPtr
 	_, ok := dirtyHeaders[header]
 	return ok
 }
 func UndirtHeader(req *http.Request, header string) {
 	header = sanitizeHeaderName(header)
-	dirtyHeaders := GetDirtyHeaders(req)
+	dirtyHeadersPtr := DirtyHeaders(req)
+	if dirtyHeadersPtr == nil {
+		return
+	}
+	dirtyHeaders := *dirtyHeadersPtr
 	delete(dirtyHeaders, header)
-	*req = *req.WithContext(context.WithValue(req.Context(), dirtyHeadersKey, dirtyHeaders))
+	*dirtyHeadersPtr = dirtyHeaders
 }
-func GetDirtyHeaders(req *http.Request) map[string]string {
-	values := req.Context().Value(dirtyHeadersKey)
-	if values == nil {
-		return make(map[string]string)
-	}
-	dirtyHeaders, ok := values.(map[string]string)
-	if !ok {
-		return make(map[string]string)
-	}
+func DirtyHeaders(req *http.Request) *map[string]string {
+	var dirtyHeaders *map[string]string
+	InjectContextValue(req, dirtyHeadersKey, &dirtyHeaders)
 	return dirtyHeaders
 }
 func sanitizeHeaderName(header string) string {

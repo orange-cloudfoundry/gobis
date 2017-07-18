@@ -40,7 +40,7 @@ type LdapOptions struct {
 	// User search filter, for example "(cn=%s)" or "(sAMAccountName=%s)" or "(uid=%s)" (default: `(objectClass=organizationalPerson)&(uid=%s)`)
 	SearchFilter       string `mapstructure:"search_filter" json:"search_filter" yaml:"search_filter"`
 	// Group search filter, to retrieve the groups of which the user is a member
-	// Groups will be passed in request context as a list of strings, how to retrieve: req.Context().Value(middlewares.GroupContextKey)
+	// Groups will be passed in request context as a list of strings, how to retrieve: ctx.Groups(*http.Request)
 	// if GroupSearchFilter or GroupSearchBaseDns or MemberOf are empty it will not search for groups
 	GroupSearchFilter  string `mapstructure:"group_search_filter" json:"group_search_filter" yaml:"group_search_filter"`
 	// base DNs to search through for groups
@@ -108,7 +108,7 @@ func (l LdapAuth) LdapAuth(user, password string, req *http.Request) bool {
 		log.Errorf("orange-cloudfoundry/gobis/middlewares: invalid ldap group search for '%s': %s", l.Address, err.Error())
 		return false
 	}
-	ctx.AddContextValue(req, UsernameContextKey, user)
+	ctx.SetUsername(req, user)
 	return true
 }
 func (l LdapAuth) LoadLdapGroup(user string, conn *ldap.Conn, req *http.Request) error {
@@ -131,7 +131,7 @@ func (l LdapAuth) LoadLdapGroup(user string, conn *ldap.Conn, req *http.Request)
 	for _, entry := range sr.Entries {
 		groups = append(groups, entry.GetAttributeValue(l.MemberOf))
 	}
-	ctx.AddContextValue(req, GroupContextKey, groups)
+	ctx.AddGroups(req, groups...)
 	return nil
 }
 

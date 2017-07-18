@@ -140,14 +140,7 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute models.ProxyRoute)
 }
 
 func ForwardRequest(proxyRoute models.ProxyRoute, req *http.Request, restPath string) {
-	dirtyHeaders := ctx.GetDirtyHeaders(req)
-	for header, oldValue := range dirtyHeaders {
-		if oldValue == "" {
-			req.Header.Del(header)
-			continue
-		}
-		req.Header.Set(header, oldValue)
-	}
+	removeDirtyHeaders(req)
 	fwdUrl, _ := url.Parse(proxyRoute.Url)
 	req.URL.Host = fwdUrl.Host
 
@@ -168,4 +161,18 @@ func ForwardRequest(proxyRoute models.ProxyRoute, req *http.Request, restPath st
 		req.SetBasicAuth(fwdUrl.User.Username(), password)
 	}
 	req.RequestURI = req.URL.RequestURI()
+}
+func removeDirtyHeaders(req *http.Request) {
+	dirtyHeadersPtr := ctx.DirtyHeaders(req)
+	if dirtyHeadersPtr == nil {
+		return
+	}
+	dirtyHeaders := *dirtyHeadersPtr
+	for header, oldValue := range dirtyHeaders {
+		if oldValue == "" {
+			req.Header.Del(header)
+			continue
+		}
+		req.Header.Set(header, oldValue)
+	}
 }

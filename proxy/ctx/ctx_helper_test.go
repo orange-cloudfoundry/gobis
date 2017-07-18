@@ -18,6 +18,21 @@ var _ = Describe("CtxHelper", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).Should(Equal("value"))
 		})
+		It("should inject pointer value when it's found in context", func() {
+			req := &http.Request{}
+			value := "value"
+			AddContextValue(req, "key", &value)
+			var val *string
+			err := InjectContextValue(req, "key", &val)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(*val).Should(Equal("value"))
+
+			*val = "changed"
+			var valChanged *string
+			err = InjectContextValue(req, "key", &valChanged)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(*valChanged).Should(Equal("changed"))
+		})
 		It("should inject complex value when it's found in context", func() {
 			req := &http.Request{}
 			sValues := []string{"val1", "val2", "val3"}

@@ -32,8 +32,7 @@ func (e GobisSourceExtractor) Extract(req *http.Request) (string, int64, error) 
 	if e.variableIsSet {
 		return e.wrapExtractor.Extract(req)
 	}
-	var user string
-	ctx.InjectContextValue(req, UsernameContextKey, &user)
+	user := ctx.Username(req)
 	if user == "" {
 		return e.wrapExtractor.Extract(req)
 	}

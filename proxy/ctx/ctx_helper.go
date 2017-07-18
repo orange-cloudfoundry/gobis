@@ -17,9 +17,7 @@ func InjectContextValue(req *http.Request, key, inject interface{}) error {
 	if reflect.TypeOf(inject).Kind() != reflect.Ptr {
 		return fmt.Errorf("You should pass a pointer")
 	}
-
 	reflectType := reflect.TypeOf(inject).Elem()
-
 	val := req.Context().Value(key)
 	if val == nil {
 		return nil

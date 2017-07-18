@@ -20,7 +20,8 @@ type RateLimitOptions struct {
 	ResetTime        int64 `mapstructure:"reset_time" json:"reset_time" yaml:"reset_time"`
 	// Identify request source to limit the source
 	// possible value are 'client.ip', 'request.host' or 'request.header.X-My-Header-Name'
-	// if empty and a context `middlewares.UsernameContextKey` exists the source will be set to this content (this allow to conn limit by username from auth middleware)
+	// if empty and a username exists in context the source will be set to this content (this allow to rate limit by username from auth middleware)
+	// for context see: https://godoc.org/github.com/orange-cloudfoundry/gobis/proxy/ctx#Username
 	SourceIdentifier string `mapstructure:"source_identifier" json:"source_identifier" yaml:"source_identifier"`
 }
 
