@@ -13,12 +13,15 @@ const (
 
 type GobisContextKey int
 
-func DirtHeader(req *http.Request, header string, oldValues ...string) {
+// Mark an http header as dirty
+// Useful to prevent some headers added and used by middleware to not be sent to upstream
+// if oldValue is not empty it will make proxy rewrite header with this value
+func DirtHeader(req *http.Request, header string, oldValue ...string) {
 	var dirtyHeaders map[string]string = make(map[string]string)
 	header = sanitizeHeaderName(header)
 	oldValue := ""
-	if len(oldValues) > 0 {
-		oldValue = oldValues[0]
+	if len(oldValue) > 0 {
+		oldValue = oldValue[0]
 	}
 	dirtyHeadersPtr := DirtyHeaders(req)
 	if dirtyHeadersPtr == nil {
@@ -30,6 +33,8 @@ func DirtHeader(req *http.Request, header string, oldValues ...string) {
 	dirtyHeaders[header] = oldValue
 	*dirtyHeadersPtr = dirtyHeaders
 }
+
+// Return true if an http header is marked as dirty
 func IsDirtyHeader(req *http.Request, header string) bool {
 	header = sanitizeHeaderName(header)
 	dirtyHeadersPtr := DirtyHeaders(req)
@@ -40,6 +45,8 @@ func IsDirtyHeader(req *http.Request, header string) bool {
 	_, ok := dirtyHeaders[header]
 	return ok
 }
+
+// Remove an http header from the list of dirty header
 func UndirtHeader(req *http.Request, header string) {
 	header = sanitizeHeaderName(header)
 	dirtyHeadersPtr := DirtyHeaders(req)
@@ -50,11 +57,14 @@ func UndirtHeader(req *http.Request, header string) {
 	delete(dirtyHeaders, header)
 	*dirtyHeadersPtr = dirtyHeaders
 }
+
+// Retrieve all http headers marked as dirty
 func DirtyHeaders(req *http.Request) *map[string]string {
 	var dirtyHeaders *map[string]string
 	InjectContextValue(req, dirtyHeadersKey, &dirtyHeaders)
 	return dirtyHeaders
 }
+
 func sanitizeHeaderName(header string) string {
 	return strings.ToLower(strings.TrimSpace(header))
 }

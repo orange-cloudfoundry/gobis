@@ -9,6 +9,7 @@ const (
 
 type MiddlewareContextKey int
 
+// Set the username to a request context
 func SetUsername(req *http.Request, username string) {
 	userPtr := usernamePtr(req)
 	if userPtr == nil {
@@ -19,6 +20,7 @@ func SetUsername(req *http.Request, username string) {
 	*userPtr = username
 }
 
+// Retrieve username from a request context
 func Username(req *http.Request) string {
 	userPtr := usernamePtr(req)
 	if userPtr == nil {
@@ -32,6 +34,7 @@ func usernamePtr(req *http.Request) *string {
 	return username
 }
 
+// add groups to a request context
 func AddGroups(req *http.Request, groups ...string) {
 	if len(groups) == 0 {
 		return
@@ -49,6 +52,7 @@ func AddGroups(req *http.Request, groups ...string) {
 	*groupsPtr = origGroups
 }
 
+// retrieve groups from request context
 func Groups(req *http.Request) []string {
 	groupsPtr := groupsPtr(req)
 	if groupsPtr == nil {
