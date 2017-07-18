@@ -11,6 +11,7 @@ import (
 	"strings"
 	"github.com/orange-cloudfoundry/gobis/utils"
 	"fmt"
+	"github.com/orange-cloudfoundry/gobis/proxy/ctx"
 )
 
 type RouterFactory interface {
@@ -139,6 +140,14 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute models.ProxyRoute)
 }
 
 func ForwardRequest(proxyRoute models.ProxyRoute, req *http.Request, restPath string) {
+	dirtyHeaders := ctx.GetDirtyHeaders(req)
+	for header, oldValue := range dirtyHeaders {
+		if oldValue == "" {
+			req.Header.Del(header)
+			continue
+		}
+		req.Header.Set(header, oldValue)
+	}
 	fwdUrl, _ := url.Parse(proxyRoute.Url)
 	req.URL.Host = fwdUrl.Host
 

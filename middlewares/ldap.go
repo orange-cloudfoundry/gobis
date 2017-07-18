@@ -11,6 +11,7 @@ import (
 	"os"
 	"github.com/goji/httpauth"
 	"github.com/ArthurHlt/github-blob-sender/Godeps/_workspace/src/golang.org/x/net/context"
+	"github.com/orange-cloudfoundry/gobis/proxy/ctx"
 )
 
 const (
@@ -71,6 +72,7 @@ func (l LdapAuth) CreateConn() (conn *ldap.Conn, err error) {
 	return
 }
 func (l LdapAuth) LdapAuth(user, password string, req *http.Request) bool {
+	ctx.DirtHeader(req, "Authorization")
 	conn, err := l.CreateConn()
 	if err != nil {
 		log.Errorf("orange-cloudfoundry/gobis/middlewares: invalid ldap for '%s': %s", l.Address, err.Error())

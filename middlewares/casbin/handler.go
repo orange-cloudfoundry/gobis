@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"github.com/mitchellh/mapstructure"
 	"github.com/gorilla/mux"
+	"strings"
 )
 
 type CasbinHandler struct {
@@ -43,9 +44,7 @@ func (h CasbinHandler) CheckPermission(e *casbin.Enforcer, r *http.Request) bool
 	if vars != nil {
 		path = vars[models.MUX_REST_VAR_KEY]
 	}
-	if path == "" {
-		path = "/"
-	}
+	path = strings.TrimSuffix(path, "/") + "/"
 	return e.Enforce(user, path, method)
 }
 
@@ -64,11 +63,7 @@ func Casbin(proxyRoute models.ProxyRoute, handler http.Handler) (http.Handler, e
 	if err != nil {
 		return handler, err
 	}
-
-	if config.Casbin == nil {
-		return handler, nil
-	}
-	if len(config.Casbin.Policies) == 0 {
+	if config.Casbin == nil || !config.Casbin.Enable {
 		return handler, nil
 	}
 	return NewCasbinHandler(handler, config.Casbin), nil

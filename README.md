@@ -4,6 +4,28 @@ Gobis is a lightweight API Gateway written in go which can be used programmatica
 
 It's largely inspired by [Netflix/zuul](https://github.com/Netflix/zuul).
 
+## Summary
+
+- [installation](#installation)
+- [Running standalone server](#running-standalone-server)
+  - [Commands](#commands)
+  - [Usage](#usage)
+- [Use in your project](#use-in-your-project)
+  - [Example with your own router and middlewares](#example-with-your-own-router-and-middlewares)
+- [Middlewares](#middlewares)
+  - [Create your middleware](#create-your-middleware)
+- [Create your middleware](#create-your-middleware)
+- [Available middlewares](#available-middlewares)
+  - [basic auth](#basic-auth)
+  - [casbin](#casbin): An authorization library that supports access control models like ACL, RBAC, ABAC
+  - [circuit breaker](#circuit-breaker)
+  - [conn limit](#conn-limit)
+  - [cors](#cors)
+  - [ldap](#ldap)
+  - [rate limit](#rate-limit)
+  - [trace](#trace)
+- [FAQ](#faq)
+
 ## Installation
 
 ```
@@ -14,14 +36,7 @@ If you set your `PATH` with `$GOPATH/bin/` you should have now a `gobis` binary 
 
 ## Running standalone server
 
-The standalone server will make available theses middlewares:
-- [basic auth](#basic-auth)
-- [circuit breaker](#circuit-breaker)
-- [conn limit](#conn-limit)
-- [cors](#cors)
-- [ldap](#ldap)
-- [rate limit](#rate-limit)
-- [trace](#trace)
+The standalone server will make available all middlewares you can found in [Available middlewares](#available-middlewares)
 
 **Note**: To enable them in your route see parameters to set on each ones
 
@@ -257,39 +272,30 @@ See godoc for [BasicAuthOption](https://godoc.org/github.com/orange-cloudfoundry
 #### Use programmatically
 
 ```go
-package main
-import (
-        "github.com/orange-cloudfoundry/gobis/handlers"
-        "github.com/orange-cloudfoundry/gobis/models"
-        "github.com/orange-cloudfoundry/gobis/utils"
-        "github.com/orange-cloudfoundry/gobis/middlewares"
-)
-func main(){
-        configHandler := handlers.DefaultHandlerConfig{
-                Routes: []models.ProxyRoute{
-                    {
-                        Name: "myapi",
-                        Path: "/app/**",
-                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                        ExtraParams: utils.InterfaceToMap(middlewares.BasicAuthConfig{
-                                BasicAuth: &middlewares.BasicAuthOptions{
-                                        {
-                                                User: "user",
-                                                Password: "$2y$12$AHKssZrkmcG2pmom.rvy2OMsV8HpMHHcRIEY158LgZIkrA0BFvFQq", // equal password
-                                                Crypted: true, // hashed by bcrypt, you can use https://github.com/gibsjose/bcrypt-hash command to crypt a password
-                                        },
-                                        {
-                                                User: "user2",
-                                                Password: "mypassword",
-                                        },
+configHandler := handlers.DefaultHandlerConfig{
+        Routes: []models.ProxyRoute{
+            {
+                Name: "myapi",
+                Path: "/app/**",
+                Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                ExtraParams: utils.InterfaceToMap(middlewares.BasicAuthConfig{
+                        BasicAuth: &middlewares.BasicAuthOptions{
+                                {
+                                        User: "user",
+                                        Password: "$2y$12$AHKssZrkmcG2pmom.rvy2OMsV8HpMHHcRIEY158LgZIkrA0BFvFQq", // equal password
+                                        Crypted: true, // hashed by bcrypt, you can use https://github.com/gibsjose/bcrypt-hash command to crypt a password
                                 },
-                        }),
-                    },
-                },
-        }
-        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
-        // create your server
+                                {
+                                        User: "user2",
+                                        Password: "mypassword",
+                                },
+                        },
+                }),
+            },
+        },
 }
+gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+// create your server
 ```
 
 #### Use in config file
@@ -304,6 +310,58 @@ extra_params:
     password: mypassword # equal password
 ```
 
+### Casbin
+
+[casbin](https://github.com/casbin/casbin) is an authorization library that supports access control models like ACL, RBAC, ABAC.
+
+This middleware allow you to add access control over your apo
+
+See godoc for [CasbinOption](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares/casbin#CasbinOption) to know more about parameters.
+
+#### Use programmatically
+
+```go
+import "github.com/orange-cloudfoundry/gobis/middlewares/casbin"
+
+configHandler := handlers.DefaultHandlerConfig{
+        Routes: []models.ProxyRoute{
+            {
+                Name: "myapi",
+                Path: "/app/**",
+                Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                ExtraParams: utils.InterfaceToMap(casbin.CasbinConfig{
+                        CircuitBreaker: &casbin.CasbinOption{
+                                Enable: true,
+                                Policies: []casbin.CasbinPolicy{
+                                        Type: "p",
+                                        Sub: "usernameOrGroupName",
+                                        Obj: "/mysubpath/*"
+                                        Act: "*",
+                                },
+                        },
+                }),
+            },
+        },
+}
+gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+// create your server
+```
+
+#### Use in config file
+
+```yaml
+extra_params:
+  casbin:
+    enable: true
+    policies:
+    - {type: p, sub: usernameOrGroupName, obj: /mysubpath/*, act: *}
+```
+
+#### Tips
+
+- It will load as role policies all groups found in context `middlewares.GroupContextKey` 
+this allow you, if you use ldap middleware, to pass a group name found as a `sub` (e.g.: `sub: myUserGroupName`)
+- It will also load all policies found in context `casbin.PolicyContextKey` this allow other middleware to add their own policies
 
 ### Circuit breaker
 
@@ -314,33 +372,24 @@ See godoc for [CircuitBreakerOption](https://godoc.org/github.com/orange-cloudfo
 #### Use programmatically
 
 ```go
-package main
-import (
-        "github.com/orange-cloudfoundry/gobis/handlers"
-        "github.com/orange-cloudfoundry/gobis/models"
-        "github.com/orange-cloudfoundry/gobis/utils"
-        "github.com/orange-cloudfoundry/gobis/middlewares"
-)
-func main(){
-        configHandler := handlers.DefaultHandlerConfig{
-                Routes: []models.ProxyRoute{
-                    {
-                        Name: "myapi",
-                        Path: "/app/**",
-                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                        ExtraParams: utils.InterfaceToMap(middlewares.CircuitBreakerConfig{
-                                CircuitBreaker: &middlewares.CircuitBreakerOptions{
-                                        Enable: true,
-                                        Expression: "NetworkErrorRatio() < 0.5",
-                                        FallbackUrl: "http://my.fallback.com",
-                                },
-                        }),
-                    },
-                },
-        }
-        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
-        // create your server
+configHandler := handlers.DefaultHandlerConfig{
+        Routes: []models.ProxyRoute{
+            {
+                Name: "myapi",
+                Path: "/app/**",
+                Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                ExtraParams: utils.InterfaceToMap(middlewares.CircuitBreakerConfig{
+                        CircuitBreaker: &middlewares.CircuitBreakerOptions{
+                                Enable: true,
+                                Expression: "NetworkErrorRatio() < 0.5",
+                                FallbackUrl: "http://my.fallback.com",
+                        },
+                }),
+            },
+        },
 }
+gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+// create your server
 ```
 
 #### Use in config file
@@ -363,31 +412,22 @@ See godoc for [ConnLimitOptions](https://godoc.org/github.com/orange-cloudfoundr
 #### Use programmatically
 
 ```go
-package main
-import (
-        "github.com/orange-cloudfoundry/gobis/handlers"
-        "github.com/orange-cloudfoundry/gobis/models"
-        "github.com/orange-cloudfoundry/gobis/utils"
-        "github.com/orange-cloudfoundry/gobis/middlewares"
-)
-func main(){
-        configHandler := handlers.DefaultHandlerConfig{
-                Routes: []models.ProxyRoute{
-                    {
-                        Name: "myapi",
-                        Path: "/app/**",
-                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                        ExtraParams: utils.InterfaceToMap(middlewares.ConnLimitConfig{
-                                ConnLimit: &middlewares.ConnLimitOptions{
-                                        Enable: true,
-                                },
-                        }),
-                    },
-                },
-        }
-        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
-        // create your server
+configHandler := handlers.DefaultHandlerConfig{
+        Routes: []models.ProxyRoute{
+            {
+                Name: "myapi",
+                Path: "/app/**",
+                Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                ExtraParams: utils.InterfaceToMap(middlewares.ConnLimitConfig{
+                        ConnLimit: &middlewares.ConnLimitOptions{
+                                Enable: true,
+                        },
+                }),
+            },
+        },
 }
+gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+// create your server
 ```
 
 #### Use in config file
@@ -407,31 +447,22 @@ See godoc for [CorsOptions](https://godoc.org/github.com/orange-cloudfoundry/gob
 #### Use programmatically
 
 ```go
-package main
-import (
-        "github.com/orange-cloudfoundry/gobis/handlers"
-        "github.com/orange-cloudfoundry/gobis/models"
-        "github.com/orange-cloudfoundry/gobis/utils"
-        "github.com/orange-cloudfoundry/gobis/middlewares"
-)
-func main(){
-        configHandler := handlers.DefaultHandlerConfig{
-                Routes: []models.ProxyRoute{
-                    {
-                        Name: "myapi",
-                        Path: "/app/**",
-                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                        ExtraParams: utils.InterfaceToMap(middlewares.CorsConfig{
-                                Cors: &middlewares.CorsOptions{
-                                        AllowedOrigins: []string{"http://localhost"},
-                                },
-                        }),
-                    },
-                },
-        }
-        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
-        // create your server
+configHandler := handlers.DefaultHandlerConfig{
+        Routes: []models.ProxyRoute{
+            {
+                Name: "myapi",
+                Path: "/app/**",
+                Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                ExtraParams: utils.InterfaceToMap(middlewares.CorsConfig{
+                        Cors: &middlewares.CorsOptions{
+                                AllowedOrigins: []string{"http://localhost"},
+                        },
+                }),
+            },
+        },
 }
+gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+// create your server
 ```
 
 #### Use in config file
@@ -453,40 +484,31 @@ See godoc for [LdapOptions](https://godoc.org/github.com/orange-cloudfoundry/gob
 #### Use programmatically
 
 ```go
-package main
-import (
-        "github.com/orange-cloudfoundry/gobis/handlers"
-        "github.com/orange-cloudfoundry/gobis/models"
-        "github.com/orange-cloudfoundry/gobis/utils"
-        "github.com/orange-cloudfoundry/gobis/middlewares"
-)
-func main(){
-        configHandler := handlers.DefaultHandlerConfig{
-                Routes: []models.ProxyRoute{
-                    {
-                        Name: "myapi",
-                        Path: "/app/**",
-                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                        ExtraParams: utils.InterfaceToMap(middlewares.LdapConfig{
-                                Ldap: &middlewares.LdapOptions{
-                                        Enable: true,
-                                        BindDn: "uid=readonly,dc=com",
-                                        BindPassword: "password",
-                                        Address: "ldap.example.com:636",
-                                        InsecureSkipVerify: true,
-                                        UseSsl: true,
-                                        SearchBaseDns: "dc=example,dc=com",
-                                        SearchFilter: "(objectClass=organizationalPerson)&(uid=%s)",
-                                        GroupSearchBaseDns: "ou=Group,dc=example,dc=com",
-                                        GroupSearchFilter: "(&(objectClass=posixGroup)(memberUid=%s))",
-                                },
-                        }),
-                    },
-                },
-        }
-        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
-        // create your server
+configHandler := handlers.DefaultHandlerConfig{
+        Routes: []models.ProxyRoute{
+            {
+                Name: "myapi",
+                Path: "/app/**",
+                Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                ExtraParams: utils.InterfaceToMap(middlewares.LdapConfig{
+                        Ldap: &middlewares.LdapOptions{
+                                Enable: true,
+                                BindDn: "uid=readonly,dc=com",
+                                BindPassword: "password",
+                                Address: "ldap.example.com:636",
+                                InsecureSkipVerify: true,
+                                UseSsl: true,
+                                SearchBaseDns: "dc=example,dc=com",
+                                SearchFilter: "(objectClass=organizationalPerson)&(uid=%s)",
+                                GroupSearchBaseDns: "ou=Group,dc=example,dc=com",
+                                GroupSearchFilter: "(&(objectClass=posixGroup)(memberUid=%s))",
+                        },
+                }),
+            },
+        },
 }
+gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+// create your server
 ```
 
 #### Use in config file
@@ -506,6 +528,10 @@ extra_params:
     group_search_filter: (&(objectClass=posixGroup)(memberUid=%s))
 ```
 
+#### Tips
+
+If `GroupSearchBaseDns` and `GroupSearchFilter` params are set the middleware will pass in context 
+the list of group accessible by other middlewares by doing `req.Context().Value(middlewares.GroupContextKey)`
 
 ### Rate limit
 
@@ -516,31 +542,22 @@ See godoc for [RateLimitOptions](https://godoc.org/github.com/orange-cloudfoundr
 #### Use programmatically
 
 ```go
-package main
-import (
-        "github.com/orange-cloudfoundry/gobis/handlers"
-        "github.com/orange-cloudfoundry/gobis/models"
-        "github.com/orange-cloudfoundry/gobis/utils"
-        "github.com/orange-cloudfoundry/gobis/middlewares"
-)
-func main(){
-        configHandler := handlers.DefaultHandlerConfig{
-                Routes: []models.ProxyRoute{
-                    {
-                        Name: "myapi",
-                        Path: "/app/**",
-                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                        ExtraParams: utils.InterfaceToMap(middlewares.RateLimitConfig{
-                                RateLimit: &middlewares.RateLimitOptions{
-                                        Enable: true,
-                                },
-                        }),
-                    },
-                },
-        }
-        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
-        // create your server
+configHandler := handlers.DefaultHandlerConfig{
+        Routes: []models.ProxyRoute{
+            {
+                Name: "myapi",
+                Path: "/app/**",
+                Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                ExtraParams: utils.InterfaceToMap(middlewares.RateLimitConfig{
+                        RateLimit: &middlewares.RateLimitOptions{
+                                Enable: true,
+                        },
+                }),
+            },
+        },
 }
+gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+// create your server
 ```
 
 #### Use in config file
@@ -560,31 +577,22 @@ See godoc for [TraceOptions](https://godoc.org/github.com/orange-cloudfoundry/go
 #### Use programmatically
 
 ```go
-package main
-import (
-        "github.com/orange-cloudfoundry/gobis/handlers"
-        "github.com/orange-cloudfoundry/gobis/models"
-        "github.com/orange-cloudfoundry/gobis/utils"
-        "github.com/orange-cloudfoundry/gobis/middlewares"
-)
-func main(){
-        configHandler := handlers.DefaultHandlerConfig{
-                Routes: []models.ProxyRoute{
-                    {
-                        Name: "myapi",
-                        Path: "/app/**",
-                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                        ExtraParams: utils.InterfaceToMap(middlewares.TraceConfig{
-                                Trace: &middlewares.TraceOptions{
-                                        Enable: true,
-                                },
-                        }),
-                    },
-                },
-        }
-        gobisHandler, err := handlers.NewDefaultHandler(configHandler)
-        // create your server
+configHandler := handlers.DefaultHandlerConfig{
+        Routes: []models.ProxyRoute{
+            {
+                Name: "myapi",
+                Path: "/app/**",
+                Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                ExtraParams: utils.InterfaceToMap(middlewares.TraceConfig{
+                        Trace: &middlewares.TraceOptions{
+                                Enable: true,
+                        },
+                }),
+            },
+        },
 }
+gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+// create your server
 ```
 
 #### Use in config file
@@ -595,7 +603,9 @@ extra_params:
     enable: true
 ```
 
-## Why this name ?
+## FAQ
+
+### Why this name ?
 
 Gobis is inspired by [zuul](https://github.com/Netflix/zuul) which also a kind of [dinosaur](https://www.wikiwand.com/en/Zuul) 
 which come from the family of [Ankylosauridae](https://www.wikiwand.com/en/Ankylosauridae), the [gobis(aurus)](https://www.wikiwand.com/en/Gobisaurus) come also from this family.

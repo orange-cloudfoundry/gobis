@@ -10,6 +10,7 @@ import (
 	"crypto/subtle"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/blowfish"
+	"github.com/orange-cloudfoundry/gobis/proxy/ctx"
 )
 
 type BasicAuthOptions []BasicAuthOption
@@ -23,6 +24,7 @@ type BasicAuthOption struct {
 }
 
 func (b BasicAuthOptions) Auth(user string, password string, req *http.Request) bool {
+	ctx.DirtHeader(req, "Authorization")
 	foundUser := b.findByUser(user)
 	if foundUser.User == "" {
 		return false
