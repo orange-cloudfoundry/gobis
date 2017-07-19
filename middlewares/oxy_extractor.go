@@ -28,7 +28,6 @@ func NewGobisSourceExtractor(variable string) (utils.SourceExtractor, error) {
 }
 
 func (e GobisSourceExtractor) Extract(req *http.Request) (string, int64, error) {
-
 	if e.variableIsSet {
 		return e.wrapExtractor.Extract(req)
 	}

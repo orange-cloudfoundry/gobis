@@ -19,18 +19,18 @@ type GobisContextKey int
 func DirtHeader(req *http.Request, header string, oldValue ...string) {
 	var dirtyHeaders map[string]string = make(map[string]string)
 	header = sanitizeHeaderName(header)
-	oldValue := ""
-	if len(oldValue) > 0 {
-		oldValue = oldValue[0]
+	oldVal := ""
+	if len(oldVal) > 0 {
+		oldVal = oldValue[0]
 	}
 	dirtyHeadersPtr := DirtyHeaders(req)
 	if dirtyHeadersPtr == nil {
-		dirtyHeaders[header] = oldValue
+		dirtyHeaders[header] = oldVal
 		AddContextValue(req, dirtyHeadersKey, &dirtyHeaders)
 		return
 	}
 	dirtyHeaders = *dirtyHeadersPtr
-	dirtyHeaders[header] = oldValue
+	dirtyHeaders[header] = oldVal
 	*dirtyHeadersPtr = dirtyHeaders
 }
 
