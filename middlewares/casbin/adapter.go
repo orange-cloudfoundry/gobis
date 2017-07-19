@@ -43,10 +43,7 @@ func (a *GobisAdapter) AddPolicies(policies ...CasbinPolicy) {
 	a.policies = append(a.policies, policies...)
 }
 func (a *GobisAdapter) AddPoliciesFromRequest(req *http.Request) {
-	user, _, _ := req.BasicAuth()
-	if user == "" {
-		return
-	}
+	user := ctx.Username(req)
 	groups := ctx.Groups(req)
 	for _, group := range groups {
 		a.AddPolicies(CasbinPolicy{

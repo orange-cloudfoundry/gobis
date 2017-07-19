@@ -33,7 +33,7 @@ type LdapOptions struct {
 	Address            string `mapstructure:"address" json:"address" yaml:"address"`
 	// Set to true if ldap server supports TLS
 	UseSsl             bool `mapstructure:"use_ssl" json:"use_ssl" yaml:"use_ssl"`
-	// Set to true to skip certificate check
+	// Set to true to skip certificate check (NOT RECOMMENDED)
 	InsecureSkipVerify bool `mapstructure:"insecure_skip_verify" json:"insecure_skip_verify" yaml:"insecure_skip_verify"`
 	// base dns to search through (Default: `dc=com`)
 	SearchBaseDns      string `mapstructure:"search_base_dns" json:"search_base_dns" yaml:"search_base_dns"`

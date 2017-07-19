@@ -92,6 +92,7 @@ func runServer(c *cli.Context) error {
 			middlewares.Cors,
 			middlewares.Ldap,
 			middlewares.BasicAuth,
+			middlewares.Basic2Token,
 			casbin.Casbin,
 			middlewares.CircuitBreaker,
 			middlewares.RateLimit,

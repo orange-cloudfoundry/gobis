@@ -60,7 +60,7 @@ var _ = Describe("RouterFactory", func() {
 				},
 				{
 					Name: "app2",
-					Path: "/app2/**",
+					Path: "/app2/*",
 					Url: "http://my.second.proxified.api",
 				},
 			}
@@ -68,8 +68,13 @@ var _ = Describe("RouterFactory", func() {
 			Expect(err).NotTo(HaveOccurred())
 			index := 0
 			rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-				tpl, _ := route.GetPathTemplate()
-				Expect(tpl).Should(Equal(routes[index].MuxRoute()))
+				u, _ := url.Parse("http://localhost/" + routes[index].Name + "/test/toto")
+				req := &http.Request{URL: u}
+				if index == 0 {
+					Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
+				} else {
+					Expect(route.Match(req, &mux.RouteMatch{})).Should(BeFalse())
+				}
 				Expect(route.GetName()).Should(Equal(routes[index].Name))
 				index++
 				return nil
@@ -122,7 +127,9 @@ var _ = Describe("RouterFactory", func() {
 				if index == 0 {
 					Expect(tpl).Should(Equal("/parent"))
 				} else {
-					Expect(tpl).Should(Equal(routes[index - 1].MuxRoute()))
+					u, _ := url.Parse("http://localhost/" + routes[index - 1].Name + "/test")
+					req := &http.Request{URL: u, Method: "GET", }
+					Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
 				}
 				index++
 				return nil
@@ -154,7 +161,9 @@ var _ = Describe("RouterFactory", func() {
 				if index == len(routes) {
 					Expect(tpl).Should(Equal(fwdUrl.Path))
 				} else {
-					Expect(tpl).Should(Equal(routes[index].MuxRoute()))
+					u, _ := url.Parse("http://localhost/" + routes[index].Name + "/test")
+					req := &http.Request{URL: u}
+					Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
 				}
 				index++
 				return nil

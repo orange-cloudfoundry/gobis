@@ -7,7 +7,6 @@ import (
 	. "github.com/onsi/gomega"
 	"encoding/json"
 	"gopkg.in/yaml.v2"
-	"fmt"
 )
 
 var _ = Describe("ProxyRoute", func() {
@@ -100,7 +99,7 @@ var _ = Describe("ProxyRoute", func() {
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(route.MuxRoute()).Should(Equal(fmt.Sprintf("{%s:(?:/.*)?}", MUX_REST_VAR_KEY)))
+				Expect(route.RouteMatcher()).Should(Equal("(/.*)?$"))
 			})
 			It("should match /*", func() {
 				route := ProxyRoute{
@@ -110,7 +109,7 @@ var _ = Describe("ProxyRoute", func() {
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(route.MuxRoute()).Should(Equal(fmt.Sprintf("{%s:(?:/[^/]*)?}", MUX_REST_VAR_KEY)))
+				Expect(route.RouteMatcher()).Should(Equal("(/[^/]*)?$"))
 			})
 			It("should not match /app/*", func() {
 				route := ProxyRoute{
@@ -120,7 +119,7 @@ var _ = Describe("ProxyRoute", func() {
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(route.MuxRoute()).Should(Equal(fmt.Sprintf("/app{%s:(?:/[^/]*)?}", MUX_REST_VAR_KEY)))
+				Expect(route.RouteMatcher()).Should(Equal("/app(/[^/]*)?$"))
 			})
 			It("should not match /app/**", func() {
 				route := ProxyRoute{
@@ -130,7 +129,7 @@ var _ = Describe("ProxyRoute", func() {
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(route.MuxRoute()).Should(Equal(fmt.Sprintf("/app{%s:(?:/.*)?}", MUX_REST_VAR_KEY)))
+				Expect(route.RouteMatcher()).Should(Equal("/app(/.*)?$"))
 			})
 			It("should not match /*/app", func() {
 				route := ProxyRoute{

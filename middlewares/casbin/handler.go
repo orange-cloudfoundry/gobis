@@ -6,7 +6,6 @@ import (
 	"github.com/orange-cloudfoundry/gobis/models"
 	"net/http"
 	"github.com/mitchellh/mapstructure"
-	"github.com/gorilla/mux"
 	"strings"
 	"github.com/orange-cloudfoundry/gobis/proxy/ctx"
 	log "github.com/sirupsen/logrus"
@@ -41,11 +40,7 @@ func (h CasbinHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func (h CasbinHandler) CheckPermission(e *casbin.Enforcer, r *http.Request) bool {
 	user := ctx.Username(r)
 	method := r.Method
-	path := ""
-	vars := mux.Vars(r)
-	if vars != nil {
-		path = vars[models.MUX_REST_VAR_KEY]
-	}
+	path := ctx.Path(r)
 	path = strings.TrimSuffix(path, "/") + "/"
 	return e.Enforce(user, path, method)
 }

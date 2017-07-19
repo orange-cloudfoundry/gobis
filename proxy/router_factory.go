@@ -12,6 +12,7 @@ import (
 	"github.com/orange-cloudfoundry/gobis/utils"
 	"fmt"
 	"github.com/orange-cloudfoundry/gobis/proxy/ctx"
+	"regexp"
 )
 
 type RouterFactory interface {
@@ -76,7 +77,11 @@ func (r RouterFactoryService) CreateMuxRouter(proxyRoutes []models.ProxyRoute, s
 		if err != nil {
 			return nil, err
 		}
-		routeMux := rtr.HandleFunc(startPath + proxyRoute.MuxRoute(), proxyHandler).Name(proxyRoute.Name)
+
+		routeMux := rtr.NewRoute().
+			Name(proxyRoute.Name).
+			MatcherFunc(r.routeMatch(proxyRoute)).
+			Handler(proxyHandler)
 		if len(proxyRoute.Methods) > 0 {
 			routeMux.Methods(proxyRoute.Methods...)
 		}
@@ -104,7 +109,18 @@ func (r RouterFactoryService) CreateHttpHandler(proxyRoute models.ProxyRoute) (h
 	}
 	return buffer.New(fwd, buffer.Retry(`IsNetworkError() && Attempts() < 2`))
 }
-
+func (r RouterFactoryService) routeMatch(proxyRoute models.ProxyRoute) (mux.MatcherFunc) {
+	return mux.MatcherFunc(func(req *http.Request, rm *mux.RouteMatch) bool {
+		matcher := proxyRoute.RouteMatcher()
+		reg := regexp.MustCompile(matcher)
+		if !reg.MatchString(req.URL.Path) {
+			return false
+		}
+		sub := reg.FindStringSubmatch(req.URL.Path)
+		ctx.SetPath(req, sub[1])
+		return true
+	})
+}
 func (r RouterFactoryService) CreateForwardHandler(proxyRoute models.ProxyRoute) (http.HandlerFunc, error) {
 	entry := log.WithField("route_name", proxyRoute.Name)
 	httpHandler, err := r.CreateHttpHandler(proxyRoute)
@@ -112,11 +128,7 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute models.ProxyRoute)
 		return nil, err
 	}
 	forwardHandler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		restPath := ""
-		vars := mux.Vars(req)
-		if vars != nil {
-			restPath = vars[models.MUX_REST_VAR_KEY]
-		}
+		restPath := ctx.Path(req)
 		ForwardRequest(proxyRoute, req, restPath)
 		httpHandler.ServeHTTP(w, req)
 	})

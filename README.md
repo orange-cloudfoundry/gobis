@@ -263,6 +263,64 @@ func main(){
 
 ## Available middlewares
 
+### Basic2Token
+
+Give the ability to connect an user over basic auth, retrieve a token from an oauth2 server with user information and forward the request with this token.
+
+This was made to transparently convert a basic auth authentication to an oauth2 one.
+
+See godoc for [Basic2TokenOptions](https://godoc.org/github.com/orange-cloudfoundry/gobis/middlewares#Basic2TokenOptions) to know more about parameters.
+
+**Note**:
+- Your oauth2 server must have the `password` grant type such as [UAA](https://github.com/cloudfoundry/uaa) or [Gitlab in oauth2 provider](https://docs.gitlab.com/ce/api/oauth2.html#resource-owner-password-credentials)
+
+#### Use programmatically
+
+```go
+configHandler := handlers.DefaultHandlerConfig{
+        Routes: []models.ProxyRoute{
+            {
+                Name: "myapi",
+                Path: "/app/**",
+                Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                ExtraParams: utils.InterfaceToMap(middlewares.Basic2TokenConfig{
+                        Ldap: &middlewares.Basic2TokenOptions{
+                                Enable: true,
+                                AccessTokenUri: "https://my.uaa.local/oauth/token",
+                                ClientId: "cf",
+                                ClientSecret: "",
+                                ParamsAsJson: false,
+                                UseRouteTransport: true,
+                                InsecureSkipVerify: true,
+                        },
+                }),
+            },
+        },
+}
+gobisHandler, err := handlers.NewDefaultHandler(configHandler)
+// create your server
+```
+
+#### Use in config file
+
+```yaml
+extra_params:
+  basic2token:
+    enable: true
+    access_token_uri: https://my.uaa.local/oauth/token
+    client_id: cf
+    client_secret: ~
+    params_as_json: false
+    use_route_transport: false
+    insecure_skip_verify: true
+```
+
+#### Tips
+
+- If key `scope` is found in the response of the oauth2 server, thoses scopes will be loaded as groups and others middlewares will
+ be able to find groups for the current user by using [context groups](https://godoc.org/github.com/orange-cloudfoundry/gobis/proxy/ctx#Groups)
+- Logged user is accessible by other middleware through [context username](https://godoc.org/github.com/orange-cloudfoundry/gobis/proxy/ctx#Username)
+
 ### Basic auth
 
 Add basic auth to upstream
