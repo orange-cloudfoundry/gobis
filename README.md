@@ -16,6 +16,7 @@ It's largely inspired by [Netflix/zuul](https://github.com/Netflix/zuul).
   - [Create your middleware](#create-your-middleware)
 - [Create your middleware](#create-your-middleware)
 - [Available middlewares](#available-middlewares)
+  - [basic2token](#basic2token): Give the ability to connect an user over basic auth, retrieve a token from an oauth2 server with user information and forward the request with this token.
   - [basic auth](#basic-auth)
   - [casbin](#casbin): An authorization library that supports access control models like ACL, RBAC, ABAC
   - [circuit breaker](#circuit-breaker)
