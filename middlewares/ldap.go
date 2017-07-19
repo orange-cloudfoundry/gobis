@@ -4,7 +4,6 @@ import (
 	"gopkg.in/ldap.v2"
 	"net/http"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"crypto/tls"
 	"github.com/mitchellh/mapstructure"
 	"github.com/orange-cloudfoundry/gobis/models"
@@ -74,7 +73,7 @@ func (l LdapAuth) LdapAuth(user, password string, req *http.Request) bool {
 	ctx.DirtHeader(req, "Authorization")
 	conn, err := l.CreateConn()
 	if err != nil {
-		log.Errorf("orange-cloudfoundry/gobis/middlewares: invalid ldap for '%s': %s", l.Address, err.Error())
+		panic(fmt.Sprintf("orange-cloudfoundry/gobis/middlewares: invalid ldap for '%s': %s", l.Address, err.Error()))
 		return false
 	}
 	defer conn.Close()
@@ -88,7 +87,7 @@ func (l LdapAuth) LdapAuth(user, password string, req *http.Request) bool {
 
 	sr, err := conn.Search(searchRequest)
 	if err != nil {
-		log.Errorf("orange-cloudfoundry/gobis/middlewares: invalid ldap search for '%s': %s", l.Address, err.Error())
+		panic(fmt.Sprintf("orange-cloudfoundry/gobis/middlewares: invalid ldap search for '%s': %s", l.Address, err.Error()))
 		return false
 	}
 
@@ -105,7 +104,7 @@ func (l LdapAuth) LdapAuth(user, password string, req *http.Request) bool {
 	}
 	err = l.LoadLdapGroup(user, conn, req)
 	if err != nil {
-		log.Errorf("orange-cloudfoundry/gobis/middlewares: invalid ldap group search for '%s': %s", l.Address, err.Error())
+		panic(fmt.Sprintf("orange-cloudfoundry/gobis/middlewares: invalid ldap group search for '%s': %s", l.Address, err.Error()))
 		return false
 	}
 	ctx.SetUsername(req, user)

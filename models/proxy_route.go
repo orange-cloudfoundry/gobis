@@ -48,6 +48,8 @@ type ProxyRoute struct {
 	// This is the path without glob variables
 	// Filled when unmarshal json or yaml or when running LoadParams on route
 	AppPath            string `json:"-" yaml:"-"`
+	// Set to true to see errors on web page when there is a panic error on gobis
+	ShowError          bool `json:"show_error" yaml:"show_error"`
 }
 
 func (r *ProxyRoute) UnmarshalJSON(data []byte) (error) {

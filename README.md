@@ -107,6 +107,8 @@ routes:
   methods: []
   # Set to true to not check ssl certificates from upstream (not recommended)
   insecure_skip_verify: false
+  # Set to true to see errors on web page when there is a panic error on gobis
+  show_error: false
   # It was made to pass arbitrary params to use it after in gobis middlewares
   # Here you can set cors parameters for cors middleware (see doc relative to middlewares)
   extra_params:
@@ -373,7 +375,8 @@ extra_params:
 
 #### Tips
 
-By setting groups it will allow others middleware to find groups for the current user by using [context groups](https://godoc.org/github.com/orange-cloudfoundry/gobis/proxy/ctx#Groups)
+- By setting groups it will allow others middleware to find groups for the current user by using [context groups](https://godoc.org/github.com/orange-cloudfoundry/gobis/proxy/ctx#Groups)
+- If you use bcrypt more the cost will be higher more it will take time to test a password against it and will increase response time
 
 ### Casbin
 

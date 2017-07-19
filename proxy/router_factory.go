@@ -13,6 +13,11 @@ import (
 	"fmt"
 	"github.com/orange-cloudfoundry/gobis/proxy/ctx"
 	"regexp"
+	"encoding/json"
+)
+
+const (
+	GobisHeaderName = "X-Gobis-Forward"
 )
 
 type RouterFactory interface {
@@ -128,6 +133,7 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute models.ProxyRoute)
 		return nil, err
 	}
 	forwardHandler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Del(GobisHeaderName)
 		restPath := ctx.Path(req)
 		ForwardRequest(proxyRoute, req, restPath)
 		httpHandler.ServeHTTP(w, req)
@@ -144,9 +150,12 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute models.ProxyRoute)
 			return nil, ErrMiddleware(fmt.Sprintf("Failed to add middleware %s: %s", funcName, err.Error()))
 		}
 		entry.Debugf("orange-cloudfoundry/gobis/proxy: Finished adding %s middleware.", funcName)
-
 	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		req.Header.Set(GobisHeaderName, "true")
+		w.Header().Set(GobisHeaderName, "true")
+		defer panicRecover(proxyRoute, w)
 		handler.ServeHTTP(w, req)
 	}), nil
 }
@@ -187,4 +196,23 @@ func removeDirtyHeaders(req *http.Request) {
 		}
 		req.Header.Set(header, oldValue)
 	}
+}
+func panicRecover(proxyRoute models.ProxyRoute, w http.ResponseWriter) {
+	err := recover()
+	if err == nil {
+		return
+	}
+	if proxyRoute.ShowError {
+		w.Header().Set("Content-Type", "application/json")
+		errMsg := struct {
+			Status  int `json:"status"`
+			Title   string `json:"title"`
+			Details string `json:"details"`
+		}{http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError), fmt.Sprint(err)}
+		b, _ := json.MarshalIndent(errMsg, "", "\t")
+		w.Write([]byte(b))
+	}
+	w.WriteHeader(http.StatusInternalServerError)
+	entry := log.WithField("route_name", proxyRoute.Name)
+	entry.Error(err)
 }

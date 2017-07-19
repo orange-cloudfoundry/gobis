@@ -3,7 +3,6 @@ package middlewares
 import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/orange-cloudfoundry/gobis/models"
-	log "github.com/sirupsen/logrus"
 	"github.com/goji/httpauth"
 	"net/http"
 	"crypto/sha256"
@@ -11,6 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/blowfish"
 	"github.com/orange-cloudfoundry/gobis/proxy/ctx"
+	"fmt"
 )
 
 type BasicAuthOptions []BasicAuthOption
@@ -39,11 +39,11 @@ func (b BasicAuthOptions) Auth(user string, password string, req *http.Request) 
 			return true
 		}
 		if _, ok := err.(blowfish.KeySizeError); ok {
-			log.Errorf(
+			panic(fmt.Sprintf(
 				"orange-cloudfoundry/gobis/middlewares: Basic auth middleware, invalid crypted password for user '%s': %s",
 				foundUser.User,
 				err.Error(),
-			)
+			))
 		}
 		return false
 	}

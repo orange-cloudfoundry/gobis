@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"bytes"
 	"strings"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"fmt"
 	"github.com/orange-cloudfoundry/gobis/proxy/ctx"
@@ -72,29 +71,31 @@ func (a Basic2TokenAuth) Auth(user, password string, origRequest *http.Request) 
 	req.Header.Add("Content-Type", contentType)
 	resp, err := a.client.Do(req)
 	if err != nil {
-		log.Errorf("Error when getting token for %s: %s", user, err.Error())
+		panic(fmt.Sprintf("Error when getting token for %s: %s", user, err.Error()))
 		return false
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 299 {
 		b, _ := ioutil.ReadAll(resp.Body)
-		log.Errorf("Error from response %d: %s", resp.StatusCode, string(b))
+		panic(fmt.Sprintf("Error from response %d: %s", resp.StatusCode, string(b)))
 		return false
 	}
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Errorf("Error when getting token for %s: %s", user, err.Error())
+		panic(fmt.Sprintf("Error when getting token for %s: %s", user, err.Error()))
 		return false
 	}
 	var accessResp AccessTokenResponse
 	err = json.Unmarshal(b, &accessResp)
 	if err != nil {
-		log.Errorf("Error when getting token for %s: %s", user, err.Error())
+		panic(fmt.Sprintf("Error when getting token for %s: %s", user, err.Error()))
 		return false
 	}
 	tokenType := accessResp.TokenType
 	if tokenType == "" {
 		tokenType = "bearer"
 	}
+	ctx.UndirtHeader(origRequest, "Authorization")
+
 	origRequest.Header.Set("Authorization", fmt.Sprintf("%s %s", strings.Title(tokenType), accessResp.AccessToken))
 	if accessResp.Scope != "" {
 		groups := strings.Split(accessResp.Scope, " ")
