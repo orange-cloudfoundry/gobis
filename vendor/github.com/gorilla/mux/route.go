@@ -16,31 +16,31 @@ import (
 // Route stores information to match a request and build URLs.
 type Route struct {
 	// Parent where the route was registered (a Router).
-	parent         parentRoute
+	parent parentRoute
 	// Request handler for the route.
-	handler        http.Handler
+	handler http.Handler
 	// List of matchers.
-	matchers       []matcher
+	matchers []matcher
 	// Manager for the variables from host and path.
-	regexp         *routeRegexpGroup
+	regexp *routeRegexpGroup
 	// If true, when the path pattern is "/path/", accessing "/path" will
 	// redirect to the former and vice versa.
-	strictSlash    bool
+	strictSlash bool
 	// If true, when the path pattern is "/path//to", accessing "/path//to"
 	// will not redirect
-	skipClean      bool
+	skipClean bool
 	// If true, "/path/foo%2Fbar/to" will match the path "/path/{var}/to"
 	useEncodedPath bool
 	// The scheme used when building URLs.
-	buildScheme    string
+	buildScheme string
 	// If true, this route never matches: it is only used to build URLs.
-	buildOnly      bool
+	buildOnly bool
 	// The name used to build URLs.
-	name           string
+	name string
 	// Error resulted from building a route.
-	err            error
+	err error
 
-	buildVarsFunc  BuildVarsFunc
+	buildVarsFunc BuildVarsFunc
 }
 
 func (r *Route) SkipClean() bool {
@@ -367,13 +367,13 @@ func (r *Route) PathPrefix(tpl string) *Route {
 // - {name:pattern} matches the given regexp pattern.
 func (r *Route) Queries(pairs ...string) *Route {
 	length := len(pairs)
-	if length % 2 != 0 {
+	if length%2 != 0 {
 		r.err = fmt.Errorf(
 			"mux: number of parameters must be multiple of 2, got %v", pairs)
 		return nil
 	}
 	for i := 0; i < length; i += 2 {
-		if r.err = r.addRegexpMatcher(pairs[i] + "=" + pairs[i + 1], false, false, true); r.err != nil {
+		if r.err = r.addRegexpMatcher(pairs[i]+"="+pairs[i+1], false, false, true); r.err != nil {
 			return r
 		}
 	}

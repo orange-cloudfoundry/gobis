@@ -1,4 +1,4 @@
-package main_test
+package gobis_test
 
 import (
 	. "github.com/onsi/ginkgo"
