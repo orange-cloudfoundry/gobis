@@ -179,7 +179,9 @@ Middlewares are located on repo https://github.com/orange-cloudfoundry/gobis-mid
 
 ## Running a standalone server
 
-You can run a prepared gobis server with all default middleware in one command line, see repo https://github.com/orange-cloudfoundry/gobis-server
+You can run a prepared gobis server with all default middlewares in one command line, see repo https://github.com/orange-cloudfoundry/gobis-server .
+
+This server can be ran on cloud like Kubernetes, Cloud Foundry or Heroku.
 
 ## FAQ
 
