@@ -76,7 +76,7 @@ var _ = Describe("TestIntegration", func() {
 					Path: "/route2/**",
 					Url: createForwardUrl("route2"),
 					NoBuffer: true,
-					ExtraParams: map[string]interface{}{
+					MiddlewareParams: map[string]interface{}{
 						"cors": map[string]interface{}{
 							"allowed_origins": []string{"http://*.app.com"},
 						},

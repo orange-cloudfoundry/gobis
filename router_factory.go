@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"regexp"
 	"encoding/json"
+	"reflect"
+	"github.com/mitchellh/mapstructure"
 )
 
 const (
@@ -28,7 +30,7 @@ type CreateTransportFunc func(ProxyRoute) http.RoundTripper
 
 type RouterFactoryService struct {
 	CreateTransportFunc CreateTransportFunc
-	Middlewares         []RouterMiddlewareFunc
+	MiddlewareHandlers  []MiddlewareHandler
 	MuxRouter           *mux.Router
 }
 type ErrMiddleware string
@@ -37,15 +39,15 @@ func (e ErrMiddleware) Error() string {
 	return string(e)
 }
 
-func NewRouterFactory(middlewares ...RouterMiddlewareFunc) RouterFactory {
-	return NewRouterFactoryWithMuxRouter(mux.NewRouter(), middlewares...)
+func NewRouterFactory(middlewareHandlers ...MiddlewareHandler) RouterFactory {
+	return NewRouterFactoryWithMuxRouter(mux.NewRouter(), middlewareHandlers...)
 }
-func NewRouterFactoryWithMuxRouter(muxRouter *mux.Router, middlewares ...RouterMiddlewareFunc) RouterFactory {
+func NewRouterFactoryWithMuxRouter(muxRouter *mux.Router, middlewares ...MiddlewareHandler) RouterFactory {
 	return &RouterFactoryService{
 		CreateTransportFunc: func(proxyRoute ProxyRoute) http.RoundTripper {
 			return NewRouteTransport(proxyRoute)
 		},
-		Middlewares: middlewares,
+		MiddlewareHandlers: middlewares,
 		MuxRouter: muxRouter,
 	}
 }
@@ -138,11 +140,12 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute ProxyRoute) (http.
 
 	var handler http.Handler
 	handler = forwardHandler
-	for i := len(r.Middlewares) - 1; i >= 0; i-- {
-		middleware := r.Middlewares[i]
+	for i := len(r.MiddlewareHandlers) - 1; i >= 0; i-- {
+		middleware := r.MiddlewareHandlers[i]
 		funcName := GetFunctionName(middleware)
 		entry.Debugf("orange-cloudfoundry/gobis/proxy: Adding %s middleware ...", funcName)
-		handler, err = middleware(proxyRoute, handler)
+		params, err := paramsToSchema(proxyRoute.MiddlewareParams, middleware.Schema())
+		handler, err = middleware.Handler(proxyRoute, params, handler)
 		if err != nil {
 			return nil, ErrMiddleware(fmt.Sprintf("Failed to add middleware %s: %s", funcName, err.Error()))
 		}
@@ -157,7 +160,14 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute ProxyRoute) (http.
 		handler.ServeHTTP(w, req)
 	}), nil
 }
-
+func paramsToSchema(params map[string]interface{}, schema interface{}) (interface{}, error) {
+	val := reflect.New(reflect.TypeOf(schema))
+	err := mapstructure.Decode(params, val.Interface())
+	if err != nil {
+		return nil, err
+	}
+	return val.Elem().Interface(), nil
+}
 func ForwardRequest(proxyRoute ProxyRoute, req *http.Request, restPath string) {
 	removeDirtyHeaders(req)
 	fwdUrl, _ := url.Parse(proxyRoute.Url)

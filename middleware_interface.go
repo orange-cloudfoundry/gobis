@@ -4,4 +4,7 @@ import (
 	"net/http"
 )
 
-type RouterMiddlewareFunc func(ProxyRoute, http.Handler) (http.Handler, error)
+type MiddlewareHandler interface {
+	Handler(route ProxyRoute, params interface{}, next http.Handler) (http.Handler, error)
+	Schema() interface{}
+}

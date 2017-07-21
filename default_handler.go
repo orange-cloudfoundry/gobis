@@ -28,10 +28,13 @@ type DefaultHandler struct {
 	muxRouter *mux.Router
 }
 
-func NewDefaultHandler(config DefaultHandlerConfig) (GobisHandler, error) {
-	return NewDefaultHandlerWithRouterFactory(config, NewRouterFactory())
-}
-func NewDefaultHandlerWithRouterFactory(config DefaultHandlerConfig, routerFactory RouterFactory) (GobisHandler, error) {
+func NewDefaultHandler(config DefaultHandlerConfig, routerFactories ...RouterFactory) (GobisHandler, error) {
+	var routerFactory RouterFactory
+	if len(routerFactories) == 0 {
+		routerFactory = NewRouterFactory()
+	} else {
+		routerFactory = routerFactories[0]
+	}
 	SetProtectedHeaders(config.ProtectedHeaders)
 	muxRouter, err := generateMuxRouter(config, routerFactory)
 	if err != nil {
@@ -43,6 +46,7 @@ func NewDefaultHandlerWithRouterFactory(config DefaultHandlerConfig, routerFacto
 		muxRouter: muxRouter,
 	}, nil
 }
+
 func (h *DefaultHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.muxRouter.ServeHTTP(w, req)
 }

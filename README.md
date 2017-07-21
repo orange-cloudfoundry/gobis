@@ -50,7 +50,7 @@ func main(){
                         Name: "myapi",
                         Path: "/app/**",
                         Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                        ExtraParams: gobis.InterfaceToMap(middlewares.CorsConfig{
+                        MiddlewareParams: gobis.InterfaceToMap(middlewares.CorsConfig{
                                 Cors: &middlewares.CorsOptions{
                                         AllowedOrigins: []string{"http://localhost"},
                                 },
@@ -92,9 +92,9 @@ func main(){
                 },
         }
         rtr := mux.NewRouter()
-        gobisHandler, err := gobis.NewDefaultHandlerWithRouterFactory(
+        gobisHandler, err := gobis.NewDefaultHandler(
                     configHandler,
-                    gobis.NewRouterFactoryWithMuxRouter(rtr, middlewares.Cors),
+                    gobis.NewRouterFactoryWithMuxRouter(rtr, middlewares.NewCors()),
                 )
         if err != nil {
                 panic(err)
@@ -114,7 +114,7 @@ Gobis permit to add middlewares on handler to be able to enhance your upstream u
 
 ### Create your middleware
 
-You can see example from [cors middleware](/middlewares/cors.go).
+You can see example from [cors middleware](https://github.com/orange-cloudfoundry/gobis-middlewares/blob/master/cors.go).
 
 To use it simply add it to your `RouterFactory`.
 
@@ -125,21 +125,24 @@ package main
 import (
         "github.com/orange-cloudfoundry/gobis"
         log "github.com/sirupsen/logrus"
-        "github.com/mitchellh/mapstructure"
         "net/http"
 )
 type TraceConfig struct{
       EnableTrace string  `mapstructure:"enable_trace" json:"enable_trace" yaml:"enable_trace"`
 }
-func traceMiddleware(proxyRoute gobis.ProxyRoute, parentHandler http.Handler) (http.Handler, error) {
-        var traceConfig TraceConfig
-        mapstructure.Decode(proxyRoute.ExtraParams, &traceConfig)
+type traceMiddleware struct {}
+func (traceMiddleware) Handler(proxyRoute gobis.ProxyRoute, params interface{}, next http.Handler) (http.Handler, error) {
+        // Params has been decode route middleware params, this decoded agains schema you gave in schema function
+        traceConfig := params.(TraceConfig)
         if !traceConfig.EnableTrace {
-            return parentHandler, nil
+            return next, nil
         }
-        return TraceHandler(parentHandler), nil
+        return TraceHandler(next), nil
 }
-
+// Schema function is required in order to gobis to decode params from route and sent it back to handler function through `params`
+func (traceMiddleware) Schema() interface{} {
+        return TraceConfig{}
+}
 func TraceHandler(h http.Handler) http.Handler {
         return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
                 groups := gobis.Groups(r) // retrieve current user groups set by other middlewares with gobis.AddGroups(r, "mygroup1", "mygroup2")
@@ -162,9 +165,9 @@ func main(){
                 },
         }
         log.SetLevel(log.DebugLevel) // set verbosity to debug for logs
-        gobisHandler, err := gobis.NewDefaultHandlerWithRouterFactory(
+        gobisHandler, err := gobis.NewDefaultHandler(
                     configHandler,
-                    gobis.NewRouterFactory(traceMiddleware),
+                    gobis.NewRouterFactory(&traceMiddleware{}),
                 )
         if err != nil {
                 panic(err)
