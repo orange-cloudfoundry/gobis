@@ -4,7 +4,7 @@ import "net/http"
 
 const (
 	PathContextKey RouterContextKey = iota
-	RouteNameContextKey
+	routeNameContextKey
 )
 
 type RouterContextKey int
@@ -35,24 +35,12 @@ func pathPtr(req *http.Request) *string {
 }
 
 func setRouteName(req *http.Request, routeName string) {
-	ptr := routeNamePtr(req)
-	if ptr == nil {
-		AddContextValue(req, RouteNameContextKey, &routeName)
-		return
-	}
-	*ptr = routeName
+	AddContextValue(req, routeNameContextKey, routeName)
 }
 
 // Retrieve route name used in this request
 func RouteName(req *http.Request) string {
-	ptr := routeNamePtr(req)
-	if ptr == nil {
-		return ""
-	}
-	return *ptr
-}
-func routeNamePtr(req *http.Request) *string {
-	var routeName *string
-	InjectContextValue(req, RouteNameContextKey, &routeName)
+	var routeName string
+	InjectContextValue(req, routeNameContextKey, &routeName)
 	return routeName
 }
