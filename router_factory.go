@@ -121,7 +121,7 @@ func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute) (mux.MatcherFunc
 			return false
 		}
 		sub := reg.FindStringSubmatch(req.URL.Path)
-		SetPath(req, sub[1])
+		setPath(req, sub[1])
 		return true
 	})
 }
