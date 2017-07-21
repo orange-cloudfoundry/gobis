@@ -12,6 +12,16 @@ It's largely inspired by [Netflix/zuul](https://github.com/Netflix/zuul).
 - [Middlewares](#middlewares)
   - [Create your middleware](#create-your-middleware)
 - [Available middlewares](https://github.com/orange-cloudfoundry/gobis-middlewares)
+  - [basic2token](https://github.com/orange-cloudfoundry/gobis-middlewares#basic2token): Give the ability to connect an user over basic auth, retrieve a token from an oauth2 server with user information and forward the request with this token.
+  - [basic auth](https://github.com/orange-cloudfoundry/gobis-middlewares#basic-auth)
+  - [casbin](https://github.com/orange-cloudfoundry/gobis-middlewares#casbin): An authorization library that supports access control models like ACL, RBAC, ABAC
+  - [circuit breaker](https://github.com/orange-cloudfoundry/gobis-middlewares#circuit-breaker)
+  - [conn limit](https://github.com/orange-cloudfoundry/gobis-middlewares#conn-limit)
+  - [cors](https://github.com/orange-cloudfoundry/gobis-middlewares#cors)
+  - [ldap](https://github.com/orange-cloudfoundry/gobis-middlewares#ldap)
+  - [rate limit](https://github.com/orange-cloudfoundry/gobis-middlewares#rate-limit)
+  - [trace](https://github.com/orange-cloudfoundry/gobis-middlewares#trace)
+  - and more see: https://github.com/orange-cloudfoundry/gobis-middlewares
 - [Running a standalone server](#running-a-standalone-server)
 - [FAQ](#faq)
 
@@ -165,7 +175,7 @@ func main(){
 
 ## Available middlewares
 
-Middlewares is located on repo https://github.com/orange-cloudfoundry/gobis-middlewares
+Middlewares are located on repo https://github.com/orange-cloudfoundry/gobis-middlewares
 
 ## Running a standalone server
 
