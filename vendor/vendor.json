@@ -21,6 +21,12 @@
 			"revisionTime": "2015-07-14T18:41:10Z"
 		},
 		{
+			"checksumSHA1": "EHjhpHipgm+XGccrRAms9AW3Ewk=",
+			"path": "github.com/mitchellh/mapstructure",
+			"revision": "d0303fe809921458f417bcf828397a65db30a7e4",
+			"revisionTime": "2017-05-23T03:00:23Z"
+		},
+		{
 			"checksumSHA1": "7MMxe2xCV/0fpJhUuTfTeOKxCxs=",
 			"path": "github.com/sirupsen/logrus",
 			"revision": "51dc0fc64317a2861273909081f9c315786533eb",
