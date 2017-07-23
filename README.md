@@ -140,6 +140,7 @@ func (traceMiddleware) Handler(proxyRoute gobis.ProxyRoute, params interface{}, 
         return TraceHandler(next), nil
 }
 // Schema function is required in order to gobis to decode params from route and sent it back to handler function through `params`
+// It use https://github.com/mitchellh/mapstructure when decode to inject in handler
 func (traceMiddleware) Schema() interface{} {
         return TraceConfig{}
 }

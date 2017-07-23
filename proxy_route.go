@@ -117,7 +117,11 @@ func (r *ProxyRoute) LoadParams() {
 	r.AppPath = reg.FindStringSubmatch(r.Path)[1]
 	r.Url = strings.TrimSuffix(r.Url, "/")
 }
-
+func (r ProxyRoute) CreateRoutePath(finalPath string) {
+	reg := regexp.MustCompile(PATH_REGEX)
+	sub := reg.FindStringSubmatch(r.Path)
+	return sub[1] + finalPath
+}
 func (r ProxyRoute) RouteMatcher() string {
 	reg := regexp.MustCompile(PATH_REGEX)
 	sub := reg.FindStringSubmatch(r.Path)
