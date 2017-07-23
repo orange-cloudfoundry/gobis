@@ -18,6 +18,7 @@ It's largely inspired by [Netflix/zuul](https://github.com/Netflix/zuul).
   - [circuit breaker](https://github.com/orange-cloudfoundry/gobis-middlewares#circuit-breaker)
   - [conn limit](https://github.com/orange-cloudfoundry/gobis-middlewares#conn-limit)
   - [cors](https://github.com/orange-cloudfoundry/gobis-middlewares#cors)
+  - [oauth2](https://github.com/orange-cloudfoundry/gobis-middlewares#oauth2)
   - [ldap](https://github.com/orange-cloudfoundry/gobis-middlewares#ldap)
   - [rate limit](https://github.com/orange-cloudfoundry/gobis-middlewares#rate-limit)
   - [trace](https://github.com/orange-cloudfoundry/gobis-middlewares#trace)
