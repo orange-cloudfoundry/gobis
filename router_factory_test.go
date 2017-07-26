@@ -15,40 +15,133 @@ var _ = Describe("RouterFactory", func() {
 		factory = NewRouterFactory()
 	})
 	Context("ForwardRequest", func() {
+
 		request := &http.Request{}
 		BeforeEach(func() {
 			headers := make(map[string][]string)
 			request.Header = http.Header(headers)
 			request.URL, _ = url.Parse("http://localhost")
 		})
-		It("should set request url to forwarded url", func() {
-			ForwardRequest(ProxyRoute{
-				Url: "http://my.proxified.api",
-			}, request, "/path")
-			Expect(request.URL.String()).Should(Equal("http://my.proxified.api/path"))
+		Context("when route doesn't have option ForwardedHeader", func() {
+			It("should set request url to upstream url", func() {
+				ForwardRequest(ProxyRoute{
+					Url: "http://my.proxified.api",
+				}, request, "/path")
+				Expect(request.URL.String()).Should(Equal("http://my.proxified.api/path"))
+			})
+			It("should merge query parameters", func() {
+				request.URL, _ = url.Parse("http://localhost?key1=val1")
+				ForwardRequest(ProxyRoute{
+					Url: "http://my.proxified.api?key2=val2",
+				}, request, "")
+				Expect(request.URL.String()).Should(Equal("http://my.proxified.api?key1=val1&key2=val2"))
+			})
+			It("should add path to upstream url path", func() {
+				ForwardRequest(ProxyRoute{
+					Url: "http://my.proxified.api/root",
+				}, request, "/path")
+				Expect(request.URL.String()).Should(Equal("http://my.proxified.api/root/path"))
+			})
+			It("should add basic auth when set on url to forward", func() {
+				Expect(request.Header.Get("Authorization")).Should(BeEmpty())
+				ForwardRequest(ProxyRoute{
+					Url: "http://user:password@my.proxified.api",
+				}, request, "")
+				Expect(request.Header.Get("Authorization")).ShouldNot(BeEmpty())
+			})
 		})
-		It("should merge query parameters", func() {
-			request.URL, _ = url.Parse("http://localhost?key1=val1")
-			ForwardRequest(ProxyRoute{
-				Url: "http://my.proxified.api?key2=val2",
-			}, request, "")
-			Expect(request.URL.String()).Should(Equal("http://my.proxified.api?key1=val1&key2=val2"))
-		})
-		It("should add path to forwarded url path", func() {
-			ForwardRequest(ProxyRoute{
-				Url: "http://my.proxified.api/root",
-			}, request, "/path")
-			Expect(request.URL.String()).Should(Equal("http://my.proxified.api/root/path"))
-		})
-		It("should add basic auth when set on url to forward", func() {
-			Expect(request.Header.Get("Authorization")).Should(BeEmpty())
-			ForwardRequest(ProxyRoute{
-				Url: "http://user:password@my.proxified.api",
-			}, request, "")
-			Expect(request.Header.Get("Authorization")).ShouldNot(BeEmpty())
+		Context("when route have option ForwardedHeader", func() {
+			It("should set request url to upstream url", func() {
+				req, _ := http.NewRequest("GET", "http://localhost/path", nil)
+				route := ProxyRoute{
+					ForwardedHeader: "X-Forwarded-For",
+				}
+				req.Header.Set("X-Forwarded-For", "http://my.proxified.api/path")
+				ForwardRequest(route, req, route.RequestPath(req))
+				Expect(req.URL.String()).Should(Equal("http://my.proxified.api/path"))
+			})
+			It("should merge query parameters", func() {
+				req, _ := http.NewRequest("GET", "http://localhost/path", nil)
+				route := ProxyRoute{
+					ForwardedHeader: "X-Forwarded-For",
+				}
+				req.Header.Set("X-Forwarded-For", "http://my.proxified.api?key1=val1&key2=val2")
+				ForwardRequest(route, req, route.RequestPath(req))
+				Expect(req.URL.String()).Should(Equal("http://my.proxified.api?key1=val1&key2=val2"))
+			})
 		})
 	})
 	Context("CreateMuxRouter", func() {
+		Context("when route have option ForwardedHeader set", func() {
+			Context("without url set in route", func() {
+				It("should create a mux router with all routes", func() {
+					routes := []ProxyRoute{
+						{
+							Name: "app1",
+							Path: "/app1/**",
+							ForwardedHeader: "X-Forwarded-Url",
+						},
+						{
+							Name: "app2",
+							Path: "/app2/*",
+							ForwardedHeader: "X-Forwarded-Url",
+						},
+					}
+					rtr, err := factory.CreateMuxRouter(routes, "")
+					Expect(err).NotTo(HaveOccurred())
+					index := 0
+					rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+						req, _ := http.NewRequest("GET", "http://localhost/" + routes[index].Name + "/test/toto", nil)
+						req.Header.Set("X-Forwarded-Url", "http://localhost/" + routes[index].Name + "/test/toto")
+						if index == 0 {
+							Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
+						} else {
+							Expect(route.Match(req, &mux.RouteMatch{})).Should(BeFalse())
+						}
+						Expect(route.GetName()).Should(Equal(routes[index].Name))
+						index++
+						return nil
+					})
+					Expect(index).Should(Equal(len(routes)))
+
+				})
+			})
+			Context("with url set in route", func() {
+				It("should create a mux router with all routes", func() {
+					routes := []ProxyRoute{
+						{
+							Name: "app1",
+							Path: "/**",
+							Url: "http://localhost",
+							ForwardedHeader: "X-Forwarded-Url",
+						},
+						{
+							Name: "app2",
+							Path: "/**",
+							Url: "http://local.com",
+							ForwardedHeader: "X-Forwarded-Url",
+						},
+					}
+					rtr, err := factory.CreateMuxRouter(routes, "")
+					Expect(err).NotTo(HaveOccurred())
+					index := 0
+					rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+						req, _ := http.NewRequest("GET", "http://localhost/" + routes[index].Name + "/test/toto", nil)
+						req.Header.Set("X-Forwarded-Url", "http://localhost/" + routes[index].Name + "/test/toto")
+						if index == 0 {
+							Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
+						} else {
+							Expect(route.Match(req, &mux.RouteMatch{})).Should(BeFalse())
+						}
+						Expect(route.GetName()).Should(Equal(routes[index].Name))
+						index++
+						return nil
+					})
+					Expect(index).Should(Equal(len(routes)))
+
+				})
+			})
+		})
 		It("should create a mux router with all routes", func() {
 			routes := []ProxyRoute{
 				{

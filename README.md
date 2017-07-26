@@ -34,7 +34,11 @@ go get github/orange-cloudfoundry/gobis
 
 ## Usage
 
-Gobis provide an handler to make it useable on your server here an example:
+Gobis provide an handler to make it useable on your server.
+
+You can found found `gobis.ProxyRoute` options in the godoc: https://godoc.org/github.com/orange-cloudfoundry/gobis#ProxyRoute
+
+**Example**:
 
 ```go
 package main

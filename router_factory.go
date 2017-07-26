@@ -115,14 +115,20 @@ func (r RouterFactoryService) CreateHttpHandler(proxyRoute ProxyRoute) (http.Han
 }
 func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute) (mux.MatcherFunc) {
 	return mux.MatcherFunc(func(req *http.Request, rm *mux.RouteMatch) bool {
+		path := proxyRoute.RequestPath(req)
 		matcher := proxyRoute.RouteMatcher()
 		reg := regexp.MustCompile(matcher)
-		if !reg.MatchString(req.URL.Path) {
+		if !reg.MatchString(path) {
 			return false
 		}
-		sub := reg.FindStringSubmatch(req.URL.Path)
+		sub := reg.FindStringSubmatch(path)
 		setPath(req, sub[1])
-		return true
+		if proxyRoute.Url == "" {
+			return true
+		}
+		upstreamUrl := proxyRoute.UpstreamUrl(req)
+		origUpstreamUrl, _ := url.Parse(proxyRoute.Url)
+		return origUpstreamUrl.Host == upstreamUrl.Host
 	})
 }
 func (r RouterFactoryService) CreateForwardHandler(proxyRoute ProxyRoute) (http.HandlerFunc, error) {
@@ -170,7 +176,7 @@ func paramsToSchema(params map[string]interface{}, schema interface{}) (interfac
 }
 func ForwardRequest(proxyRoute ProxyRoute, req *http.Request, restPath string) {
 	removeDirtyHeaders(req)
-	fwdUrl, _ := url.Parse(proxyRoute.Url)
+	fwdUrl := proxyRoute.UpstreamUrl(req)
 	req.URL.Host = fwdUrl.Host
 
 	req.URL.Scheme = fwdUrl.Scheme
