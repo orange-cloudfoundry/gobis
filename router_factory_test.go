@@ -107,7 +107,7 @@ var _ = Describe("RouterFactory", func() {
 				})
 			})
 			Context("with url set in route", func() {
-				It("should create a mux router with all routes", func() {
+				It("should create a mux router with all routes by only matching url host when no path is set in url", func() {
 					routes := []ProxyRoute{
 						{
 							Name: "app1",
@@ -119,6 +119,39 @@ var _ = Describe("RouterFactory", func() {
 							Name: "app2",
 							Path: "/**",
 							Url: "http://local.com",
+							ForwardedHeader: "X-Forwarded-Url",
+						},
+					}
+					rtr, err := factory.CreateMuxRouter(routes, "")
+					Expect(err).NotTo(HaveOccurred())
+					index := 0
+					rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+						req, _ := http.NewRequest("GET", "http://localhost/" + routes[index].Name + "/test/toto", nil)
+						req.Header.Set("X-Forwarded-Url", "http://localhost/" + routes[index].Name + "/test/toto")
+						if index == 0 {
+							Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
+						} else {
+							Expect(route.Match(req, &mux.RouteMatch{})).Should(BeFalse())
+						}
+						Expect(route.GetName()).Should(Equal(routes[index].Name))
+						index++
+						return nil
+					})
+					Expect(index).Should(Equal(len(routes)))
+
+				})
+				It("should create a mux router with all routes by matching url host and path when path is set in url", func() {
+					routes := []ProxyRoute{
+						{
+							Name: "app1",
+							Path: "/**",
+							Url: "http://localhost/app1/**",
+							ForwardedHeader: "X-Forwarded-Url",
+						},
+						{
+							Name: "app2",
+							Path: "/**",
+							Url: "http://localhost/fakepath",
 							ForwardedHeader: "X-Forwarded-Url",
 						},
 					}

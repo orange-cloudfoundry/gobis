@@ -9,7 +9,6 @@ import (
 	"github.com/vulcand/oxy/buffer"
 	"strings"
 	"fmt"
-	"regexp"
 	"encoding/json"
 	"reflect"
 	"github.com/mitchellh/mapstructure"
@@ -117,18 +116,24 @@ func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute) (mux.MatcherFunc
 	return mux.MatcherFunc(func(req *http.Request, rm *mux.RouteMatch) bool {
 		path := proxyRoute.RequestPath(req)
 		matcher := proxyRoute.RouteMatcher()
-		reg := regexp.MustCompile(matcher)
-		if !reg.MatchString(path) {
+		if !matcher.MatchString(path) {
 			return false
 		}
-		sub := reg.FindStringSubmatch(path)
+		sub := matcher.FindStringSubmatch(path)
 		setPath(req, sub[1])
-		if proxyRoute.Url == "" {
+		if proxyRoute.Url == "" || proxyRoute.ForwardedHeader == "" {
 			return true
 		}
 		upstreamUrl := proxyRoute.UpstreamUrl(req)
 		origUpstreamUrl, _ := url.Parse(proxyRoute.Url)
-		return origUpstreamUrl.Host == upstreamUrl.Host
+		if origUpstreamUrl.Host != upstreamUrl.Host {
+			return false
+		}
+		if origUpstreamUrl.Path == "" || origUpstreamUrl.Path == "/" {
+			return true
+		}
+		origPathMatcher := createPathMatcher(origUpstreamUrl.Path)
+		return origPathMatcher.MatchString(path)
 	})
 }
 func (r RouterFactoryService) CreateForwardHandler(proxyRoute ProxyRoute) (http.HandlerFunc, error) {

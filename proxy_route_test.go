@@ -163,7 +163,9 @@ var _ = Describe("ProxyRoute", func() {
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(route.RouteMatcher()).Should(Equal("(/.*)?$"))
+				matcher := route.RouteMatcher()
+				Expect(matcher.MatchString("/firstlevel")).Should(BeTrue())
+				Expect(matcher.MatchString("/firstlevel/secondlevel")).Should(BeTrue())
 			})
 			It("should match /*", func() {
 				route := ProxyRoute{
@@ -173,7 +175,9 @@ var _ = Describe("ProxyRoute", func() {
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(route.RouteMatcher()).Should(Equal("(/[^/]*)?$"))
+				matcher := route.RouteMatcher()
+				Expect(matcher.MatchString("/app")).Should(BeTrue())
+				Expect(matcher.MatchString("/app/secondlevel")).Should(BeFalse())
 			})
 			It("should not match /app/*", func() {
 				route := ProxyRoute{
@@ -183,7 +187,11 @@ var _ = Describe("ProxyRoute", func() {
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(route.RouteMatcher()).Should(Equal("/app(/[^/]*)?$"))
+				matcher := route.RouteMatcher()
+				Expect(matcher.MatchString("/foo")).Should(BeFalse())
+				Expect(matcher.MatchString("/app")).Should(BeTrue())
+				Expect(matcher.MatchString("/app/secondlevel")).Should(BeTrue())
+				Expect(matcher.MatchString("/app/secondlevel/thirdlevel")).Should(BeFalse())
 			})
 			It("should not match /app/**", func() {
 				route := ProxyRoute{
@@ -193,7 +201,11 @@ var _ = Describe("ProxyRoute", func() {
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(route.RouteMatcher()).Should(Equal("/app(/.*)?$"))
+				matcher := route.RouteMatcher()
+				Expect(matcher.MatchString("/foo")).Should(BeFalse())
+				Expect(matcher.MatchString("/app")).Should(BeTrue())
+				Expect(matcher.MatchString("/app/secondlevel")).Should(BeTrue())
+				Expect(matcher.MatchString("/app/secondlevel/thirdlevel")).Should(BeTrue())
 			})
 			It("should not match /*/app", func() {
 				route := ProxyRoute{

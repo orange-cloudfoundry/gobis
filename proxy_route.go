@@ -29,7 +29,7 @@ type ProxyRoute struct {
 	// Can be empty if ForwardedHeader is set
 	Url                string `json:"url" yaml:"url"`
 	// If set upstream url will be took from the value of this header inside the received request
-	// Url option will be used for the router to match host found in value of this header and host found in url (If NoUrlMatch is false)
+	// Url option will be used for the router to match host and path (if not empty) found in value of this header and host and path found in url (If NoUrlMatch is false)
 	// this useful, for example, to create a cloud foundry route service: https://docs.cloudfoundry.org/services/route-services.html
 	ForwardedHeader    string `json:"forwarded_header" yaml:"forwarded_header"`
 	// List of headers which should not be sent to upstream
@@ -160,16 +160,20 @@ func (r ProxyRoute) UpstreamUrl(req *http.Request) *url.URL {
 	upstreamUrl.Path = ""
 	return upstreamUrl
 }
-func (r ProxyRoute) RouteMatcher() string {
+func (r ProxyRoute) RouteMatcher() *regexp.Regexp {
+	return createPathMatcher(r.Path)
+}
+
+func createPathMatcher(path string) *regexp.Regexp {
 	reg := regexp.MustCompile(PATH_REGEX)
-	sub := reg.FindStringSubmatch(r.Path)
-	muxRoute := sub[1]
+	sub := reg.FindStringSubmatch(path)
+	muxRoute := regexp.QuoteMeta(sub[1])
 	glob := sub[4]
 	if glob == "" {
-		return muxRoute
+		return regexp.MustCompile(muxRoute)
 	}
 	if glob == "*" {
-		return fmt.Sprintf("%s(/[^/]*)?$", muxRoute)
+		return regexp.MustCompile(fmt.Sprintf("^%s(/[^/]*)?$", muxRoute))
 	}
-	return fmt.Sprintf("%s(/.*)?$", muxRoute)
+	return regexp.MustCompile(fmt.Sprintf("^%s(/.*)?$", muxRoute))
 }
