@@ -125,6 +125,7 @@ func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute) (mux.MatcherFunc
 			return true
 		}
 		upstreamUrl := proxyRoute.UpstreamUrl(req)
+		req.URL.RawQuery = upstreamUrl.RawQuery
 		origUpstreamUrl, _ := url.Parse(proxyRoute.Url)
 		if origUpstreamUrl.Host != upstreamUrl.Host {
 			return false
