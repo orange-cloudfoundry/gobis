@@ -121,11 +121,13 @@ func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute) (mux.MatcherFunc
 		}
 		sub := matcher.FindStringSubmatch(path)
 		setPath(req, sub[1])
+		upstreamUrl := proxyRoute.UpstreamUrl(req)
+		if proxyRoute.ForwardedHeader != "" {
+			req.URL.RawQuery = upstreamUrl.RawQuery
+		}
 		if proxyRoute.Url == "" || proxyRoute.ForwardedHeader == "" {
 			return true
 		}
-		upstreamUrl := proxyRoute.UpstreamUrl(req)
-		req.URL.RawQuery = upstreamUrl.RawQuery
 		origUpstreamUrl, _ := url.Parse(proxyRoute.Url)
 		if origUpstreamUrl.Host != upstreamUrl.Host {
 			return false

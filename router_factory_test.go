@@ -73,6 +73,27 @@ var _ = Describe("RouterFactory", func() {
 	})
 	Context("CreateMuxRouter", func() {
 		Context("when route have option ForwardedHeader set", func() {
+			It("should copy get parameter in the request from upstream", func() {
+				routes := []ProxyRoute{
+					{
+						Name: "app1",
+						Path: "/app1/**",
+						ForwardedHeader: "X-Forwarded-Url",
+					},
+				}
+				rtr, err := factory.CreateMuxRouter(routes, "")
+				Expect(err).NotTo(HaveOccurred())
+				rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+					req, _ := http.NewRequest("GET", "http://localhost/" + routes[0].Name + "/test/toto", nil)
+					req.Header.Set("X-Forwarded-Url", "http://localhost/" + routes[0].Name + "/test/toto?data=mydata")
+					Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
+
+					Expect(route.GetName()).Should(Equal(routes[0].Name))
+					Expect(req.URL.Query().Get("data")).Should(Equal("mydata"))
+					return nil
+				})
+
+			})
 			Context("without url set in route", func() {
 				It("should create a mux router with all routes", func() {
 					routes := []ProxyRoute{
