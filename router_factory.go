@@ -1,21 +1,23 @@
 package gobis
 
 import (
-	"github.com/gorilla/mux"
-	"net/http"
-	"github.com/vulcand/oxy/forward"
-	log "github.com/sirupsen/logrus"
-	"net/url"
-	"github.com/vulcand/oxy/buffer"
-	"strings"
-	"fmt"
 	"encoding/json"
-	"reflect"
+	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/mitchellh/mapstructure"
+	log "github.com/sirupsen/logrus"
+	"github.com/vulcand/oxy/buffer"
+	"github.com/vulcand/oxy/forward"
+	"net/http"
+	"net/url"
+	"reflect"
+	"strings"
 )
 
 const (
 	GobisHeaderName = "X-Gobis-Forward"
+	XGobisUsername  = "X-Gobis-Username"
+	XGobisGroups    = "X-Gobis-Groups"
 )
 
 type RouterFactory interface {
@@ -47,7 +49,7 @@ func NewRouterFactoryWithMuxRouter(muxRouter *mux.Router, middlewares ...Middlew
 			return NewRouteTransport(proxyRoute)
 		},
 		MiddlewareHandlers: middlewares,
-		MuxRouter: muxRouter,
+		MuxRouter:          muxRouter,
 	}
 }
 
@@ -58,10 +60,10 @@ func (r RouterFactoryService) CreateMuxRouterRouteService(proxyRoutes []ProxyRou
 	}
 	// forward everything which not matching a proxified route to original app
 	originalAppHandler, err := r.CreateForwardHandler(ProxyRoute{
-		Url: forwardedUrl.String(),
+		Url:                forwardedUrl.String(),
 		RemoveProxyHeaders: true,
 		InsecureSkipVerify: true,
-		NoProxy: true,
+		NoProxy:            true,
 	})
 	if err != nil {
 		return nil, err
@@ -112,7 +114,7 @@ func (r RouterFactoryService) CreateHttpHandler(proxyRoute ProxyRoute) (http.Han
 	}
 	return buffer.New(fwd, buffer.Retry(`IsNetworkError() && Attempts() < 2`))
 }
-func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute) (mux.MatcherFunc) {
+func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute) mux.MatcherFunc {
 	return mux.MatcherFunc(func(req *http.Request, rm *mux.RouteMatch) bool {
 		path := proxyRoute.RequestPath(req)
 		matcher := proxyRoute.RouteMatcher()
@@ -184,6 +186,8 @@ func paramsToSchema(params map[string]interface{}, schema interface{}) (interfac
 }
 func ForwardRequest(proxyRoute ProxyRoute, req *http.Request, restPath string) {
 	removeDirtyHeaders(req)
+	req.Header.Add(XGobisUsername, Username(req))
+	req.Header.Add(XGobisGroups, strings.Join(Groups(req), ","))
 	fwdUrl := proxyRoute.UpstreamUrl(req)
 	req.URL.Host = fwdUrl.Host
 
@@ -227,7 +231,7 @@ func panicRecover(proxyRoute ProxyRoute, w http.ResponseWriter) {
 	if proxyRoute.ShowError {
 		w.Header().Set("Content-Type", "application/json")
 		errMsg := struct {
-			Status    int `json:"status"`
+			Status    int    `json:"status"`
 			Title     string `json:"title"`
 			Details   string `json:"details"`
 			RouteName string `json:"route_name"`

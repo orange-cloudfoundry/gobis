@@ -8,6 +8,7 @@ It's largely inspired by [Netflix/zuul](https://github.com/Netflix/zuul).
 
 - [installation](#installation)
 - [Usage](#usage)
+  - [Headers sent by gobis to reversed app](headers-sent-by-gobis-to-reversed-app)
   - [Example with your own router and middlewares](#example-with-your-own-router-and-middlewares)
 - [Middlewares](#middlewares)
   - [Create your middleware](#create-your-middleware)
@@ -75,6 +76,14 @@ func main(){
 You can see doc [DefaultHandlerConfig](https://godoc.org/github.com/orange-cloudfoundry/gobis#DefaultHandlerConfig) to know more about possible parameters.
 
 You can also see doc [ProxyRoute](https://godoc.org/github.com/orange-cloudfoundry/gobis#ProxyRoute) to see available options for routes.
+
+### Headers sent by gobis to reversed app
+
+Gobis will send some headers to the app when the request is forwarded:
+
+- **X-Gobis-Forward**: This is a dummy header to say to the app that the requested was forwarded by gobis.
+- **X-Gobis-Username**: User name of a logged user set by a middleware.
+- **X-Gobis-Groups**: User's groups of a logged user set by a middleware.
 
 ### Example with your own router and middlewares
 

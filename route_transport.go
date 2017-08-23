@@ -1,13 +1,13 @@
 package gobis
 
 import (
+	"crypto/tls"
+	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
-	"fmt"
 	"time"
-	"net"
-	"crypto/tls"
 )
 
 var protectedHeaders map[string]bool = map[string]bool{}
@@ -18,9 +18,9 @@ type RouteTransport struct {
 }
 
 const (
-	XForwardedProto = "X-Forwarded-Proto"
-	XForwardedFor = "X-Forwarded-For"
-	XForwardedHost = "X-Forwarded-Host"
+	XForwardedProto  = "X-Forwarded-Proto"
+	XForwardedFor    = "X-Forwarded-For"
+	XForwardedHost   = "X-Forwarded-Host"
 	XForwardedServer = "X-Forwarded-Server"
 )
 
@@ -29,7 +29,7 @@ func NewRouteTransport(route ProxyRoute) http.RoundTripper {
 }
 func NewRouteTransportWithHttpTransport(route ProxyRoute, httpTransport *http.Transport) http.RoundTripper {
 	routeTransport := &RouteTransport{
-		route: route,
+		route:         route,
 		httpTransport: httpTransport,
 	}
 	routeTransport.InitHttpTransport()
@@ -46,7 +46,6 @@ func (r *RouteTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return r.httpTransport.RoundTrip(req)
 }
 func (r *RouteTransport) TransformRequest(req *http.Request) {
-
 	sensitiveHeaders := r.route.SensitiveHeaders
 	if r.route.RemoveProxyHeaders {
 		sensitiveHeaders = append(sensitiveHeaders,

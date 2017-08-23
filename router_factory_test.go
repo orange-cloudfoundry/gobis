@@ -1,12 +1,12 @@
 package gobis_test
 
 import (
+	"github.com/gorilla/mux"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/orange-cloudfoundry/gobis"
 	"net/http"
 	"net/url"
-	"github.com/gorilla/mux"
 )
 
 var _ = Describe("RouterFactory", func() {
@@ -70,22 +70,34 @@ var _ = Describe("RouterFactory", func() {
 				Expect(req.URL.String()).Should(Equal("http://my.proxified.api?key1=val1&key2=val2"))
 			})
 		})
+		Context("When username and groups has been set in request context", func() {
+			It("should give X-Gobis-Username and X-Gobis-Groups as headers", func() {
+				SetUsername(request, "myuser")
+				AddGroups(request, "group1", "group2")
+				ForwardRequest(ProxyRoute{
+					Url: "http://my.proxified.api",
+				}, request, "/path")
+				Expect(request.Header.Get(XGobisUsername)).Should(Equal("myuser"))
+				Expect(request.Header.Get(XGobisGroups)).Should(ContainSubstring("group1"))
+				Expect(request.Header.Get(XGobisGroups)).Should(ContainSubstring("group2"))
+			})
+		})
 	})
 	Context("CreateMuxRouter", func() {
 		Context("when route have option ForwardedHeader set", func() {
 			It("should copy get parameter in the request from upstream", func() {
 				routes := []ProxyRoute{
 					{
-						Name: "app1",
-						Path: "/app1/**",
+						Name:            "app1",
+						Path:            "/app1/**",
 						ForwardedHeader: "X-Forwarded-Url",
 					},
 				}
 				rtr, err := factory.CreateMuxRouter(routes, "")
 				Expect(err).NotTo(HaveOccurred())
 				rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-					req, _ := http.NewRequest("GET", "http://localhost/" + routes[0].Name + "/test/toto", nil)
-					req.Header.Set("X-Forwarded-Url", "http://localhost/" + routes[0].Name + "/test/toto?data=mydata")
+					req, _ := http.NewRequest("GET", "http://localhost/"+routes[0].Name+"/test/toto", nil)
+					req.Header.Set("X-Forwarded-Url", "http://localhost/"+routes[0].Name+"/test/toto?data=mydata")
 					Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
 
 					Expect(route.GetName()).Should(Equal(routes[0].Name))
@@ -98,13 +110,13 @@ var _ = Describe("RouterFactory", func() {
 				It("should create a mux router with all routes", func() {
 					routes := []ProxyRoute{
 						{
-							Name: "app1",
-							Path: "/app1/**",
+							Name:            "app1",
+							Path:            "/app1/**",
 							ForwardedHeader: "X-Forwarded-Url",
 						},
 						{
-							Name: "app2",
-							Path: "/app2/*",
+							Name:            "app2",
+							Path:            "/app2/*",
 							ForwardedHeader: "X-Forwarded-Url",
 						},
 					}
@@ -112,8 +124,8 @@ var _ = Describe("RouterFactory", func() {
 					Expect(err).NotTo(HaveOccurred())
 					index := 0
 					rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-						req, _ := http.NewRequest("GET", "http://localhost/" + routes[index].Name + "/test/toto", nil)
-						req.Header.Set("X-Forwarded-Url", "http://localhost/" + routes[index].Name + "/test/toto")
+						req, _ := http.NewRequest("GET", "http://localhost/"+routes[index].Name+"/test/toto", nil)
+						req.Header.Set("X-Forwarded-Url", "http://localhost/"+routes[index].Name+"/test/toto")
 						if index == 0 {
 							Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
 						} else {
@@ -131,15 +143,15 @@ var _ = Describe("RouterFactory", func() {
 				It("should create a mux router with all routes by only matching url host when no path is set in url", func() {
 					routes := []ProxyRoute{
 						{
-							Name: "app1",
-							Path: "/**",
-							Url: "http://localhost",
+							Name:            "app1",
+							Path:            "/**",
+							Url:             "http://localhost",
 							ForwardedHeader: "X-Forwarded-Url",
 						},
 						{
-							Name: "app2",
-							Path: "/**",
-							Url: "http://local.com",
+							Name:            "app2",
+							Path:            "/**",
+							Url:             "http://local.com",
 							ForwardedHeader: "X-Forwarded-Url",
 						},
 					}
@@ -147,8 +159,8 @@ var _ = Describe("RouterFactory", func() {
 					Expect(err).NotTo(HaveOccurred())
 					index := 0
 					rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-						req, _ := http.NewRequest("GET", "http://localhost/" + routes[index].Name + "/test/toto", nil)
-						req.Header.Set("X-Forwarded-Url", "http://localhost/" + routes[index].Name + "/test/toto")
+						req, _ := http.NewRequest("GET", "http://localhost/"+routes[index].Name+"/test/toto", nil)
+						req.Header.Set("X-Forwarded-Url", "http://localhost/"+routes[index].Name+"/test/toto")
 						if index == 0 {
 							Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
 						} else {
@@ -164,15 +176,15 @@ var _ = Describe("RouterFactory", func() {
 				It("should create a mux router with all routes by matching url host and path when path is set in url", func() {
 					routes := []ProxyRoute{
 						{
-							Name: "app1",
-							Path: "/**",
-							Url: "http://localhost/app1/**",
+							Name:            "app1",
+							Path:            "/**",
+							Url:             "http://localhost/app1/**",
 							ForwardedHeader: "X-Forwarded-Url",
 						},
 						{
-							Name: "app2",
-							Path: "/**",
-							Url: "http://localhost/fakepath",
+							Name:            "app2",
+							Path:            "/**",
+							Url:             "http://localhost/fakepath",
 							ForwardedHeader: "X-Forwarded-Url",
 						},
 					}
@@ -180,8 +192,8 @@ var _ = Describe("RouterFactory", func() {
 					Expect(err).NotTo(HaveOccurred())
 					index := 0
 					rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-						req, _ := http.NewRequest("GET", "http://localhost/" + routes[index].Name + "/test/toto", nil)
-						req.Header.Set("X-Forwarded-Url", "http://localhost/" + routes[index].Name + "/test/toto")
+						req, _ := http.NewRequest("GET", "http://localhost/"+routes[index].Name+"/test/toto", nil)
+						req.Header.Set("X-Forwarded-Url", "http://localhost/"+routes[index].Name+"/test/toto")
 						if index == 0 {
 							Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
 						} else {
@@ -201,12 +213,12 @@ var _ = Describe("RouterFactory", func() {
 				{
 					Name: "app1",
 					Path: "/app1/**",
-					Url: "http://my.proxified.api",
+					Url:  "http://my.proxified.api",
 				},
 				{
 					Name: "app2",
 					Path: "/app2/*",
-					Url: "http://my.second.proxified.api",
+					Url:  "http://my.second.proxified.api",
 				},
 			}
 			rtr, err := factory.CreateMuxRouter(routes, "")
@@ -230,9 +242,9 @@ var _ = Describe("RouterFactory", func() {
 		It("should create a mux router methods set if route resquested it", func() {
 			routes := []ProxyRoute{
 				{
-					Name: "app1",
-					Path: "/app1/**",
-					Url: "http://my.proxified.api",
+					Name:    "app1",
+					Path:    "/app1/**",
+					Url:     "http://my.proxified.api",
 					Methods: []string{"GET"},
 				},
 			}
@@ -255,9 +267,9 @@ var _ = Describe("RouterFactory", func() {
 			})
 			routes := []ProxyRoute{
 				{
-					Name: "app1",
-					Path: "/app1/**",
-					Url: "http://my.proxified.api",
+					Name:    "app1",
+					Path:    "/app1/**",
+					Url:     "http://my.proxified.api",
 					Methods: []string{"GET"},
 				},
 			}
@@ -272,8 +284,8 @@ var _ = Describe("RouterFactory", func() {
 				if index == 0 {
 					Expect(tpl).Should(Equal("/parent"))
 				} else {
-					u, _ := url.Parse("http://localhost/" + routes[index - 1].Name + "/test")
-					req := &http.Request{URL: u, Method: "GET", }
+					u, _ := url.Parse("http://localhost/" + routes[index-1].Name + "/test")
+					req := &http.Request{URL: u, Method: "GET"}
 					Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
 				}
 				index++
@@ -289,12 +301,12 @@ var _ = Describe("RouterFactory", func() {
 				{
 					Name: "app1",
 					Path: "/app1/**",
-					Url: "http://my.proxified.api",
+					Url:  "http://my.proxified.api",
 				},
 				{
 					Name: "app2",
 					Path: "/app2/**",
-					Url: "http://my.second.proxified.api",
+					Url:  "http://my.second.proxified.api",
 				},
 			}
 			fwdUrl, _ := url.Parse("http://myapp.local/path")
