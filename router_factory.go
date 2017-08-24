@@ -158,7 +158,7 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute ProxyRoute) (http.
 	handler = forwardHandler
 	for i := len(r.MiddlewareHandlers) - 1; i >= 0; i-- {
 		middleware := r.MiddlewareHandlers[i]
-		funcName := GetFunctionName(middleware)
+		funcName := GetMiddlewareName(middleware)
 		entry.Debugf("orange-cloudfoundry/gobis/proxy: Adding %s middleware ...", funcName)
 		params, err := paramsToSchema(proxyRoute.MiddlewareParams, middleware.Schema())
 		handler, err = middleware.Handler(proxyRoute, params, handler)

@@ -1,6 +1,6 @@
 {
 	"comment": "",
-	"ignore": "test github.com/onsi",
+	"ignore": "test github.com/onsi github.com/sirupsen/logrus",
 	"package": [
 		{
 			"checksumSHA1": "iIUYZyoanCQQTUaWsu8b+iOSPt4=",
@@ -25,12 +25,6 @@
 			"path": "github.com/mitchellh/mapstructure",
 			"revision": "d0303fe809921458f417bcf828397a65db30a7e4",
 			"revisionTime": "2017-05-23T03:00:23Z"
-		},
-		{
-			"checksumSHA1": "7MMxe2xCV/0fpJhUuTfTeOKxCxs=",
-			"path": "github.com/sirupsen/logrus",
-			"revision": "51dc0fc64317a2861273909081f9c315786533eb",
-			"revisionTime": "2017-07-13T11:57:24Z"
 		},
 		{
 			"checksumSHA1": "IrdcKbuIdEwYOOmgCZxV4zm6+ag=",

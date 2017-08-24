@@ -2,9 +2,7 @@ package gobis
 
 import (
 	"gopkg.in/yaml.v2"
-	"runtime"
 	"reflect"
-	"strings"
 )
 
 func InterfaceToMap(is ...interface{}) map[string]interface{} {
@@ -26,8 +24,6 @@ func interfaceToMap(i interface{}) map[string]interface{} {
 	yaml.Unmarshal(b, &m)
 	return m
 }
-func GetFunctionName(i interface{}) string {
-	fullName := runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
-	splittedName := strings.Split(fullName, ".")
-	return splittedName[len(splittedName) - 1]
+func GetMiddlewareName(i interface{}) string {
+	return reflect.ValueOf(i).Elem().Type().Name()
 }
