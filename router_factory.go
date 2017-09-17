@@ -228,6 +228,7 @@ func panicRecover(proxyRoute ProxyRoute, w http.ResponseWriter) {
 	if err == nil {
 		return
 	}
+	w.WriteHeader(http.StatusInternalServerError)
 	if proxyRoute.ShowError {
 		w.Header().Set("Content-Type", "application/json")
 		errMsg := struct {
@@ -239,7 +240,6 @@ func panicRecover(proxyRoute ProxyRoute, w http.ResponseWriter) {
 		b, _ := json.MarshalIndent(errMsg, "", "\t")
 		w.Write([]byte(b))
 	}
-	w.WriteHeader(http.StatusInternalServerError)
 	entry := log.WithField("route_name", proxyRoute.Name)
 	entry.Error(err)
 }
