@@ -1,64 +1,65 @@
 package gobis
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
-	"encoding/json"
-	"net/http"
 )
 
 const (
 	PATH_REGEX = "(?i)^((/[^/\\*]*)*)(/((\\*){1,2}))?$"
-	MUX_REST_VAR_KEY = "rest"
 )
 
 type ProxyRoute struct {
 	// Name of your route
-	Name               string `json:"name" yaml:"name"`
+	Name string `json:"name" yaml:"name"`
 	// Path which gobis handler should listen to
 	// You can use globs:
 	//   - appending /* will only make requests available in first level of upstream
 	//   - appending /** will pass everything to upstream
 	// e.g.: /app/**
-	Path               string `json:"path" yaml:"path"`
+	Path string `json:"path" yaml:"path"`
 	// Upstream url where all request will be redirected (if ForwardedHeader option not set)
 	// Query parameters can be passed, e.g.: http://localhost?param=1
 	// User and password are given as basic auth too (this is not recommended to use it), e.g.: http://user:password@localhost
 	// Can be empty if ForwardedHeader is set
-	Url                string `json:"url" yaml:"url"`
+	Url string `json:"url" yaml:"url"`
 	// If set upstream url will be took from the value of this header inside the received request
 	// Url option will be used for the router to match host and path (if not empty) found in value of this header and host and path found in url (If NoUrlMatch is false)
 	// this useful, for example, to create a cloud foundry route service: https://docs.cloudfoundry.org/services/route-services.html
-	ForwardedHeader    string `json:"forwarded_header" yaml:"forwarded_header"`
+	ForwardedHeader string `json:"forwarded_header" yaml:"forwarded_header"`
 	// List of headers which should not be sent to upstream
-	SensitiveHeaders   []string `json:"sensitive_headers" yaml:"sensitive_headers"`
+	SensitiveHeaders []string `json:"sensitive_headers" yaml:"sensitive_headers"`
 	// List of http methods allowed (Default: all methods are accepted)
-	Methods            []string `json:"methods" yaml:"methods"`
+	Methods []string `json:"methods" yaml:"methods"`
 	// An url to an http proxy to make requests to upstream pass to this
-	HttpProxy          string `json:"http_proxy" yaml:"http_proxy"`
+	HttpProxy string `json:"http_proxy" yaml:"http_proxy"`
 	// An url to an https proxy to make requests to upstream pass to this
-	HttpsProxy         string `json:"https_proxy" yaml:"https_proxy"`
+	HttpsProxy string `json:"https_proxy" yaml:"https_proxy"`
 	// Force to never use proxy even proxy from environment variables
-	NoProxy            bool `json:"no_proxy" yaml:"no_proxy"`
+	NoProxy bool `json:"no_proxy" yaml:"no_proxy"`
 	// By default response from upstream are buffered, it can be issue when sending big files
 	// Set to true to stream response
-	NoBuffer           bool `json:"no_buffer" yaml:"no_buffer"`
+	NoBuffer bool `json:"no_buffer" yaml:"no_buffer"`
 	// Set to true to not send X-Forwarded-* headers to upstream
 	RemoveProxyHeaders bool `json:"remove_proxy_headers" yaml:"remove_proxy_headers"`
 	// Set to true to not check ssl certificates from upstream (not really recommended)
 	InsecureSkipVerify bool `json:"insecure_skip_verify" yaml:"insecure_skip_verify"`
 	// It was made to pass arbitrary params to use it after in gobis middlewares
-	MiddlewareParams   map[string]interface{} `json:"middleware_params" yaml:"middleware_params"`
+	MiddlewareParams map[string]interface{} `json:"middleware_params" yaml:"middleware_params"`
 	// This is the path without glob variables
 	// Filled when unmarshal json or yaml or when running LoadParams on route
-	AppPath            string `json:"-" yaml:"-"`
+	AppPath string `json:"-" yaml:"-"`
 	// Set to true to see errors on web page when there is a panic error on gobis
-	ShowError          bool `json:"show_error" yaml:"show_error"`
+	ShowError bool `json:"show_error" yaml:"show_error"`
+	// Chain others routes in a route
+	Routes []ProxyRoute `json:"routes" yaml:"routes"`
 }
 
-func (r *ProxyRoute) UnmarshalJSON(data []byte) (error) {
+func (r *ProxyRoute) UnmarshalJSON(data []byte) error {
 	type plain ProxyRoute
 	err := json.Unmarshal(data, (*plain)(r))
 	if err != nil {
@@ -71,7 +72,7 @@ func (r *ProxyRoute) UnmarshalJSON(data []byte) (error) {
 	r.LoadParams()
 	return nil
 }
-func (r *ProxyRoute) UnmarshalYAML(unmarshal func(interface{}) error) (error) {
+func (r *ProxyRoute) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type plain ProxyRoute
 	var err error
 	if err = unmarshal((*plain)(r)); err != nil {
@@ -123,7 +124,11 @@ func (r ProxyRoute) Check() error {
 	}
 	return nil
 }
-
+func (r ProxyRoute) PathAsStartPath() string {
+	startPath := strings.TrimSuffix(r.Path, "/**")
+	startPath = strings.TrimSuffix(startPath, "/*")
+	return startPath
+}
 func (r *ProxyRoute) LoadParams() {
 	reg := regexp.MustCompile(PATH_REGEX)
 	r.AppPath = reg.FindStringSubmatch(r.Path)[1]

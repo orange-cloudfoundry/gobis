@@ -1,10 +1,10 @@
 language: go
 go:
-- 1.8
+- 1.9
 
 install:
 - go get github.com/onsi/ginkgo/ginkgo
 - go get github.com/onsi/gomega
 - go get github.com/sirupsen/logrus
 
-script: go test -v `go list ./... | grep -v vendor` -args -ginkgo.randomizeAllSpecs -ginkgo.trace
+script: go test -v ./... -args -ginkgo.randomizeAllSpecs -ginkgo.trace

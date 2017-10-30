@@ -1,116 +1,541 @@
 package test_integration_test
 
 import (
+	"encoding/json"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"net/http"
 	"github.com/orange-cloudfoundry/gobis"
-	"fmt"
-	"net/http/httptest"
+	. "github.com/orange-cloudfoundry/gobis/gobistest"
 	log "github.com/sirupsen/logrus"
-	"os"
 	"io/ioutil"
-	"gopkg.in/jarcoal/httpmock.v1"
+	"net/http"
+	"net/http/httptest"
+	"os"
 )
 
-var originUrl string = "http://local.app.com"
-var forwardToUrl string = "http://forward.%s.app.com"
-
-func createForwardUrl(name string) string {
-	return fmt.Sprintf(forwardToUrl, name)
-}
-func createAppUrl(proxyRoute gobis.ProxyRoute) string {
-	proxyRoute.LoadParams()
-	return fmt.Sprintf("%s%s", originUrl, proxyRoute.AppPath)
-}
-
-var routerFactory gobis.RouterFactory
+var gobisTestHandler *GobisHandlerTest
+var rr *httptest.ResponseRecorder
 var _ = BeforeSuite(func() {
 	log.SetLevel(log.DebugLevel)
 	log.SetOutput(os.Stdout)
-	httpmock.Activate()
 })
 
 var _ = BeforeEach(func() {
-	httpmock.Reset()
-	routerFactory = gobis.NewRouterFactory()
-	routerFactory.(*gobis.RouterFactoryService).CreateTransportFunc = func(proxyRoute gobis.ProxyRoute) http.RoundTripper {
-		return httpmock.DefaultTransport
-	}
+	rr = httptest.NewRecorder()
 })
-
+var _ = AfterEach(func() {
+	gobisTestHandler.Close()
+})
 var _ = AfterSuite(func() {
-	httpmock.DeactivateAndReset()
-})
 
-func responderFromHandler(handler gobis.GobisHandler, respRecorder *httptest.ResponseRecorder) httpmock.Responder {
-	return func(req *http.Request) (*http.Response, error) {
-		handler.ServeHTTP(respRecorder, req)
-		res := respRecorder.Result()
-		res.Request = req
-		return res, nil
-	}
-}
-func responderFromRecorder(respRecorder *httptest.ResponseRecorder) httpmock.Responder {
-	return func(req *http.Request) (*http.Response, error) {
-		res := respRecorder.Result()
-		res.Request = req
-		return res, nil
-	}
-}
+})
 
 var _ = Describe("TestIntegration", func() {
-
-	var gobisHandler gobis.GobisHandler
-	Context("without start path and forwarded url", func() {
-		config := gobis.DefaultHandlerConfig{
-			Routes: []gobis.ProxyRoute{
-				{
-					Name: "route1",
-					Path: "/route1/**",
-					NoBuffer: true,
-					Url: createForwardUrl("route1"),
-				},
-				{
-					Name: "route2",
-					Path: "/route2/**",
-					Url: createForwardUrl("route2"),
-					NoBuffer: true,
-					MiddlewareParams: map[string]interface{}{
-						"cors": map[string]interface{}{
-							"allowed_origins": []string{"http://*.app.com"},
-						},
-					},
-				},
-			},
-		}
+	Context("simple forwarding", func() {
+		var defaultRoute gobis.ProxyRoute
 		BeforeEach(func() {
-			gobisHandler, _ = gobis.NewDefaultHandler(config, routerFactory)
-			for _, route := range config.Routes {
-				httpmock.RegisterResponder(
-					"GET",
-					createAppUrl(route),
-					responderFromHandler(gobisHandler, httptest.NewRecorder()),
-				)
+			defaultRoute = gobis.ProxyRoute{
+				Name:      "myroute",
+				Path:      "/**",
+				Methods:   []string{"GET"},
+				ShowError: true,
 			}
-
 		})
-		PIt("should do things", func() {
-			route := config.Routes[0]
-			rr := httptest.NewRecorder()
-			rr.WriteHeader(200)
-			rr.WriteString("route1 content")
-			httpmock.RegisterResponder(
-				"GET",
-				createForwardUrl(route.Name),
-				responderFromRecorder(rr),
-			)
-			resp, err := http.Get(createAppUrl(route))
+
+		It("should not redirect to backend when http method is wrong.", func() {
+			gobisTestHandler = NewSimpleGobisHandlerTest(defaultRoute)
+			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Write([]byte("route1 content"))
+			}))
+
+			req := CreateAppRequest(defaultRoute, "POST")
+			req.URL.Path = "/anypath"
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).ShouldNot(Equal("route1 content"))
+			Expect(resp.StatusCode).Should(Equal(404))
+		})
+		It("should redirect to backend with gobis header", func() {
+			defaultRoute.Path = "/anypath"
+			gobisTestHandler = NewSimpleGobisHandlerTest(defaultRoute)
+			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				defer GinkgoRecover()
+				Expect(req.Header.Get(gobis.GobisHeaderName)).To(Equal("true"))
+				Expect(req.Header).To(HaveKey(gobis.XGobisUsername))
+				Expect(req.Header).To(HaveKey(gobis.XGobisGroups))
+				Expect(req.Header).To(HaveKey("X-Forwarded-Host"))
+				Expect(req.Header).To(HaveKey("X-Forwarded-Proto"))
+				Expect(req.Header).To(HaveKey("X-Forwarded-Server"))
+				w.Write([]byte("route1 content"))
+			}))
+
+			req := CreateAppRequest(defaultRoute)
+			req.URL.Path = "/anypath"
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
 			content, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).Should(Equal("route1 content"))
 			Expect(resp.StatusCode).Should(Equal(200))
+		})
+		It("should redirect to backend with gobis header when path has subpath", func() {
+			defaultRoute.Path = "/apath/**"
+			gobisTestHandler = NewSimpleGobisHandlerTest(defaultRoute)
+			routeServer := gobisTestHandler.ServerFirst()
+			routeServer.SetHandler(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				defer GinkgoRecover()
+				Expect(req.Header.Get(gobis.GobisHeaderName)).To(Equal("true"))
+				Expect(req.Header).To(HaveKey(gobis.XGobisUsername))
+				Expect(req.Header).To(HaveKey(gobis.XGobisGroups))
+				Expect(req.Header).To(HaveKey("X-Forwarded-Host"))
+				Expect(req.Header).To(HaveKey("X-Forwarded-Proto"))
+				Expect(req.Header).To(HaveKey("X-Forwarded-Server"))
+				w.Write([]byte("route1 content"))
+			}))
+
+			req := CreateAppRequest(defaultRoute)
+			req.URL.Path = "/apath"
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).Should(Equal("route1 content"))
+			Expect(resp.StatusCode).Should(Equal(200))
+		})
+		It("should redirect to backend without X-Forwarded-* header when user deactivate it", func() {
+			myroute := gobis.ProxyRoute{
+				Name:               "myroute",
+				Path:               "/**",
+				RemoveProxyHeaders: true,
+			}
+			gobisTestHandler = NewSimpleGobisHandlerTest(myroute)
+			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				defer GinkgoRecover()
+				Expect(req.Header.Get(gobis.GobisHeaderName)).To(Equal("true"))
+				Expect(req.Header).To(HaveKey(gobis.XGobisUsername))
+				Expect(req.Header).To(HaveKey(gobis.XGobisGroups))
+				Expect(req.Header).ToNot(HaveKey("X-Forwarded-Host"))
+				Expect(req.Header).ToNot(HaveKey("X-Forwarded-Proto"))
+				Expect(req.Header).ToNot(HaveKey("X-Forwarded-Server"))
+				w.Write([]byte("route1 content"))
+			}))
+
+			req := CreateAppRequest(defaultRoute)
+			req.URL.Path = "/anypath"
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).Should(Equal("route1 content"))
+			Expect(resp.StatusCode).Should(Equal(200))
+		})
+		It("should not redirect to backend when path is incorrect in request", func() {
+			myroute := gobis.ProxyRoute{
+				Name:               "myroute",
+				Path:               "/apath/**",
+				RemoveProxyHeaders: true,
+			}
+			gobisTestHandler = NewSimpleGobisHandlerTest(myroute)
+			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Write([]byte("route1 content"))
+			}))
+
+			req := CreateAppRequest(defaultRoute)
+			req.URL.Path = "/anypath"
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).ShouldNot(Equal("route1 content"))
+			Expect(resp.StatusCode).Should(Equal(404))
+		})
+		It("should show error as json when user set ShowError to true", func() {
+			errorHandler := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p MiddlewareTestParams) {
+				panic("this is an error")
+			})
+			gobisTestHandler = NewGobisHandlerTest(
+				[]gobis.ProxyRoute{defaultRoute},
+				NewMiddlewareTest(errorHandler),
+			)
+			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Write([]byte("route1 content"))
+			}))
+
+			req := CreateAppRequest(defaultRoute)
+			req.URL.Path = "/anypath"
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			var jsonError gobis.JsonError
+			err = json.Unmarshal(content, &jsonError)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(jsonError.Details).Should(Equal("this is an error"))
+			Expect(jsonError.RouteName).Should(Equal(defaultRoute.Name))
+			Expect(resp.StatusCode).Should(Equal(500))
+		})
+		Context("with multiple routes", func() {
+			It("should redirect correctly to url", func() {
+				firstRoute := gobis.ProxyRoute{
+					Name: "firstRoute",
+					Path: "/firstroute/**",
+				}
+				secondRoute := gobis.ProxyRoute{
+					Name: "secondRoute",
+					Path: "/secondroute/**",
+				}
+				gobisTestHandler = NewSimpleGobisHandlerTest(firstRoute, secondRoute)
+				gobisTestHandler.SetBackendHandler(firstRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					w.Write([]byte("first route"))
+				}))
+				gobisTestHandler.SetBackendHandler(secondRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					w.Write([]byte("second route"))
+				}))
+
+				// first route
+				req := CreateAppRequest(defaultRoute)
+				req.URL.Path = "/firstroute"
+				gobisTestHandler.ServeHTTP(rr, req)
+				resp := rr.Result()
+
+				content, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(content)).Should(Equal("first route"))
+				Expect(resp.StatusCode).Should(Equal(200))
+
+				//second route
+				rr = httptest.NewRecorder()
+				req = CreateAppRequest(defaultRoute)
+				req.URL.Path = "/secondroute"
+				gobisTestHandler.ServeHTTP(rr, req)
+				resp = rr.Result()
+
+				content, err = ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(content)).Should(Equal("second route"))
+				Expect(resp.StatusCode).Should(Equal(200))
+			})
+			It("should fallback redirect when first match not correspond and the second is wildcard", func() {
+				firstRoute := gobis.ProxyRoute{
+					Name: "firstRoute",
+					Path: "/firstroute/**",
+				}
+				secondRoute := gobis.ProxyRoute{
+					Name: "secondRoute",
+					Path: "/**",
+				}
+				gobisTestHandler = NewSimpleGobisHandlerTest(firstRoute, secondRoute)
+				gobisTestHandler.SetBackendHandler(firstRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					w.Write([]byte("route"))
+				}))
+				gobisTestHandler.SetBackendHandler(secondRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					w.Write([]byte("fallback"))
+				}))
+
+				// first route
+				req := CreateAppRequest(defaultRoute)
+				req.URL.Path = "/firstroute"
+				gobisTestHandler.ServeHTTP(rr, req)
+				resp := rr.Result()
+
+				content, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(content)).Should(Equal("route"))
+				Expect(resp.StatusCode).Should(Equal(200))
+
+				//second route
+				rr = httptest.NewRecorder()
+				req = CreateAppRequest(defaultRoute)
+				req.URL.Path = "/anypath"
+				gobisTestHandler.ServeHTTP(rr, req)
+				resp = rr.Result()
+
+				content, err = ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(content)).Should(Equal("fallback"))
+				Expect(resp.StatusCode).Should(Equal(200))
+			})
+		})
+	})
+	Context("chaining forwarding", func() {
+		It("should chain to sub request when routes is set inside a route", func() {
+			subRoute := gobis.ProxyRoute{
+				Name: "subRoute",
+				Path: "/sub",
+			}
+			route := gobis.ProxyRoute{
+				Name:   "parentRoute",
+				Path:   "/parent/**",
+				Routes: []gobis.ProxyRoute{subRoute},
+			}
+			gobisTestHandler = NewSimpleGobisHandlerTest(route)
+			gobisTestHandler.SetBackendHandler(route, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Write([]byte("parent"))
+			}))
+			gobisTestHandler.SetBackendHandler(subRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Write([]byte("sub"))
+			}))
+
+			// first route
+			req := CreateAppRequest(route)
+			req.URL.Path = "/parent/any"
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).Should(Equal("parent"))
+			Expect(resp.StatusCode).Should(Equal(200))
+
+			//second route
+			rr = httptest.NewRecorder()
+			req = CreateAppRequest(subRoute)
+			req.URL.Path = "/parent/sub"
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp = rr.Result()
+
+			content, err = ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).Should(Equal("sub"))
+			Expect(resp.StatusCode).Should(Equal(200))
+		})
+		It("should apply middleware from parent and after middleware from sub", func() {
+			midParent := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p MiddlewareTestParams) {
+				if _, ok := p.TestParams["parentHeaderKey"]; !ok {
+					return
+				}
+				req.Header.Set(p.TestParams["parentHeaderKey"].(string), p.TestParams["parentHeaderValue"].(string))
+			})
+			midSub := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p MiddlewareTestParams) {
+				if _, ok := p.TestParams["subHeaderKey"]; !ok {
+					return
+				}
+				req.Header.Set(p.TestParams["subHeaderKey"].(string), p.TestParams["subHeaderValue"].(string))
+			})
+			subRoute := gobis.ProxyRoute{
+				Name: "subRoute",
+				Path: "/sub",
+				MiddlewareParams: CreateInlineParams(
+					"subHeaderKey", "X-Sub-Header",
+					"subHeaderValue", "sub",
+				),
+			}
+			route := gobis.ProxyRoute{
+				Name:   "parentRoute",
+				Path:   "/parent/**",
+				Routes: []gobis.ProxyRoute{subRoute},
+				MiddlewareParams: CreateInlineParams(
+					"parentHeaderKey", "X-Parent-Header",
+					"parentHeaderValue", "parent",
+				),
+			}
+			gobisTestHandler = NewGobisHandlerTest(
+				[]gobis.ProxyRoute{route},
+				NewMiddlewareTest(midParent),
+				NewMiddlewareTest(midSub),
+			)
+			gobisTestHandler.SetBackendHandler(route, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Write([]byte("parent"))
+			}))
+			gobisTestHandler.SetBackendHandler(subRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				defer GinkgoRecover()
+				Expect(req.Header.Get("X-Parent-Header")).To(Equal("parent"))
+				Expect(req.Header.Get("X-Sub-Header")).To(Equal("sub"))
+				w.Write([]byte("sub"))
+			}))
+
+			req := CreateAppRequest(subRoute)
+			req.URL.Path = "/parent/sub"
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).Should(Equal("sub"))
+			Expect(resp.StatusCode).Should(Equal(200))
+		})
+	})
+	Context("forwarding with forwarded header", func() {
+		var forwardedHeader string = "X-Forward-Url"
+		It("should redirect to backend with gobis header", func() {
+			route := gobis.ProxyRoute{
+				Name:            "myroute",
+				Path:            "/**",
+				ForwardedHeader: forwardedHeader,
+			}
+			gobisTestHandler = NewSimpleGobisHandlerTest(route)
+			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				defer GinkgoRecover()
+				Expect(req.Header.Get(gobis.GobisHeaderName)).To(Equal("true"))
+				Expect(req.Header).To(HaveKey(gobis.XGobisUsername))
+				Expect(req.Header).To(HaveKey(gobis.XGobisGroups))
+				Expect(req.Header).To(HaveKey("X-Forwarded-Host"))
+				Expect(req.Header).To(HaveKey("X-Forwarded-Proto"))
+				Expect(req.Header).To(HaveKey("X-Forwarded-Server"))
+				Expect(req.URL.Path).To(Equal("/mypath"))
+				w.Write([]byte("route1 content"))
+			}))
+
+			server := gobisTestHandler.ServerFirst()
+			req := CreateAppRequest(route)
+			req.Header.Set(forwardedHeader, server.Server.URL+"/mypath")
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).Should(Equal("route1 content"))
+			Expect(resp.StatusCode).Should(Equal(200))
+		})
+		It("should not redirect to backend when not matching path route param", func() {
+			route := gobis.ProxyRoute{
+				Name:            "myroute",
+				Path:            "/forcepath",
+				ForwardedHeader: forwardedHeader,
+			}
+			gobisTestHandler = NewSimpleGobisHandlerTest(route)
+			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Write([]byte("route1 content"))
+			}))
+
+			server := gobisTestHandler.ServerFirst()
+			req := CreateAppRequest(route)
+			req.Header.Set(forwardedHeader, server.Server.URL+"/mypath")
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).ShouldNot(Equal("route1 content"))
+			Expect(resp.StatusCode).Should(Equal(404))
+		})
+	})
+	Context("when use http(s) proxy", func() {
+		It("should use http proxy when is set", func() {
+			httpProxy := CreateBackendServer("httpProxy")
+			route := gobis.ProxyRoute{
+				Name:      "myroute",
+				Path:      "/**",
+				HttpProxy: httpProxy.Server.URL,
+			}
+			httpProxy.SetHandler(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.WriteHeader(http.StatusTemporaryRedirect)
+				w.Write([]byte("proxified"))
+			}))
+			gobisTestHandler = NewSimpleGobisHandlerTest(route)
+			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Write([]byte("route1 content"))
+			}))
+
+			req := CreateAppRequest(route)
+			req.URL.Path = "/anypath"
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).Should(Equal("proxified"))
+			Expect(resp.StatusCode).Should(Equal(http.StatusTemporaryRedirect))
+		})
+		It("should use https proxy when is set", func() {
+			httpsProxy := CreateBackendServer("httpsProxy")
+			route := gobis.ProxyRoute{
+				Name:       "myroute",
+				Path:       "/**",
+				HttpsProxy: httpsProxy.Server.URL,
+			}
+			passThroughProxy := false
+			httpsProxy.SetHandler(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				passThroughProxy = true
+			}))
+			gobisTestHandler = NewSimpleGobisHandlerTestInSsl(route)
+			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Write([]byte("route1 content"))
+			}))
+
+			req := CreateAppRequest(route)
+			req.URL.Path = "/anypath"
+			gobisTestHandler.ServeHTTP(rr, req)
+
+			Expect(passThroughProxy).Should(BeTrue())
+		})
+	})
+	Context("forward with middleware", func() {
+		It("should pass through middleware before forward", func() {
+			middleware := TestHandlerFunc(func(p HandlerParams) {
+				defer GinkgoRecover()
+				Expect(p.Params.TestParams["key"]).Should(Equal("value"))
+				p.W.Write([]byte("intercepted"))
+			})
+			route := gobis.ProxyRoute{
+				Name:             "myroute",
+				Path:             "/**",
+				MiddlewareParams: CreateInlineParams("key", "value"),
+			}
+			gobisTestHandler = NewGobisHandlerTest([]gobis.ProxyRoute{route}, NewMiddlewareTest(middleware))
+			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Write([]byte("forward"))
+			}))
+
+			req := CreateAppRequest(route)
+			req.URL.Path = "/anypath"
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).Should(Equal("intercepted"))
+			Expect(resp.StatusCode).Should(Equal(200))
+		})
+		It("should have request with username and groups when middleware set it", func() {
+			middlewareAuth := TestHandlerFunc(func(p HandlerParams) {
+				gobis.SetUsername(p.Req, "me")
+				gobis.AddGroups(p.Req, "group1", "group2")
+				p.W.Write([]byte("intercepted"))
+				p.Next.ServeHTTP(p.W, p.Req)
+			})
+			middlewareAssert := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p MiddlewareTestParams) {
+				Expect(gobis.Username(req)).To(Equal("me"))
+				Expect(gobis.Groups(req)).To(ContainElement("group1"))
+				Expect(gobis.Groups(req)).To(ContainElement("group2"))
+			})
+			route := gobis.ProxyRoute{
+				Name:             "myroute",
+				Path:             "/**",
+				MiddlewareParams: CreateInlineParams("key", "value"),
+			}
+			gobisTestHandler = NewGobisHandlerTest(
+				[]gobis.ProxyRoute{route},
+				NewMiddlewareTest(middlewareAuth),
+				NewMiddlewareTest(middlewareAssert),
+			)
+			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				defer GinkgoRecover()
+				Expect(req.Header.Get(gobis.XGobisUsername)).Should(Equal("me"))
+				Expect(req.Header.Get(gobis.XGobisGroups)).Should(ContainSubstring("group1"))
+				Expect(req.Header.Get(gobis.XGobisGroups)).Should(ContainSubstring("group2"))
+				w.Write([]byte("forward"))
+			}))
+
+			req := CreateAppRequest(route)
+			req.URL.Path = "/anypath"
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).Should(Equal("interceptedforward"))
+			Expect(resp.StatusCode).Should(Equal(200))
+
 		})
 	})
 })

@@ -35,6 +35,12 @@ func usernamePtr(req *http.Request) *string {
 }
 
 // add groups to a request context
+// this call AddGroups, it's simply for UX
+func SetGroups(req *http.Request, groups ...string) {
+	AddGroups(req, groups...)
+}
+
+// add groups to a request context
 func AddGroups(req *http.Request, groups ...string) {
 	if len(groups) == 0 {
 		return

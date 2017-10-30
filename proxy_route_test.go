@@ -1,10 +1,10 @@
 package gobis_test
 
 import (
+	"encoding/json"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/orange-cloudfoundry/gobis"
-	"encoding/json"
 	"gopkg.in/yaml.v2"
 	"net/http"
 )
@@ -46,7 +46,7 @@ var _ = Describe("ProxyRoute", func() {
 		It("should return original request url if option ForwardedHeader not set", func() {
 			route := ProxyRoute{
 				Path: "/app/**",
-				Url: "http://my.proxified.api",
+				Url:  "http://my.proxified.api",
 			}
 			req, _ := http.NewRequest("GET", "http://localhost.com/path", nil)
 			upstreamUrl := route.UpstreamUrl(req)
@@ -54,9 +54,9 @@ var _ = Describe("ProxyRoute", func() {
 		})
 		It("should return original request url if option ForwardedHeader is set but not found in request", func() {
 			route := ProxyRoute{
-				Path: "/app/**",
+				Path:            "/app/**",
 				ForwardedHeader: "X-Forwarded-Url",
-				Url: "http://my.proxified.api",
+				Url:             "http://my.proxified.api",
 			}
 			req, _ := http.NewRequest("GET", "http://localhost.com/path", nil)
 			upstreamUrl := route.UpstreamUrl(req)
@@ -64,9 +64,9 @@ var _ = Describe("ProxyRoute", func() {
 		})
 		It("should return url without path from header set in option ForwardedHeader if it's set and found", func() {
 			route := ProxyRoute{
-				Path: "/app/**",
+				Path:            "/app/**",
 				ForwardedHeader: "X-Forwarded-Url",
-				Url: "http://my.proxified.api",
+				Url:             "http://my.proxified.api",
 			}
 			req, _ := http.NewRequest("GET", "http://localhost.com/path", nil)
 			req.Header.Set("X-Forwarded-Url", "http://other.url.com/otherpath")
@@ -78,7 +78,7 @@ var _ = Describe("ProxyRoute", func() {
 		It("should return original request path if option ForwardedHeader not set", func() {
 			route := ProxyRoute{
 				Path: "/app/**",
-				Url: "http://my.proxified.api",
+				Url:  "http://my.proxified.api",
 			}
 			req, _ := http.NewRequest("GET", "http://localhost.com/path", nil)
 			path := route.RequestPath(req)
@@ -86,9 +86,9 @@ var _ = Describe("ProxyRoute", func() {
 		})
 		It("should return original request path if option ForwardedHeader is set but not found in request", func() {
 			route := ProxyRoute{
-				Path: "/app/**",
+				Path:            "/app/**",
 				ForwardedHeader: "X-Forwarded-Url",
-				Url: "http://my.proxified.api",
+				Url:             "http://my.proxified.api",
 			}
 			req, _ := http.NewRequest("GET", "http://localhost.com/path", nil)
 			path := route.RequestPath(req)
@@ -96,9 +96,9 @@ var _ = Describe("ProxyRoute", func() {
 		})
 		It("should return path from url found in header set in option ForwardedHeader if it's set and found", func() {
 			route := ProxyRoute{
-				Path: "/app/**",
+				Path:            "/app/**",
 				ForwardedHeader: "X-Forwarded-Url",
-				Url: "http://my.proxified.api",
+				Url:             "http://my.proxified.api",
 			}
 			req, _ := http.NewRequest("GET", "http://localhost.com/path", nil)
 			req.Header.Set("X-Forwarded-Url", "http://other.url.com/otherpath")
@@ -110,7 +110,7 @@ var _ = Describe("ProxyRoute", func() {
 		It("should complain when no name is provided", func() {
 			route := ProxyRoute{
 				Path: "/app/**",
-				Url: "http://my.proxified.api",
+				Url:  "http://my.proxified.api",
 			}
 			err := route.Check()
 			Expect(err).Should(HaveOccurred())
@@ -119,7 +119,7 @@ var _ = Describe("ProxyRoute", func() {
 		It("should complain when no path is provided", func() {
 			route := ProxyRoute{
 				Name: "myroute",
-				Url: "http://my.proxified.api",
+				Url:  "http://my.proxified.api",
 			}
 			err := route.Check()
 			Expect(err).Should(HaveOccurred())
@@ -138,7 +138,7 @@ var _ = Describe("ProxyRoute", func() {
 			route := ProxyRoute{
 				Name: "my route",
 				Path: "/app/**",
-				Url: "http://localhost",
+				Url:  "http://localhost",
 			}
 			err := route.Check()
 			Expect(err).Should(HaveOccurred())
@@ -148,7 +148,7 @@ var _ = Describe("ProxyRoute", func() {
 			route := ProxyRoute{
 				Name: "my route",
 				Path: "/app/**",
-				Url: "http://127.0.0.1",
+				Url:  "http://127.0.0.1",
 			}
 			err := route.Check()
 			Expect(err).Should(HaveOccurred())
@@ -159,7 +159,7 @@ var _ = Describe("ProxyRoute", func() {
 				route := ProxyRoute{
 					Name: "my route",
 					Path: "/**",
-					Url: "http://my.proxified.api",
+					Url:  "http://my.proxified.api",
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
@@ -171,7 +171,7 @@ var _ = Describe("ProxyRoute", func() {
 				route := ProxyRoute{
 					Name: "my route",
 					Path: "/*",
-					Url: "http://my.proxified.api",
+					Url:  "http://my.proxified.api",
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
@@ -183,7 +183,7 @@ var _ = Describe("ProxyRoute", func() {
 				route := ProxyRoute{
 					Name: "my route",
 					Path: "/app/*",
-					Url: "http://my.proxified.api",
+					Url:  "http://my.proxified.api",
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
@@ -197,7 +197,7 @@ var _ = Describe("ProxyRoute", func() {
 				route := ProxyRoute{
 					Name: "my route",
 					Path: "/app/**",
-					Url: "http://my.proxified.api",
+					Url:  "http://my.proxified.api",
 				}
 				err := route.Check()
 				Expect(err).ShouldNot(HaveOccurred())
@@ -211,7 +211,7 @@ var _ = Describe("ProxyRoute", func() {
 				route := ProxyRoute{
 					Name: "my route",
 					Path: "/*/app",
-					Url: "http://my.proxified.api",
+					Url:  "http://my.proxified.api",
 				}
 				err := route.Check()
 				Expect(err).Should(HaveOccurred())
@@ -221,7 +221,7 @@ var _ = Describe("ProxyRoute", func() {
 				route := ProxyRoute{
 					Name: "my route",
 					Path: "/app/***",
-					Url: "http://my.proxified.api",
+					Url:  "http://my.proxified.api",
 				}
 				err := route.Check()
 				Expect(err).Should(HaveOccurred())

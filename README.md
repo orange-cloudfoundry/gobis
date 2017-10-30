@@ -45,7 +45,7 @@ You can found found `gobis.ProxyRoute` options in the godoc: https://godoc.org/g
 package main
 import (
         "github.com/orange-cloudfoundry/gobis"
-        "github.com/orange-cloudfoundry/gobis-middlewares"
+        "github.com/orange-cloudfoundry/gobis-middlewares/cors"
         log "github.com/sirupsen/logrus"
         "net/http"
 )
@@ -56,8 +56,8 @@ func main(){
                         Name: "myapi",
                         Path: "/app/**",
                         Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                        MiddlewareParams: gobis.InterfaceToMap(middlewares.CorsConfig{
-                                Cors: &middlewares.CorsOptions{
+                        MiddlewareParams: gobis.InterfaceToMap(cors.CorsConfig{
+                                Cors: &cors.CorsOptions{
                                         AllowedOrigins: []string{"http://localhost"},
                                 },
                         }),
@@ -69,7 +69,10 @@ func main(){
         if err != nil {
                 panic(err)
         }
-        return http.ListenAndServe(":8080", gobisHandler)
+        err = http.ListenAndServe(":8080", gobisHandler)
+        if err != nil {
+                panic(err)
+        }
 }
 ```
 
@@ -91,7 +94,7 @@ Gobis will send some headers to the app when the request is forwarded:
 package main
 import (
         "github.com/orange-cloudfoundry/gobis"
-        "github.com/orange-cloudfoundry/gobis-middlewares"
+        "github.com/orange-cloudfoundry/gobis-middlewares/cors"
         "github.com/gorilla/mux"
         "net/http"
 )
@@ -108,13 +111,18 @@ func main(){
         rtr := mux.NewRouter()
         gobisHandler, err := gobis.NewDefaultHandler(
                     configHandler,
-                    gobis.NewRouterFactoryWithMuxRouter(rtr, middlewares.NewCors()),
+                    gobis.NewRouterFactoryWithMuxRouter(func()*mux.Router{
+                        return rtr
+                    }, cors.NewCors()),
                 )
         if err != nil {
                 panic(err)
         }
-        rtr.HandleFunc("/gobis/{d:.*}", gobisHandler)
-        return http.ListenAndServe(":8080", rtr)
+        rtr.HandleFunc("/gobis/{d:.*}", gobisHandler.ServeHTTP)
+        err = http.ListenAndServe(":8080", rtr)
+        if err != nil {
+                panic(err)
+        }
 }
 ```
 
@@ -142,7 +150,7 @@ import (
         "net/http"
 )
 type TraceConfig struct{
-      EnableTrace string  `mapstructure:"enable_trace" json:"enable_trace" yaml:"enable_trace"`
+      EnableTrace bool  `mapstructure:"enable_trace" json:"enable_trace" yaml:"enable_trace"`
 }
 type traceMiddleware struct {}
 func (traceMiddleware) Handler(proxyRoute gobis.ProxyRoute, params interface{}, next http.Handler) (http.Handler, error) {
@@ -187,7 +195,10 @@ func main(){
         if err != nil {
                 panic(err)
         }
-        return http.ListenAndServe(":8080", gobisHandler)
+        err = http.ListenAndServe(":8080", gobisHandler)
+        if err != nil {
+                panic(err)
+        }
 }
 ```
 

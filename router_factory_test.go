@@ -208,6 +208,42 @@ var _ = Describe("RouterFactory", func() {
 				})
 			})
 		})
+		Context("when startPath is set", func() {
+			It("should create a mux router with all routes starting with path set", func() {
+				routes := []ProxyRoute{
+					{
+						Name: "app1",
+						Path: "/app1/**",
+						Url:  "http://my.proxified.api",
+					},
+					{
+						Name: "app2",
+						Path: "/app2/*",
+						Url:  "http://my.second.proxified.api",
+					},
+				}
+				rtr, err := factory.CreateMuxRouter(routes, "/startpath")
+				Expect(err).NotTo(HaveOccurred())
+				index := 0
+				rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+					u, _ := url.Parse("http://localhost/startpath/" + routes[index].Name + "/test/toto")
+					req := &http.Request{URL: u}
+					if index == 0 {
+						Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
+					} else {
+						Expect(route.Match(req, &mux.RouteMatch{})).Should(BeFalse())
+					}
+					if route.GetName() == "" {
+						return nil
+					}
+					Expect(route.GetName()).Should(Equal(routes[index].Name))
+					index++
+					return nil
+				})
+				Expect(index).Should(Equal(len(routes)))
+
+			})
+		})
 		It("should create a mux router with all routes", func() {
 			routes := []ProxyRoute{
 				{
@@ -273,7 +309,9 @@ var _ = Describe("RouterFactory", func() {
 					Methods: []string{"GET"},
 				},
 			}
-			muxFactory := NewRouterFactoryWithMuxRouter(parentMuxRouter)
+			muxFactory := NewRouterFactoryWithMuxRouter(func() *mux.Router {
+				return parentMuxRouter
+			})
 			rtr, err := muxFactory.CreateMuxRouter(routes, "")
 			Expect(err).NotTo(HaveOccurred())
 			var r *mux.Route
