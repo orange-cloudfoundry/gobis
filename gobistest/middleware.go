@@ -63,6 +63,20 @@ func (t *MiddlewareTest) SetMiddlewareParams(middlewareParams map[string]interfa
 	route.MiddlewareParams = middlewareParams
 	t.route = route
 }
+func (t *MiddlewareTest) AddMiddlewareParam(rootKey string, key string, value interface{}) {
+	rootParams := t.route.MiddlewareParams
+	params := rootParams[rootKey].(map[string]interface{})
+	params[key] = value
+	rootParams[rootKey] = params
+	t.SetMiddlewareParams(rootParams)
+}
+func (t *MiddlewareTest) AddMiddlewareParamToFirst(key string, value interface{}) {
+	var rootKey string
+	for rootKey, _ = range t.route.MiddlewareParams {
+		break
+	}
+	t.AddMiddlewareParam(rootKey, key, value)
+}
 func (t *MiddlewareTest) SetMiddlewares(middlewareHandlers []gobis.MiddlewareHandler) {
 	t.middlewareHandlers = middlewareHandlers
 }
