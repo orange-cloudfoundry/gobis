@@ -25,6 +25,7 @@ It's largely inspired by [Netflix/zuul](https://github.com/Netflix/zuul).
   - [trace](https://github.com/orange-cloudfoundry/gobis-middlewares#trace)
   - and more see: https://github.com/orange-cloudfoundry/gobis-middlewares
 - [Running a standalone server](#running-a-standalone-server)
+- [Pro tips](#pro-tips)
 - [FAQ](#faq)
 
 ## Installation
@@ -211,6 +212,45 @@ Middlewares are located on repo https://github.com/orange-cloudfoundry/gobis-mid
 You can run a prepared gobis server with all default middlewares in one command line, see repo https://github.com/orange-cloudfoundry/gobis-server .
 
 This server can be ran on cloud like Kubernetes, Cloud Foundry or Heroku.
+
+## Pro tips
+
+You can set multiple middleware params programmatically by using a dummy structure containing each config you wanna set, example:
+```go
+package main
+import (
+    "github.com/orange-cloudfoundry/gobis-middlewares/trace"
+    "github.com/orange-cloudfoundry/gobis-middlewares/cors"
+    "github.com/orange-cloudfoundry/gobis"
+)
+func main(){
+    configHandler := gobis.DefaultHandlerConfig{
+            Routes: []gobis.ProxyRoute{
+                {
+                    Name: "myapi",
+                    Path: "/app/**",
+                    Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
+                    MiddlewareParams: struct {
+                        trace.TraceConfig
+                        cors.CorsConfig
+                    }{
+                        TraceConfig: trace.TraceConfig{
+                            Trace: &trace.TraceOptions{
+                                Enabled: true,
+                            },
+                        },
+                        CorsConfig: cors.CorsConfig{
+                            Cors: &cors.CorsOptions{
+                                Enabled: true,
+                            },
+                        },
+                    },
+                },
+            },
+    }
+    gobisHandler, err := gobis.NewDefaultHandler(configHandler, gobis.NewRouterFactory(trace.NewTrace(), cors.NewCors()))
+}
+```
 
 ## FAQ
 
