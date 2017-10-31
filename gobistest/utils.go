@@ -26,7 +26,7 @@ func (h ParamHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func (p *PackServer) SetHandler(handler http.Handler) {
 	p.Handler.Handler = handler
 }
-func CreateAppRequest(proxyRoute gobis.ProxyRoute, methods ...string) *http.Request {
+func CreateRequest(proxyRoute gobis.ProxyRoute, methods ...string) *http.Request {
 	proxyRoute.LoadParams()
 	appPath := proxyRoute.AppPath
 	if appPath == "" {
@@ -47,4 +47,27 @@ func CreateBackendServer(name string) *PackServer {
 	paramHandler := &ParamHandler{}
 	backendServer := httptest.NewServer(paramHandler)
 	return &PackServer{paramHandler, backendServer, name}
+}
+func CreateInlineParams(rootKey string, elems ...interface{}) map[string]interface{} {
+	if len(elems)%2 == 1 {
+		panic("Parameters are not in pairs")
+	}
+	finalParams := make(map[string]interface{})
+	var data interface{}
+	for i, elem := range elems {
+		if (i+1)%2 == 1 {
+			data = elem
+			continue
+		}
+		finalParams[fmt.Sprint(data)] = elem
+	}
+	return CreateParams(rootKey, finalParams)
+}
+func CreateInlineTestParams(elems ...interface{}) map[string]interface{} {
+	return CreateInlineParams("test_params", elems...)
+}
+func CreateParams(rootKey string, params map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		rootKey: params,
+	}
 }

@@ -48,7 +48,7 @@ var _ = Describe("TestIntegration", func() {
 				w.Write([]byte("route1 content"))
 			}))
 
-			req := CreateAppRequest(defaultRoute, "POST")
+			req := CreateRequest(defaultRoute, "POST")
 			req.URL.Path = "/anypath"
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
@@ -72,7 +72,7 @@ var _ = Describe("TestIntegration", func() {
 				w.Write([]byte("route1 content"))
 			}))
 
-			req := CreateAppRequest(defaultRoute)
+			req := CreateRequest(defaultRoute)
 			req.URL.Path = "/anypath"
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
@@ -97,7 +97,7 @@ var _ = Describe("TestIntegration", func() {
 				w.Write([]byte("route1 content"))
 			}))
 
-			req := CreateAppRequest(defaultRoute)
+			req := CreateRequest(defaultRoute)
 			req.URL.Path = "/apath"
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
@@ -125,7 +125,7 @@ var _ = Describe("TestIntegration", func() {
 				w.Write([]byte("route1 content"))
 			}))
 
-			req := CreateAppRequest(defaultRoute)
+			req := CreateRequest(defaultRoute)
 			req.URL.Path = "/anypath"
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
@@ -146,7 +146,7 @@ var _ = Describe("TestIntegration", func() {
 				w.Write([]byte("route1 content"))
 			}))
 
-			req := CreateAppRequest(defaultRoute)
+			req := CreateRequest(defaultRoute)
 			req.URL.Path = "/anypath"
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
@@ -157,18 +157,18 @@ var _ = Describe("TestIntegration", func() {
 			Expect(resp.StatusCode).Should(Equal(404))
 		})
 		It("should show error as json when user set ShowError to true", func() {
-			errorHandler := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p MiddlewareTestParams) {
+			errorHandler := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p FakeMiddlewareParams) {
 				panic("this is an error")
 			})
 			gobisTestHandler = NewGobisHandlerTest(
 				[]gobis.ProxyRoute{defaultRoute},
-				NewMiddlewareTest(errorHandler),
+				NewFakeMiddleware(errorHandler),
 			)
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				w.Write([]byte("route1 content"))
 			}))
 
-			req := CreateAppRequest(defaultRoute)
+			req := CreateRequest(defaultRoute)
 			req.URL.Path = "/anypath"
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
@@ -202,7 +202,7 @@ var _ = Describe("TestIntegration", func() {
 				}))
 
 				// first route
-				req := CreateAppRequest(defaultRoute)
+				req := CreateRequest(defaultRoute)
 				req.URL.Path = "/firstroute"
 				gobisTestHandler.ServeHTTP(rr, req)
 				resp := rr.Result()
@@ -214,7 +214,7 @@ var _ = Describe("TestIntegration", func() {
 
 				//second route
 				rr = httptest.NewRecorder()
-				req = CreateAppRequest(defaultRoute)
+				req = CreateRequest(defaultRoute)
 				req.URL.Path = "/secondroute"
 				gobisTestHandler.ServeHTTP(rr, req)
 				resp = rr.Result()
@@ -242,7 +242,7 @@ var _ = Describe("TestIntegration", func() {
 				}))
 
 				// first route
-				req := CreateAppRequest(defaultRoute)
+				req := CreateRequest(defaultRoute)
 				req.URL.Path = "/firstroute"
 				gobisTestHandler.ServeHTTP(rr, req)
 				resp := rr.Result()
@@ -254,7 +254,7 @@ var _ = Describe("TestIntegration", func() {
 
 				//second route
 				rr = httptest.NewRecorder()
-				req = CreateAppRequest(defaultRoute)
+				req = CreateRequest(defaultRoute)
 				req.URL.Path = "/anypath"
 				gobisTestHandler.ServeHTTP(rr, req)
 				resp = rr.Result()
@@ -286,7 +286,7 @@ var _ = Describe("TestIntegration", func() {
 			}))
 
 			// first route
-			req := CreateAppRequest(route)
+			req := CreateRequest(route)
 			req.URL.Path = "/parent/any"
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
@@ -298,7 +298,7 @@ var _ = Describe("TestIntegration", func() {
 
 			//second route
 			rr = httptest.NewRecorder()
-			req = CreateAppRequest(subRoute)
+			req = CreateRequest(subRoute)
 			req.URL.Path = "/parent/sub"
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp = rr.Result()
@@ -309,13 +309,13 @@ var _ = Describe("TestIntegration", func() {
 			Expect(resp.StatusCode).Should(Equal(200))
 		})
 		It("should apply middleware from parent and after middleware from sub", func() {
-			midParent := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p MiddlewareTestParams) {
+			midParent := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p FakeMiddlewareParams) {
 				if _, ok := p.TestParams["parentHeaderKey"]; !ok {
 					return
 				}
 				req.Header.Set(p.TestParams["parentHeaderKey"].(string), p.TestParams["parentHeaderValue"].(string))
 			})
-			midSub := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p MiddlewareTestParams) {
+			midSub := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p FakeMiddlewareParams) {
 				if _, ok := p.TestParams["subHeaderKey"]; !ok {
 					return
 				}
@@ -324,7 +324,7 @@ var _ = Describe("TestIntegration", func() {
 			subRoute := gobis.ProxyRoute{
 				Name: "subRoute",
 				Path: "/sub",
-				MiddlewareParams: CreateInlineParams(
+				MiddlewareParams: CreateInlineTestParams(
 					"subHeaderKey", "X-Sub-Header",
 					"subHeaderValue", "sub",
 				),
@@ -333,15 +333,15 @@ var _ = Describe("TestIntegration", func() {
 				Name:   "parentRoute",
 				Path:   "/parent/**",
 				Routes: []gobis.ProxyRoute{subRoute},
-				MiddlewareParams: CreateInlineParams(
+				MiddlewareParams: CreateInlineTestParams(
 					"parentHeaderKey", "X-Parent-Header",
 					"parentHeaderValue", "parent",
 				),
 			}
 			gobisTestHandler = NewGobisHandlerTest(
 				[]gobis.ProxyRoute{route},
-				NewMiddlewareTest(midParent),
-				NewMiddlewareTest(midSub),
+				NewFakeMiddleware(midParent),
+				NewFakeMiddleware(midSub),
 			)
 			gobisTestHandler.SetBackendHandler(route, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				w.Write([]byte("parent"))
@@ -353,7 +353,7 @@ var _ = Describe("TestIntegration", func() {
 				w.Write([]byte("sub"))
 			}))
 
-			req := CreateAppRequest(subRoute)
+			req := CreateRequest(subRoute)
 			req.URL.Path = "/parent/sub"
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
@@ -386,7 +386,7 @@ var _ = Describe("TestIntegration", func() {
 			}))
 
 			server := gobisTestHandler.ServerFirst()
-			req := CreateAppRequest(route)
+			req := CreateRequest(route)
 			req.Header.Set(forwardedHeader, server.Server.URL+"/mypath")
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
@@ -408,7 +408,7 @@ var _ = Describe("TestIntegration", func() {
 			}))
 
 			server := gobisTestHandler.ServerFirst()
-			req := CreateAppRequest(route)
+			req := CreateRequest(route)
 			req.Header.Set(forwardedHeader, server.Server.URL+"/mypath")
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
@@ -436,7 +436,7 @@ var _ = Describe("TestIntegration", func() {
 				w.Write([]byte("route1 content"))
 			}))
 
-			req := CreateAppRequest(route)
+			req := CreateRequest(route)
 			req.URL.Path = "/anypath"
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
@@ -462,7 +462,7 @@ var _ = Describe("TestIntegration", func() {
 				w.Write([]byte("route1 content"))
 			}))
 
-			req := CreateAppRequest(route)
+			req := CreateRequest(route)
 			req.URL.Path = "/anypath"
 			gobisTestHandler.ServeHTTP(rr, req)
 
@@ -479,14 +479,14 @@ var _ = Describe("TestIntegration", func() {
 			route := gobis.ProxyRoute{
 				Name:             "myroute",
 				Path:             "/**",
-				MiddlewareParams: CreateInlineParams("key", "value"),
+				MiddlewareParams: CreateInlineTestParams("key", "value"),
 			}
-			gobisTestHandler = NewGobisHandlerTest([]gobis.ProxyRoute{route}, NewMiddlewareTest(middleware))
+			gobisTestHandler = NewGobisHandlerTest([]gobis.ProxyRoute{route}, NewFakeMiddleware(middleware))
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				w.Write([]byte("forward"))
 			}))
 
-			req := CreateAppRequest(route)
+			req := CreateRequest(route)
 			req.URL.Path = "/anypath"
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
@@ -503,7 +503,7 @@ var _ = Describe("TestIntegration", func() {
 				p.W.Write([]byte("intercepted"))
 				p.Next.ServeHTTP(p.W, p.Req)
 			})
-			middlewareAssert := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p MiddlewareTestParams) {
+			middlewareAssert := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p FakeMiddlewareParams) {
 				Expect(gobis.Username(req)).To(Equal("me"))
 				Expect(gobis.Groups(req)).To(ContainElement("group1"))
 				Expect(gobis.Groups(req)).To(ContainElement("group2"))
@@ -511,12 +511,12 @@ var _ = Describe("TestIntegration", func() {
 			route := gobis.ProxyRoute{
 				Name:             "myroute",
 				Path:             "/**",
-				MiddlewareParams: CreateInlineParams("key", "value"),
+				MiddlewareParams: CreateInlineTestParams("key", "value"),
 			}
 			gobisTestHandler = NewGobisHandlerTest(
 				[]gobis.ProxyRoute{route},
-				NewMiddlewareTest(middlewareAuth),
-				NewMiddlewareTest(middlewareAssert),
+				NewFakeMiddleware(middlewareAuth),
+				NewFakeMiddleware(middlewareAssert),
 			)
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				defer GinkgoRecover()
@@ -526,7 +526,7 @@ var _ = Describe("TestIntegration", func() {
 				w.Write([]byte("forward"))
 			}))
 
-			req := CreateAppRequest(route)
+			req := CreateRequest(route)
 			req.URL.Path = "/anypath"
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
