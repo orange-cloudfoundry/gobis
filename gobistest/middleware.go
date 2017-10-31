@@ -78,3 +78,6 @@ func (t *MiddlewareTest) SetRoute(route gobis.ProxyRoute) {
 func (t *MiddlewareTest) SetBackendHandler(handler http.Handler) {
 	t.backendHandler = handler
 }
+func (t MiddlewareTest) CreateRequest(methods ...string) *http.Request {
+	return CreateRequest(t.route, methods...)
+}
