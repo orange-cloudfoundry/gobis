@@ -16,7 +16,7 @@ type MiddlewareTest struct {
 	middlewareHandlers []gobis.MiddlewareHandler
 }
 
-func NewSimpleMiddlewareTest(middlewareParams map[string]interface{}, middlewareHandlers ...gobis.MiddlewareHandler) *MiddlewareTest {
+func NewSimpleMiddlewareTest(middlewareParams interface{}, middlewareHandlers ...gobis.MiddlewareHandler) *MiddlewareTest {
 	midNames := make([]string, len(middlewareHandlers))
 	for i, middleware := range middlewareHandlers {
 		midNames[i] = gobis.GetMiddlewareName(middleware)
@@ -58,21 +58,28 @@ func (t MiddlewareTest) ResponseRecorder() *httptest.ResponseRecorder {
 func (t MiddlewareTest) ResponseWriter() http.ResponseWriter {
 	return t.rr
 }
-func (t *MiddlewareTest) SetMiddlewareParams(middlewareParams map[string]interface{}) {
+func (t *MiddlewareTest) SetMiddlewareParams(middlewareParams interface{}) {
 	route := t.route
 	route.MiddlewareParams = middlewareParams
 	t.route = route
 }
 func (t *MiddlewareTest) AddMiddlewareParam(rootKey string, key string, value interface{}) {
-	rootParams := t.route.MiddlewareParams
+	if _, ok := t.route.MiddlewareParams.(map[string]interface{}); !ok {
+		panic("Middleware params is not a map[string]interface{} type. ")
+	}
+	rootParams := t.route.MiddlewareParams.(map[string]interface{})
 	params := rootParams[rootKey].(map[string]interface{})
 	params[key] = value
 	rootParams[rootKey] = params
 	t.SetMiddlewareParams(rootParams)
 }
 func (t *MiddlewareTest) AddMiddlewareParamToFirst(key string, value interface{}) {
+	if _, ok := t.route.MiddlewareParams.(map[string]interface{}); !ok {
+		panic("Middleware params is not a map[string]interface{} type. ")
+	}
+	rootParams := t.route.MiddlewareParams.(map[string]interface{})
 	var rootKey string
-	for rootKey, _ = range t.route.MiddlewareParams {
+	for rootKey, _ = range rootParams {
 		break
 	}
 	t.AddMiddlewareParam(rootKey, key, value)

@@ -215,7 +215,10 @@ func middlewareHandlerToHandler(middleware MiddlewareHandler, proxyRoute ProxyRo
 	entry.Debugf("orange-cloudfoundry/gobis/proxy: Finished adding %s middleware.", funcName)
 	return handler, nil
 }
-func paramsToSchema(params map[string]interface{}, schema interface{}) interface{} {
+func paramsToSchema(params interface{}, schema interface{}) interface{} {
+	if params != nil && reflect.TypeOf(params).Kind() != reflect.Map {
+		params = InterfaceToMap(params)
+	}
 	val := reflect.New(reflect.TypeOf(schema))
 	err := mapstructure.Decode(params, val.Interface())
 	if err != nil {

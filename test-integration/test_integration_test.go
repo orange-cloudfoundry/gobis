@@ -310,16 +310,18 @@ var _ = Describe("TestIntegration", func() {
 		})
 		It("should apply middleware from parent and after middleware from sub", func() {
 			midParent := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p FakeMiddlewareParams) {
-				if _, ok := p.TestParams["parentHeaderKey"]; !ok {
+				params := p.TestParams.(map[string]interface{})
+				if _, ok := params["parentHeaderKey"]; !ok {
 					return
 				}
-				req.Header.Set(p.TestParams["parentHeaderKey"].(string), p.TestParams["parentHeaderValue"].(string))
+				req.Header.Set(params["parentHeaderKey"].(string), params["parentHeaderValue"].(string))
 			})
 			midSub := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p FakeMiddlewareParams) {
-				if _, ok := p.TestParams["subHeaderKey"]; !ok {
+				params := p.TestParams.(map[string]interface{})
+				if _, ok := params["subHeaderKey"]; !ok {
 					return
 				}
-				req.Header.Set(p.TestParams["subHeaderKey"].(string), p.TestParams["subHeaderValue"].(string))
+				req.Header.Set(params["subHeaderKey"].(string), params["subHeaderValue"].(string))
 			})
 			subRoute := gobis.ProxyRoute{
 				Name: "subRoute",
@@ -473,13 +475,50 @@ var _ = Describe("TestIntegration", func() {
 		It("should pass through middleware before forward", func() {
 			middleware := TestHandlerFunc(func(p HandlerParams) {
 				defer GinkgoRecover()
-				Expect(p.Params.TestParams["key"]).Should(Equal("value"))
+				params := p.Params.TestParams.(map[string]interface{})
+				Expect(params["key"]).Should(Equal("value"))
 				p.W.Write([]byte("intercepted"))
 			})
 			route := gobis.ProxyRoute{
 				Name:             "myroute",
 				Path:             "/**",
 				MiddlewareParams: CreateInlineTestParams("key", "value"),
+			}
+			gobisTestHandler = NewGobisHandlerTest([]gobis.ProxyRoute{route}, NewFakeMiddleware(middleware))
+			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Write([]byte("forward"))
+			}))
+
+			req := CreateRequest(route)
+			req.URL.Path = "/anypath"
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).Should(Equal("intercepted"))
+			Expect(resp.StatusCode).Should(Equal(200))
+		})
+		It("should pass through middleware before forward when middleware params is a struct", func() {
+			type Astruct struct {
+				Key   string `mapstructure:"key"`
+				Value string `mapstructure:"value"`
+			}
+			middleware := TestHandlerFunc(func(p HandlerParams) {
+				defer GinkgoRecover()
+				log.Error(p.Params.TestParams)
+				params := p.Params.TestParams.(map[interface{}]interface{})
+				Expect(params["key"]).Should(Equal("value"))
+				p.W.Write([]byte("intercepted"))
+			})
+			route := gobis.ProxyRoute{
+				Name: "myroute",
+				Path: "/**",
+				MiddlewareParams: FakeMiddlewareParams{
+					TestParams: map[string]interface{}{
+						"key": "value",
+					},
+				},
 			}
 			gobisTestHandler = NewGobisHandlerTest([]gobis.ProxyRoute{route}, NewFakeMiddleware(middleware))
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {

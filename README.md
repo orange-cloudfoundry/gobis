@@ -56,11 +56,11 @@ func main(){
                         Name: "myapi",
                         Path: "/app/**",
                         Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                        MiddlewareParams: gobis.InterfaceToMap(cors.CorsConfig{
+                        MiddlewareParams: cors.CorsConfig{
                                 Cors: &cors.CorsOptions{
                                         AllowedOrigins: []string{"http://localhost"},
                                 },
-                        }),
+                        },
                     },
                 },
         }

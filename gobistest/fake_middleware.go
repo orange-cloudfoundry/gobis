@@ -22,7 +22,7 @@ func (h SimpleTestHandleFunc) ServeHTTP(p HandlerParams) {
 }
 
 type FakeMiddlewareParams struct {
-	TestParams map[string]interface{} `mapstructure:"test_params" json:"test_params" yaml:"test_params"`
+	TestParams interface{} `mapstructure:"test_params" json:"test_params" yaml:"test_params"`
 }
 type HandlerParams struct {
 	W      http.ResponseWriter
