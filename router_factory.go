@@ -147,7 +147,7 @@ func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute, startPath string
 		if len(sub) >= 2 {
 			finalPath = sub[1]
 		}
-		setPath(req, finalPath)
+		SetPath(req, finalPath)
 		upstreamUrl := proxyRoute.UpstreamUrl(req)
 		if proxyRoute.ForwardedHeader != "" {
 			req.URL.RawQuery = upstreamUrl.RawQuery

@@ -471,7 +471,65 @@ var _ = Describe("TestIntegration", func() {
 			Expect(passThroughProxy).Should(BeTrue())
 		})
 	})
+	Context("when use a horward handler in route", func() {
+		It("should not use reverse proxy but handler instead", func() {
+			route := gobis.ProxyRoute{
+				Name: "myroute",
+				Path: "/**",
+				ForwardHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Write([]byte("content forward"))
+				}),
+			}
+			gobisTestHandler = NewSimpleGobisHandlerTestInSsl(route)
+			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Write([]byte("should not be seen"))
+			}))
+
+			req := CreateRequest(route)
+			gobisTestHandler.ServeHTTP(rr, req)
+			resp := rr.Result()
+
+			content, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).Should(Equal("content forward"))
+			Expect(resp.StatusCode).Should(Equal(200))
+		})
+	})
 	Context("forward with middleware", func() {
+		Context("middleware override path", func() {
+			It("should use the overrided path when reverse", func() {
+				middleware := TestHandlerFunc(func(p HandlerParams) {
+					defer GinkgoRecover()
+					params := p.Params.TestParams.(map[string]interface{})
+					Expect(params["key"]).Should(Equal("value"))
+					p.W.Write([]byte("intercepted "))
+					gobis.SetPath(p.Req, "/newpath")
+					p.Next.ServeHTTP(p.W, p.Req)
+				})
+				route := gobis.ProxyRoute{
+					Name:             "myroute",
+					Path:             "/**",
+					MiddlewareParams: CreateInlineTestParams("key", "value"),
+					ForwardHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						if r.URL.Path == "/newpath" {
+							w.Write([]byte("forward new path"))
+						}
+					}),
+				}
+				gobisTestHandler = NewGobisHandlerTest([]gobis.ProxyRoute{route}, NewFakeMiddleware(middleware))
+				gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {}))
+
+				req := CreateRequest(route)
+				req.URL.Path = "/anypath"
+				gobisTestHandler.ServeHTTP(rr, req)
+				resp := rr.Result()
+
+				content, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(content)).Should(Equal("intercepted forward new path"))
+				Expect(resp.StatusCode).Should(Equal(200))
+			})
+		})
 		It("should pass through middleware before forward", func() {
 			middleware := TestHandlerFunc(func(p HandlerParams) {
 				defer GinkgoRecover()

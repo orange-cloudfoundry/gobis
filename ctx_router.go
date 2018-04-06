@@ -11,7 +11,7 @@ type RouterContextKey int
 
 
 // Set the rest of the path from a request url to his context (used by router factory)
-func setPath(req *http.Request, path string) {
+func SetPath(req *http.Request, path string) {
 	AddContextValue(req, pathContextKey, path)
 }
 
