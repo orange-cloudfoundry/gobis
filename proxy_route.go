@@ -26,6 +26,7 @@ type ProxyRoute struct {
 	// Query parameters can be passed, e.g.: http://localhost?param=1
 	// User and password are given as basic auth too (this is not recommended to use it), e.g.: http://user:password@localhost
 	// Can be empty if ForwardedHeader is set
+	// This is ignored if ForwardHandler is set
 	Url string `json:"url" yaml:"url"`
 	// If set upstream url will be took from the value of this header inside the received request
 	// Url option will be used for the router to match host and path (if not empty) found in value of this header and host and path found in url (If NoUrlMatch is false)
@@ -57,6 +58,8 @@ type ProxyRoute struct {
 	ShowError bool `json:"show_error" yaml:"show_error"`
 	// Chain others routes in a route
 	Routes []ProxyRoute `json:"routes" yaml:"routes"`
+	// Set an handler to use to forward request to this handler when using gobis programmatically
+	ForwardHandler http.Handler `json:"-" yaml:"-"`
 }
 
 func (r *ProxyRoute) UnmarshalJSON(data []byte) error {
@@ -151,6 +154,10 @@ func (r ProxyRoute) RequestPath(req *http.Request) string {
 	return upstreamUrl.Path
 }
 func (r ProxyRoute) UpstreamUrl(req *http.Request) *url.URL {
+	if r.ForwardHandler != nil {
+		req.URL.Path = ""
+		return req.URL
+	}
 	var upstreamUrl *url.URL
 	if r.ForwardedHeader == "" {
 		upstreamUrl, _ = url.Parse(r.Url)

@@ -244,6 +244,39 @@ var _ = Describe("RouterFactory", func() {
 
 			})
 		})
+		Context("when using a forward handler in route", func() {
+			It("should create a mux router with all routes", func() {
+				routes := []ProxyRoute{
+					{
+						Name:           "app1",
+						Path:           "/app1/**",
+						ForwardHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+					},
+					{
+						Name:           "app2",
+						Path:           "/app2/*",
+						ForwardHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+					},
+				}
+				rtr, err := factory.CreateMuxRouter(routes, "")
+				Expect(err).NotTo(HaveOccurred())
+				index := 0
+				rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+					u, _ := url.Parse("http://localhost/" + routes[index].Name + "/test/toto")
+					req := &http.Request{URL: u}
+					if index == 0 {
+						Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
+					} else {
+						Expect(route.Match(req, &mux.RouteMatch{})).Should(BeFalse())
+					}
+					Expect(route.GetName()).Should(Equal(routes[index].Name))
+					index++
+					return nil
+				})
+				Expect(index).Should(Equal(len(routes)))
+
+			})
+		})
 		It("should create a mux router with all routes", func() {
 			routes := []ProxyRoute{
 				{

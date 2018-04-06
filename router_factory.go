@@ -31,7 +31,7 @@ type RouterFactory interface {
 	CreateMuxRouterRouteService([]ProxyRoute, string, *url.URL) (*mux.Router, error)
 	CreateMuxRouter([]ProxyRoute, string) (*mux.Router, error)
 	CreateForwardHandler(ProxyRoute) (http.HandlerFunc, error)
-	CreateHttpHandler(ProxyRoute) (http.Handler, error)
+	CreateReverseHandler(ProxyRoute) (http.Handler, error)
 }
 
 type CreateTransportFunc func(ProxyRoute) http.RoundTripper
@@ -113,8 +113,12 @@ func (r RouterFactoryService) CreateMuxRouter(proxyRoutes []ProxyRoute, startPat
 	log.Debug("orange-cloudfoundry/gobis/proxy: Finished creating handlers ...")
 	return parentRtr, nil
 }
-func (r RouterFactoryService) CreateHttpHandler(proxyRoute ProxyRoute) (http.Handler, error) {
+func (r RouterFactoryService) CreateReverseHandler(proxyRoute ProxyRoute) (http.Handler, error) {
 	entry := log.WithField("route_name", proxyRoute.Name)
+	if proxyRoute.ForwardHandler != nil {
+		entry.Debug("orange-cloudfoundry/gobis/proxy: Handler for route will use forward handler provided.")
+		return proxyRoute.ForwardHandler, nil
+	}
 	var err error
 	var fwd *forward.Forwarder
 	if !proxyRoute.NoBuffer {
@@ -167,7 +171,7 @@ func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute, startPath string
 	})
 }
 func (r RouterFactoryService) CreateForwardHandler(proxyRoute ProxyRoute) (http.HandlerFunc, error) {
-	httpHandler, err := r.CreateHttpHandler(proxyRoute)
+	httpHandler, err := r.CreateReverseHandler(proxyRoute)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +236,6 @@ func ForwardRequest(proxyRoute ProxyRoute, req *http.Request, restPath string) {
 	req.Header.Add(XGobisGroups, strings.Join(Groups(req), ","))
 	fwdUrl := proxyRoute.UpstreamUrl(req)
 	req.URL.Host = fwdUrl.Host
-
 	req.URL.Scheme = fwdUrl.Scheme
 	finalPath := fwdUrl.Path + restPath
 
