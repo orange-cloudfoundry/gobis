@@ -56,7 +56,7 @@ var _ = Describe("TestIntegration", func() {
 			content, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).ShouldNot(Equal("route1 content"))
-			Expect(resp.StatusCode).Should(Equal(404))
+			Expect(resp.StatusCode).Should(Equal(405))
 		})
 		It("should redirect to backend with gobis header", func() {
 			defaultRoute.Path = "/anypath"
@@ -564,8 +564,7 @@ var _ = Describe("TestIntegration", func() {
 			}
 			middleware := TestHandlerFunc(func(p HandlerParams) {
 				defer GinkgoRecover()
-				log.Error(p.Params.TestParams)
-				params := p.Params.TestParams.(map[interface{}]interface{})
+				params := p.Params.TestParams.(map[string]interface{})
 				Expect(params["key"]).Should(Equal("value"))
 				p.W.Write([]byte("intercepted"))
 			})

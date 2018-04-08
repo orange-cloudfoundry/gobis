@@ -50,6 +50,7 @@ type ProxyRoute struct {
 	// Set to true to not check ssl certificates from upstream (not really recommended)
 	InsecureSkipVerify bool `json:"insecure_skip_verify" yaml:"insecure_skip_verify"`
 	// It was made to pass arbitrary params to use it after in gobis middlewares
+	// This can be a structure (to set them programmatically) or a map[string]interface{} (to set them from a config file)
 	MiddlewareParams interface{} `json:"middleware_params" yaml:"middleware_params"`
 	// This is the path without glob variables
 	// Filled when unmarshal json or yaml or when running LoadParams on route

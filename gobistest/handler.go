@@ -52,8 +52,7 @@ func NewGobisHandlerTestSsl(routes []gobis.ProxyRoute, inSsl bool, middlewareHan
 	config := gobis.DefaultHandlerConfig{
 		Routes: finalRoutes,
 	}
-	routerFactory := gobis.NewRouterFactory(middlewareHandlers...)
-	gobisHandler, err := gobis.NewDefaultHandler(config, routerFactory)
+	gobisHandler, err := gobis.NewDefaultHandler(config, middlewareHandlers...)
 	if err != nil {
 		panic(err)
 	}

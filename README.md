@@ -9,7 +9,7 @@ It's largely inspired by [Netflix/zuul](https://github.com/Netflix/zuul).
 - [installation](#installation)
 - [Usage](#usage)
   - [Headers sent by gobis to reversed app](headers-sent-by-gobis-to-reversed-app)
-  - [Example with your own router and middlewares](#example-with-your-own-router-and-middlewares)
+  - [Example using gobis as a middleware](#example-using-gobis-as-a-middleware)
 - [Middlewares](#middlewares)
   - [Create your middleware](#create-your-middleware)
 - [Available middlewares](https://github.com/orange-cloudfoundry/gobis-middlewares)
@@ -51,29 +51,29 @@ import (
         "net/http"
 )
 func main(){
-        configHandler := gobis.DefaultHandlerConfig{
-                Routes: []gobis.ProxyRoute{
-                    {
-                        Name: "myapi",
-                        Path: "/app/**",
-                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                        MiddlewareParams: cors.CorsConfig{
-                                Cors: &cors.CorsOptions{
-                                        AllowedOrigins: []string{"http://localhost"},
-                                },
-                        },
-                    },
-                },
-        }
-        log.SetLevel(log.DebugLevel) // set verbosity to debug for logs
-        gobisHandler, err := gobis.NewDefaultHandler(configHandler)
-        if err != nil {
-                panic(err)
-        }
-        err = http.ListenAndServe(":8080", gobisHandler)
-        if err != nil {
-                panic(err)
-        }
+	configHandler := gobis.DefaultHandlerConfig{
+		Routes: []gobis.ProxyRoute{
+			{
+				Name: "myapi",
+				Path: "/app/**",
+				Url:  "http://www.mocky.io/v2/595625d22900008702cd71e8",
+				MiddlewareParams: cors.CorsConfig{
+					Cors: &cors.CorsOptions{
+						AllowedOrigins: []string{"http://localhost"},
+					},
+				},
+			},
+		},
+	}
+    log.SetLevel(log.DebugLevel) // set verbosity to debug for logs
+    gobisHandler, err := gobis.NewDefaultHandler(configHandler, cors.NewCors()) // we add cors middleware
+    if err != nil {
+            panic(err)
+    }
+    err = http.ListenAndServe(":8080", gobisHandler)
+    if err != nil {
+            panic(err)
+    }
 }
 ```
 
@@ -89,41 +89,44 @@ Gobis will send some headers to the app when the request is forwarded:
 - **X-Gobis-Username**: User name of a logged user set by a middleware.
 - **X-Gobis-Groups**: User's groups of a logged user set by a middleware.
 
-### Example with your own router and middlewares
+### Example using gobis as a middleware
 
 ```go
 package main
 import (
-        "github.com/orange-cloudfoundry/gobis"
-        "github.com/orange-cloudfoundry/gobis-middlewares/cors"
-        "github.com/gorilla/mux"
-        "net/http"
+	"github.com/orange-cloudfoundry/gobis"
+	"github.com/orange-cloudfoundry/gobis-middlewares/cors"
+	"github.com/gorilla/mux"
+	"net/http"
 )
-func main(){
-        configHandler := gobis.DefaultHandlerConfig{
-                Routes: []gobis.ProxyRoute{
-                    {
-                        Name: "myapi",
-                        Path: "/app/**",
-                        Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                    },
-                },
-        }
-        rtr := mux.NewRouter()
-        gobisHandler, err := gobis.NewDefaultHandler(
-                    configHandler,
-                    gobis.NewRouterFactoryWithMuxRouter(func()*mux.Router{
-                        return rtr
-                    }, cors.NewCors()),
-                )
-        if err != nil {
-                panic(err)
-        }
-        rtr.HandleFunc("/gobis/{d:.*}", gobisHandler.ServeHTTP)
-        err = http.ListenAndServe(":8080", rtr)
-        if err != nil {
-                panic(err)
-        }
+func main() {
+	rtr := mux.NewRouter()
+	rtr.HandleFunc("/hello", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+    		w.Write([]byte("hello world"))
+    }))
+	mid, err := gobis.NewGobisMiddleware([]gobis.ProxyRoute{
+		{
+			Name: "myapi",
+			Path: "/app/**",
+			Url:  "http://www.mocky.io/v2/595625d22900008702cd71e8",
+			MiddlewareParams: cors.CorsConfig{
+				Cors: &cors.CorsOptions{
+					AllowedOrigins: []string{"http://localhost"},
+				},
+			},
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+	
+	err = http.ListenAndServe(":8080", mid(rtr))
+	if err != nil {
+		panic(err)
+	}
+
+	// hitting /hello will show hello world
+	// hitting /app/something will forward against gobis
 }
 ```
 
@@ -191,7 +194,7 @@ func main(){
         log.SetLevel(log.DebugLevel) // set verbosity to debug for logs
         gobisHandler, err := gobis.NewDefaultHandler(
                     configHandler,
-                    gobis.NewRouterFactory(&traceMiddleware{}),
+                    &traceMiddleware{},
                 )
         if err != nil {
                 panic(err)
@@ -248,7 +251,7 @@ func main(){
                 },
             },
     }
-    gobisHandler, err := gobis.NewDefaultHandler(configHandler, gobis.NewRouterFactory(trace.NewTrace(), cors.NewCors()))
+    gobisHandler, err := gobis.NewDefaultHandler(configHandler, trace.NewTrace(), cors.NewCors())
 }
 ```
 

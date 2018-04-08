@@ -1,7 +1,6 @@
 package gobis
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
 )
 
@@ -19,10 +18,7 @@ func (m MiddlewareChainRoutes) Handler(route ProxyRoute, params interface{}, nex
 	if err != nil {
 		return nil, err
 	}
-	routeMatchAll := rtr.NewRoute().Name(route.Name + "_all")
-	routeMatchAll.MatcherFunc(mux.MatcherFunc(func(req *http.Request, rm *mux.RouteMatch) bool {
-		return true
-	})).Handler(next)
+	rtr.NotFoundHandler = next
 	return rtr, nil
 }
 func (m MiddlewareChainRoutes) Schema() interface{} {

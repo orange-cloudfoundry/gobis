@@ -3,16 +3,16 @@
 	"ignore": "test github.com/onsi github.com/sirupsen/logrus",
 	"package": [
 		{
-			"checksumSHA1": "iIUYZyoanCQQTUaWsu8b+iOSPt4=",
+			"checksumSHA1": "g/V4qrXjUGG9B+e3hB+4NAYJ5Gs=",
 			"path": "github.com/gorilla/context",
-			"revision": "1c83b3eabd45b6d76072b66b746c20815fb2872d",
-			"revisionTime": "2015-08-20T05:12:45Z"
+			"revision": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42",
+			"revisionTime": "2016-08-17T18:46:32Z"
 		},
 		{
-			"checksumSHA1": "WJVob291FROhjcMEkpZnNrtQrBc=",
+			"checksumSHA1": "YuYKzn2jczaM6DQcFDmukvAHUX4=",
 			"path": "github.com/gorilla/mux",
-			"revision": "ac112f7d75a0714af1bd86ab17749b31f7809640",
-			"revisionTime": "2017-07-03T15:07:09Z"
+			"revision": "94231ffd98496cbcb1c15b7bf2a9edfd5f852cd4",
+			"revisionTime": "2018-04-03T18:23:30Z"
 		},
 		{
 			"checksumSHA1": "3YyGyWFaO2B+uaFE57ghJZtYowA=",
@@ -21,10 +21,10 @@
 			"revisionTime": "2015-07-14T18:41:10Z"
 		},
 		{
-			"checksumSHA1": "EHjhpHipgm+XGccrRAms9AW3Ewk=",
+			"checksumSHA1": "Yvzge1YQcD/wSDXLD5qNHqmI/0s=",
 			"path": "github.com/mitchellh/mapstructure",
-			"revision": "d0303fe809921458f417bcf828397a65db30a7e4",
-			"revisionTime": "2017-05-23T03:00:23Z"
+			"revision": "00c29f56e2386353d58c599509e8dc3801b0d716",
+			"revisionTime": "2018-02-20T23:01:11Z"
 		},
 		{
 			"checksumSHA1": "IrdcKbuIdEwYOOmgCZxV4zm6+ag=",
@@ -51,22 +51,10 @@
 			"revisionTime": "2016-06-22T06:01:15Z"
 		},
 		{
-			"checksumSHA1": "15doxxBfOxOhWExkxjPNo6Y7fEw=",
-			"path": "golang.org/x/sys/unix",
-			"revision": "833a04a10549a95dc34458c195cbad61bbb6cb4d",
-			"revisionTime": "2015-12-11T01:34:15Z"
-		},
-		{
-			"checksumSHA1": "Wx2FYL6OLgZ/9PF1nb+hhNoXcTo=",
-			"path": "gopkg.in/jarcoal/httpmock.v1",
-			"revision": "cf52904a3cf0f78f199ecade6a6df8e245d5b25a",
-			"revisionTime": "2017-04-12T08:57:02Z"
-		},
-		{
-			"checksumSHA1": "12GqsW8PiRPnezDDy0v4brZrndM=",
+			"checksumSHA1": "AnKBN2Q4AWaSNb0JyINBQbnpxGM=",
 			"path": "gopkg.in/yaml.v2",
-			"revision": "a5b47d31c556af34a302ce5d659e6fea44d90de0",
-			"revisionTime": "2016-09-28T15:37:09Z"
+			"revision": "7f97868eec74b32b0982dd158a51a446d1da7eb5",
+			"revisionTime": "2018-02-23T19:12:37Z"
 		}
 	],
 	"rootPath": "github.com/orange-cloudfoundry/gobis"

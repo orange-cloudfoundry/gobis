@@ -4,14 +4,15 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/orange-cloudfoundry/gobis"
+	"github.com/mitchellh/mapstructure"
 )
 
 type TestStruct struct {
-	Foo string
-	Bar int
+	Foo string `json:"foo"`
+	Bar int    `json:"bar"`
 }
 type SecondTestStruct struct {
-	Zorro string
+	Zorro string `json:"zorro"`
 }
 
 var _ = Describe("Utils", func() {
@@ -21,8 +22,12 @@ var _ = Describe("Utils", func() {
 				Foo: "bar",
 				Bar: 1,
 			})
-			Expect(m["foo"]).Should(Equal("bar"))
-			Expect(m["bar"]).Should(Equal(1))
+			var t TestStruct
+			err := mapstructure.Decode(m, &t)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(t.Foo).Should(Equal("bar"))
+			Expect(t.Bar).Should(Equal(1))
 		})
 	})
 	Context("When passing multiple interface", func() {
@@ -36,9 +41,15 @@ var _ = Describe("Utils", func() {
 					Zorro: "garcia",
 				},
 			)
-			Expect(m["foo"]).Should(Equal("bar"))
-			Expect(m["zorro"]).Should(Equal("garcia"))
-			Expect(m["bar"]).Should(Equal(1))
+			var t TestStruct
+			err := mapstructure.Decode(m, &t)
+			Expect(err).ToNot(HaveOccurred())
+			var z SecondTestStruct
+			err = mapstructure.Decode(m, &z)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(z.Zorro).Should(Equal("garcia"))
+
 		})
 	})
 })

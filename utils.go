@@ -1,8 +1,8 @@
 package gobis
 
 import (
-	"gopkg.in/yaml.v2"
 	"reflect"
+	"encoding/json"
 )
 
 func InterfaceToMap(is ...interface{}) map[string]interface{} {
@@ -19,9 +19,9 @@ func mergeMap(parent map[string]interface{}, toMerge map[string]interface{}) map
 	return parent
 }
 func interfaceToMap(i interface{}) map[string]interface{} {
-	b, _ := yaml.Marshal(i)
+	b, _ := json.Marshal(i)
 	var m map[string]interface{}
-	yaml.Unmarshal(b, &m)
+	json.Unmarshal(b, &m)
 	return m
 }
 func GetMiddlewareName(i interface{}) string {

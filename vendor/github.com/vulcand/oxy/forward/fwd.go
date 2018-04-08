@@ -110,11 +110,11 @@ type handlerContext struct {
 // httpForwarder is a handler that can reverse proxy
 // HTTP traffic
 type httpForwarder struct {
-	roundTripper http.RoundTripper
-	rewriter     ReqRewriter
-	passHost     bool
+	roundTripper    http.RoundTripper
+	rewriter        ReqRewriter
+	passHost        bool
 
-	flushInterval time.Duration
+	flushInterval   time.Duration
 
 	tlsClientConfig *tls.Config
 }
