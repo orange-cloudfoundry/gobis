@@ -7,10 +7,10 @@ import (
 	"net/http"
 )
 
-var _ = Describe("Builder", func() {
-	var builder *Builder
+var _ = Describe("ProxyRouteBuilder", func() {
+	var builder *ProxyRouteBuilder
 	BeforeEach(func() {
-		builder = NewProxyRouteBuilder()
+		builder = Builder()
 	})
 	Context("Create simle route", func() {
 		It("should create all fields on a single route", func() {

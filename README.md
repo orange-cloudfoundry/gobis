@@ -51,7 +51,7 @@ import (
         "net/http"
 )
 func main(){
-	builder := gobis.NewProxyRouteBuilder()
+	builder := gobis.Builder()
 	routes := builder.AddRoute("/app/**", "http://www.mocky.io/v2/595625d22900008702cd71e8").
 		WithName("myapi").
         WithMiddlewareParams(cors.CorsConfig{
@@ -102,7 +102,7 @@ func main() {
 	rtr.HandleFunc("/hello", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
     		w.Write([]byte("hello world"))
     }))
-	builder := gobis.NewProxyRouteBuilder()
+	builder := gobis.Builder()
     routes := builder.AddRoute("/app/**", "http://www.mocky.io/v2/595625d22900008702cd71e8").
         WithName("myapi").
         WithMiddlewareParams(cors.CorsConfig{

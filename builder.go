@@ -6,22 +6,22 @@ import (
 	"reflect"
 )
 
-type Builder struct {
+type ProxyRouteBuilder struct {
 	routes   []*ProxyRoute
-	children map[int]*Builder
-	parent   *Builder
+	children map[int]*ProxyRouteBuilder
+	parent   *ProxyRouteBuilder
 	index    int
 }
 
-func NewProxyRouteBuilder() *Builder {
-	return &Builder{
+func Builder() *ProxyRouteBuilder {
+	return &ProxyRouteBuilder{
 		routes:   make([]*ProxyRoute, 0),
-		children: make(map[int]*Builder, 0),
+		children: make(map[int]*ProxyRouteBuilder, 0),
 		index:    -1,
 	}
 }
 
-func (b *Builder) AddRoute(path, url string) *Builder {
+func (b *ProxyRouteBuilder) AddRoute(path, url string) *ProxyRouteBuilder {
 	b.routes = append(b.routes, &ProxyRoute{
 		Name:             uuid.NewV4().String(),
 		Path:             path,
@@ -34,7 +34,7 @@ func (b *Builder) AddRoute(path, url string) *Builder {
 	return b
 }
 
-func (b *Builder) AddRouteHandler(path string, forwardHandler http.Handler) *Builder {
+func (b *ProxyRouteBuilder) AddRouteHandler(path string, forwardHandler http.Handler) *ProxyRouteBuilder {
 	b.routes = append(b.routes, &ProxyRoute{
 		Name:             uuid.NewV4().String(),
 		Path:             path,
@@ -47,102 +47,102 @@ func (b *Builder) AddRouteHandler(path string, forwardHandler http.Handler) *Bui
 	return b
 }
 
-func (b *Builder) AddSubRoute(path, url string) *Builder {
-	child := NewProxyRouteBuilder()
+func (b *ProxyRouteBuilder) AddSubRoute(path, url string) *ProxyRouteBuilder {
+	child := Builder()
 	child.parent = b
 	b.children[b.index] = child
 
 	return child.AddRoute(path, url)
 }
 
-func (b *Builder) AddSubRouteHandler(path string, forwardHandler http.Handler) *Builder {
-	child := NewProxyRouteBuilder()
+func (b *ProxyRouteBuilder) AddSubRouteHandler(path string, forwardHandler http.Handler) *ProxyRouteBuilder {
+	child := Builder()
 	child.parent = b
 	b.children[b.index] = child
 
 	return child.AddRouteHandler(path, forwardHandler)
 }
 
-func (b *Builder) Parent() *Builder {
+func (b *ProxyRouteBuilder) Parent() *ProxyRouteBuilder {
 	if b.parent == nil {
 		return b
 	}
 	return b.parent
 }
 
-func (b *Builder) Finish() *Builder {
+func (b *ProxyRouteBuilder) Finish() *ProxyRouteBuilder {
 	return b.Parent()
 }
 
-func (b *Builder) currentRoute() *ProxyRoute {
+func (b *ProxyRouteBuilder) currentRoute() *ProxyRoute {
 	if b.index < 0 {
 		panic("orange-cloudfoundry/gobis/builder: You must add a route by using AddRoute or AddRouteHandler.")
 	}
 	return b.routes[b.index]
 }
 
-func (b *Builder) WithSensitiveHeaders(headers ...string) *Builder {
+func (b *ProxyRouteBuilder) WithSensitiveHeaders(headers ...string) *ProxyRouteBuilder {
 	rte := b.currentRoute()
 	rte.SensitiveHeaders = append(rte.SensitiveHeaders, headers...)
 	return b
 }
 
-func (b *Builder) WithMethods(methods ...string) *Builder {
+func (b *ProxyRouteBuilder) WithMethods(methods ...string) *ProxyRouteBuilder {
 	rte := b.currentRoute()
 	rte.Methods = append(rte.Methods, methods...)
 	return b
 }
 
-func (b *Builder) WithHttpProxy(httpProxy, httpsProxy string) *Builder {
+func (b *ProxyRouteBuilder) WithHttpProxy(httpProxy, httpsProxy string) *ProxyRouteBuilder {
 	rte := b.currentRoute()
 	rte.HttpProxy = httpProxy
 	rte.HttpsProxy = httpsProxy
 	return b
 }
 
-func (b *Builder) WithoutProxy() *Builder {
+func (b *ProxyRouteBuilder) WithoutProxy() *ProxyRouteBuilder {
 	rte := b.currentRoute()
 	rte.NoProxy = true
 	return b
 }
 
-func (b *Builder) WithoutBuffer() *Builder {
+func (b *ProxyRouteBuilder) WithoutBuffer() *ProxyRouteBuilder {
 	rte := b.currentRoute()
 	rte.NoBuffer = true
 	return b
 }
 
-func (b *Builder) WithoutProxyHeaders() *Builder {
+func (b *ProxyRouteBuilder) WithoutProxyHeaders() *ProxyRouteBuilder {
 	rte := b.currentRoute()
 	rte.RemoveProxyHeaders = true
 	return b
 }
 
-func (b *Builder) WithInsecureSkipVerify() *Builder {
+func (b *ProxyRouteBuilder) WithInsecureSkipVerify() *ProxyRouteBuilder {
 	rte := b.currentRoute()
 	rte.InsecureSkipVerify = true
 	return b
 }
 
-func (b *Builder) WithShowError() *Builder {
+func (b *ProxyRouteBuilder) WithShowError() *ProxyRouteBuilder {
 	rte := b.currentRoute()
 	rte.ShowError = true
 	return b
 }
 
-func (b *Builder) WithName(name string) *Builder {
+func (b *ProxyRouteBuilder) WithName(name string) *ProxyRouteBuilder {
 	rte := b.currentRoute()
 	rte.Name = name
 	return b
 }
 
-func (b *Builder) WithForwardedHeader(header string) *Builder {
+func (b *ProxyRouteBuilder) WithForwardedHeader(header string) *ProxyRouteBuilder {
 	rte := b.currentRoute()
 	rte.ForwardedHeader = header
 	return b
 }
 
-func (b *Builder) WithMiddlewareParams(params ...interface{}) *Builder {
+func (b *ProxyRouteBuilder) WithMiddlewareParams(params ...interface{}) *ProxyRouteBuilder {
 	rte := b.currentRoute()
 
 	midParams := rte.MiddlewareParams.(map[string]interface{})
@@ -162,7 +162,7 @@ func (b *Builder) WithMiddlewareParams(params ...interface{}) *Builder {
 	return b
 }
 
-func (b *Builder) Build() []ProxyRoute {
+func (b *ProxyRouteBuilder) Build() []ProxyRoute {
 	if b.parent != nil {
 		return b.parent.Build()
 	}
