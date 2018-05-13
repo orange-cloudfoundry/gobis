@@ -18,13 +18,6 @@ var _ = Describe("ProxyRoute", func() {
 			Expect(err).Should(HaveOccurred())
 			Expect(err.Error()).Should(ContainSubstring("name"))
 		})
-		It("should write app path", func() {
-			var route ProxyRoute
-			jsonRoute := `{"name": "myroute", "path": "/app/**", "url": "http://my.proxified.api"}`
-			err := json.Unmarshal([]byte(jsonRoute), &route)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(route.AppPath).Should(Equal("/app"))
-		})
 	})
 	Context("UnmarshallYAML", func() {
 		It("should complain when check not passing", func() {
@@ -33,13 +26,6 @@ var _ = Describe("ProxyRoute", func() {
 			err := yaml.Unmarshal([]byte(yamlRoute), &route)
 			Expect(err).Should(HaveOccurred())
 			Expect(err.Error()).Should(ContainSubstring("name"))
-		})
-		It("should write app path", func() {
-			var route ProxyRoute
-			yamlRoute := "name: myroute\npath: /app/**\nurl: http://my.proxified.api"
-			err := yaml.Unmarshal([]byte(yamlRoute), &route)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(route.AppPath).Should(Equal("/app"))
 		})
 	})
 	Context("UpstreamUrl", func() {

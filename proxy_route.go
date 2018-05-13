@@ -52,9 +52,6 @@ type ProxyRoute struct {
 	// It was made to pass arbitrary params to use it after in gobis middlewares
 	// This can be a structure (to set them programmatically) or a map[string]interface{} (to set them from a config file)
 	MiddlewareParams interface{} `json:"middleware_params" yaml:"middleware_params"`
-	// This is the path without glob variables
-	// Filled when unmarshal json or yaml or when running LoadParams on route
-	AppPath string `json:"-" yaml:"-"`
 	// Set to true to see errors on web page when there is a panic error on gobis
 	ShowError bool `json:"show_error" yaml:"show_error"`
 	// Chain others routes in a route
@@ -69,26 +66,18 @@ func (r *ProxyRoute) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	err = r.Check()
-	if err != nil {
-		return err
-	}
-	r.LoadParams()
-	return nil
+	return r.Check()
 }
+
 func (r *ProxyRoute) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type plain ProxyRoute
 	var err error
 	if err = unmarshal((*plain)(r)); err != nil {
 		return err
 	}
-	err = r.Check()
-	if err != nil {
-		return err
-	}
-	r.LoadParams()
-	return nil
+	return r.Check()
 }
+
 func (r ProxyRoute) Check() error {
 	if r.Name == "" {
 		return fmt.Errorf("You must provide a name to your route")
@@ -128,21 +117,19 @@ func (r ProxyRoute) Check() error {
 	}
 	return nil
 }
+
 func (r ProxyRoute) PathAsStartPath() string {
 	startPath := strings.TrimSuffix(r.Path, "/**")
 	startPath = strings.TrimSuffix(startPath, "/*")
 	return startPath
 }
-func (r *ProxyRoute) LoadParams() {
-	reg := regexp.MustCompile(PATH_REGEX)
-	r.AppPath = reg.FindStringSubmatch(r.Path)[1]
-	r.Url = strings.TrimSuffix(r.Url, "/")
-}
+
 func (r ProxyRoute) CreateRoutePath(finalPath string) string {
 	reg := regexp.MustCompile(PATH_REGEX)
 	sub := reg.FindStringSubmatch(r.Path)
 	return sub[1] + finalPath
 }
+
 func (r ProxyRoute) RequestPath(req *http.Request) string {
 	if r.ForwardedHeader == "" {
 		return req.URL.Path
@@ -154,6 +141,7 @@ func (r ProxyRoute) RequestPath(req *http.Request) string {
 	upstreamUrl, _ := url.Parse(upstream)
 	return upstreamUrl.Path
 }
+
 func (r ProxyRoute) UpstreamUrl(req *http.Request) *url.URL {
 	if r.ForwardHandler != nil {
 		req.URL.Path = ""
@@ -173,6 +161,7 @@ func (r ProxyRoute) UpstreamUrl(req *http.Request) *url.URL {
 	upstreamUrl.Path = ""
 	return upstreamUrl
 }
+
 func (r ProxyRoute) RouteMatcher() *regexp.Regexp {
 	return createPathMatcher(r.Path)
 }

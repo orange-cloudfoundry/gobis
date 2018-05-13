@@ -53,6 +53,7 @@ func NewRouterFactory(middlewareHandlers ...MiddlewareHandler) RouterFactory {
 		return mux.NewRouter()
 	}, middlewareHandlers...)
 }
+
 func NewRouterFactoryWithMuxRouter(muxRouterOption func() *mux.Router, middlewares ...MiddlewareHandler) RouterFactory {
 	factory := &RouterFactoryService{
 		CreateTransportFunc: func(proxyRoute ProxyRoute) http.RoundTripper {
@@ -83,6 +84,7 @@ func (r RouterFactoryService) CreateMuxRouterRouteService(proxyRoutes []ProxyRou
 	rtr.HandleFunc(forwardedUrl.Path, originalAppHandler)
 	return rtr, nil
 }
+
 func (r RouterFactoryService) CreateMuxRouter(proxyRoutes []ProxyRoute, startPath string) (*mux.Router, error) {
 	log.Debug("github.com/orange-cloudfoundry/proxy: Creating handlers ...")
 	startPath = strings.TrimSuffix(startPath, "/")
@@ -113,6 +115,7 @@ func (r RouterFactoryService) CreateMuxRouter(proxyRoutes []ProxyRoute, startPat
 	log.Debug("orange-cloudfoundry/gobis/proxy: Finished creating handlers ...")
 	return parentRtr, nil
 }
+
 func (r RouterFactoryService) CreateReverseHandler(proxyRoute ProxyRoute) (http.Handler, error) {
 	entry := log.WithField("route_name", proxyRoute.Name)
 	if proxyRoute.ForwardHandler != nil {
@@ -136,6 +139,7 @@ func (r RouterFactoryService) CreateReverseHandler(proxyRoute ProxyRoute) (http.
 	}
 	return buffer.New(fwd, buffer.Retry(`IsNetworkError() && Attempts() < 2`))
 }
+
 func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute, startPath string) mux.MatcherFunc {
 	return mux.MatcherFunc(func(req *http.Request, rm *mux.RouteMatch) bool {
 		path := proxyRoute.RequestPath(req)
@@ -170,6 +174,7 @@ func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute, startPath string
 		return origPathMatcher.MatchString(path)
 	})
 }
+
 func (r RouterFactoryService) CreateForwardHandler(proxyRoute ProxyRoute) (http.HandlerFunc, error) {
 	httpHandler, err := r.CreateReverseHandler(proxyRoute)
 	if err != nil {
@@ -208,6 +213,7 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute ProxyRoute) (http.
 		handler.ServeHTTP(w, req)
 	}), nil
 }
+
 func middlewareHandlerToHandler(middleware MiddlewareHandler, proxyRoute ProxyRoute, params interface{}, next http.Handler) (http.Handler, error) {
 	entry := log.WithField("route_name", proxyRoute.Name)
 	funcName := GetMiddlewareName(middleware)
@@ -219,6 +225,7 @@ func middlewareHandlerToHandler(middleware MiddlewareHandler, proxyRoute ProxyRo
 	entry.Debugf("orange-cloudfoundry/gobis/proxy: Finished adding %s middleware.", funcName)
 	return handler, nil
 }
+
 func paramsToSchema(params interface{}, schema interface{}) interface{} {
 	if params != nil && reflect.TypeOf(params).Kind() != reflect.Map {
 		params = InterfaceToMap(params)
@@ -230,6 +237,7 @@ func paramsToSchema(params interface{}, schema interface{}) interface{} {
 	}
 	return val.Elem().Interface()
 }
+
 func ForwardRequest(proxyRoute ProxyRoute, req *http.Request, restPath string) {
 	removeDirtyHeaders(req)
 	req.Header.Add(XGobisUsername, Username(req))
@@ -254,6 +262,7 @@ func ForwardRequest(proxyRoute ProxyRoute, req *http.Request, restPath string) {
 	}
 	req.RequestURI = req.URL.RequestURI()
 }
+
 func removeDirtyHeaders(req *http.Request) {
 	dirtyHeadersPtr := DirtyHeaders(req)
 	if dirtyHeadersPtr == nil {
@@ -268,6 +277,7 @@ func removeDirtyHeaders(req *http.Request) {
 		req.Header.Set(header, oldValue)
 	}
 }
+
 func panicRecover(proxyRoute ProxyRoute, w http.ResponseWriter) {
 	err := recover()
 	if err == nil {
