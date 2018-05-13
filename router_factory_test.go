@@ -366,38 +366,4 @@ var _ = Describe("RouterFactory", func() {
 
 		})
 	})
-	Context("CreateMuxRouterRouteService", func() {
-		It("should create a mux router with all routes and the route for forwarded url", func() {
-			routes := []ProxyRoute{
-				{
-					Name: "app1",
-					Path: "/app1/**",
-					Url:  "http://my.proxified.api",
-				},
-				{
-					Name: "app2",
-					Path: "/app2/**",
-					Url:  "http://my.second.proxified.api",
-				},
-			}
-			fwdUrl, _ := url.Parse("http://myapp.local/path")
-			rtr, err := factory.CreateMuxRouterRouteService(routes, "", fwdUrl)
-			Expect(err).NotTo(HaveOccurred())
-			index := 0
-			rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-				tpl, _ := route.GetPathTemplate()
-				if index == len(routes) {
-					Expect(tpl).Should(Equal(fwdUrl.Path))
-				} else {
-					u, _ := url.Parse("http://localhost/" + routes[index].Name + "/test")
-					req := &http.Request{URL: u}
-					Expect(route.Match(req, &mux.RouteMatch{})).Should(BeTrue())
-				}
-				index++
-				return nil
-			})
-			Expect(index).Should(Equal(len(routes) + 1))
-
-		})
-	})
 })

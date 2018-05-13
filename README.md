@@ -51,22 +51,18 @@ import (
         "net/http"
 )
 func main(){
-	configHandler := gobis.DefaultHandlerConfig{
-		Routes: []gobis.ProxyRoute{
-			{
-				Name: "myapi",
-				Path: "/app/**",
-				Url:  "http://www.mocky.io/v2/595625d22900008702cd71e8",
-				MiddlewareParams: cors.CorsConfig{
-					Cors: &cors.CorsOptions{
-						AllowedOrigins: []string{"http://localhost"},
-					},
-				},
-			},
-		},
-	}
+	builder := gobis.NewProxyRouteBuilder()
+	routes := builder.AddRoute("/app/**", "http://www.mocky.io/v2/595625d22900008702cd71e8").
+		WithName("myapi").
+        WithMiddlewareParams(cors.CorsConfig{
+            Cors: &cors.CorsOptions{
+                AllowedOrigins: []string{"http://localhost"},
+            },
+        }).
+        Build()
+        
     log.SetLevel(log.DebugLevel) // set verbosity to debug for logs
-    gobisHandler, err := gobis.NewDefaultHandler(configHandler, cors.NewCors()) // we add cors middleware
+    gobisHandler, err := gobis.NewHandler(routes, cors.NewCors()) // we add cors middleware
     if err != nil {
             panic(err)
     }
@@ -76,6 +72,8 @@ func main(){
     }
 }
 ```
+
+The builder is a more convenient way to build complex and multiple route programmatically see doc [Builder](https://godoc.org/github.com/orange-cloudfoundry/gobis#Builder).
 
 You can see doc [DefaultHandlerConfig](https://godoc.org/github.com/orange-cloudfoundry/gobis#DefaultHandlerConfig) to know more about possible parameters.
 
@@ -104,18 +102,17 @@ func main() {
 	rtr.HandleFunc("/hello", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
     		w.Write([]byte("hello world"))
     }))
-	mid, err := gobis.NewGobisMiddleware([]gobis.ProxyRoute{
-		{
-			Name: "myapi",
-			Path: "/app/**",
-			Url:  "http://www.mocky.io/v2/595625d22900008702cd71e8",
-			MiddlewareParams: cors.CorsConfig{
-				Cors: &cors.CorsOptions{
-					AllowedOrigins: []string{"http://localhost"},
-				},
-			},
-		},
-	})
+	builder := gobis.NewProxyRouteBuilder()
+    routes := builder.AddRoute("/app/**", "http://www.mocky.io/v2/595625d22900008702cd71e8").
+        WithName("myapi").
+        WithMiddlewareParams(cors.CorsConfig{
+            Cors: &cors.CorsOptions{
+                AllowedOrigins: []string{"http://localhost"},
+            },
+        }).
+        Build()
+        
+	mid, err := gobis.NewGobisMiddleware(routes)
 	if err != nil {
 		panic(err)
 	}

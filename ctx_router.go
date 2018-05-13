@@ -26,7 +26,7 @@ func setRouteName(req *http.Request, routeName string) {
 	AddContextValue(req, routeNameContextKey, routeName)
 }
 
-// Retrieve route name used in this request
+// Retrieve routes name used in this request
 func RouteName(req *http.Request) string {
 	var routeName string
 	InjectContextValue(req, routeNameContextKey, &routeName)

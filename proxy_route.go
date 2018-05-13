@@ -14,7 +14,7 @@ const (
 )
 
 type ProxyRoute struct {
-	// Name of your route
+	// Name of your routes
 	Name string `json:"name" yaml:"name"`
 	// Path which gobis handler should listen to
 	// You can use globs:
@@ -30,7 +30,7 @@ type ProxyRoute struct {
 	Url string `json:"url" yaml:"url"`
 	// If set upstream url will be took from the value of this header inside the received request
 	// Url option will be used for the router to match host and path (if not empty) found in value of this header and host and path found in url (If NoUrlMatch is false)
-	// this useful, for example, to create a cloud foundry route service: https://docs.cloudfoundry.org/services/route-services.html
+	// this useful, for example, to create a cloud foundry routes service: https://docs.cloudfoundry.org/services/route-services.html
 	ForwardedHeader string `json:"forwarded_header" yaml:"forwarded_header"`
 	// List of headers which should not be sent to upstream
 	SensitiveHeaders []string `json:"sensitive_headers" yaml:"sensitive_headers"`
@@ -54,7 +54,7 @@ type ProxyRoute struct {
 	MiddlewareParams interface{} `json:"middleware_params" yaml:"middleware_params"`
 	// Set to true to see errors on web page when there is a panic error on gobis
 	ShowError bool `json:"show_error" yaml:"show_error"`
-	// Chain others routes in a route
+	// Chain others routes in a routes
 	Routes []ProxyRoute `json:"routes" yaml:"routes"`
 	// Set an handler to use to forward request to this handler when using gobis programmatically
 	ForwardHandler http.Handler `json:"-" yaml:"-"`
@@ -80,13 +80,13 @@ func (r *ProxyRoute) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 func (r ProxyRoute) Check() error {
 	if r.Name == "" {
-		return fmt.Errorf("You must provide a name to your route")
+		return fmt.Errorf("You must provide a name to your routes")
 	}
 	if r.Path == "" {
-		return fmt.Errorf("You must provide a path to your route")
+		return fmt.Errorf("You must provide a path to your routes")
 	}
 	if r.Url == "" && r.ForwardedHeader == "" {
-		return fmt.Errorf("You must provide an url or forwarded header to your route")
+		return fmt.Errorf("You must provide an url or forwarded header to your routes")
 	}
 
 	reg := regexp.MustCompile(PATH_REGEX)

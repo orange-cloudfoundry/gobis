@@ -5,28 +5,21 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"net/url"
 )
 
 type DefaultHandlerConfig struct {
-	// Host where server should listen (default to 127.0.0.1)
-	Host string `json:"host" yaml:"host"`
-	// Port where server should listen
-	Port int `json:"port" yaml:"port"`
 	// List of routes
 	Routes []ProxyRoute `json:"routes" yaml:"routes"`
-	// Set the path where all path from route should start (e.g.: if set to `/root` request for the next route will be localhost/root/app)
-	StartPath string `json:"start_path" yaml:"start_path"`
-	// Forward all request which doesn't match route to this url
-	ForwardedUrl *url.URL `json:"-" yaml:"-"`
 	// List of headers which cannot be removed by `sensitive_headers`
 	ProtectedHeaders []string `json:"protected_headers" yaml:"protected_headers"`
+	// Set the path where all path from routes should start (e.g.: if set to `/root` request for the next routes will be localhost/root/app)
+	StartPath string `json:"start_path" yaml:"start_path"`
 }
 
 type MiddlewareConfig struct {
 	// List of routes
 	Routes []ProxyRoute `json:"routes" yaml:"routes"`
-	// Set the path where all path from route should start (e.g.: if set to `/root` request for the next route will be localhost/root/app)
+	// Set the path where all path from routes should start (e.g.: if set to `/root` request for the next routes will be localhost/root/app)
 	StartPath string `json:"start_path" yaml:"start_path"`
 }
 
@@ -36,6 +29,12 @@ type DefaultHandler struct {
 	muxRouter *mux.Router
 }
 
+func NewHandler(routes []ProxyRoute, middlewareHandlers ...MiddlewareHandler) (GobisHandler, error) {
+	return NewDefaultHandler(DefaultHandlerConfig{
+		Routes: routes,
+	}, middlewareHandlers...)
+}
+
 func NewDefaultHandler(config DefaultHandlerConfig, middlewareHandlers ...MiddlewareHandler) (GobisHandler, error) {
 	SetProtectedHeaders(config.ProtectedHeaders)
 	muxRouter, err := generateMuxRouter(config, NewRouterFactory(middlewareHandlers ...))
@@ -43,8 +42,6 @@ func NewDefaultHandler(config DefaultHandlerConfig, middlewareHandlers ...Middle
 		return nil, err
 	}
 	return &DefaultHandler{
-		port:      config.Port,
-		host:      config.Host,
 		muxRouter: muxRouter,
 	}, nil
 }
@@ -69,15 +66,7 @@ func generateMuxRouter(config DefaultHandlerConfig, routerFactory RouterFactory)
 	var err error
 	var rtr *mux.Router
 	log.Debug("orange-cloudfoundry/gobis/handlers: Creating mux router for routes ...")
-	if config.ForwardedUrl == nil || config.ForwardedUrl.String() == "" {
-		rtr, err = routerFactory.CreateMuxRouter(config.Routes, config.StartPath)
-	} else {
-		rtr, err = routerFactory.CreateMuxRouterRouteService(
-			config.Routes,
-			config.StartPath,
-			config.ForwardedUrl,
-		)
-	}
+	rtr, err = routerFactory.CreateMuxRouter(config.Routes, config.StartPath)
 	if err != nil {
 		return nil, err
 	}

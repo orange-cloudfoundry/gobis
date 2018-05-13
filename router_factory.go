@@ -28,7 +28,6 @@ type JsonError struct {
 }
 
 type RouterFactory interface {
-	CreateMuxRouterRouteService([]ProxyRoute, string, *url.URL) (*mux.Router, error)
 	CreateMuxRouter([]ProxyRoute, string) (*mux.Router, error)
 	CreateForwardHandler(ProxyRoute) (http.HandlerFunc, error)
 	CreateReverseHandler(ProxyRoute) (http.Handler, error)
@@ -66,25 +65,6 @@ func NewRouterFactoryWithMuxRouter(muxRouterOption func() *mux.Router, middlewar
 	return factory
 }
 
-func (r RouterFactoryService) CreateMuxRouterRouteService(proxyRoutes []ProxyRoute, startPath string, forwardedUrl *url.URL) (*mux.Router, error) {
-	rtr, err := r.CreateMuxRouter(proxyRoutes, startPath)
-	if err != nil {
-		return nil, err
-	}
-	// forward everything which not matching a proxified route to original app
-	originalAppHandler, err := r.CreateForwardHandler(ProxyRoute{
-		Url:                forwardedUrl.String(),
-		RemoveProxyHeaders: true,
-		InsecureSkipVerify: true,
-		NoProxy:            true,
-	})
-	if err != nil {
-		return nil, err
-	}
-	rtr.HandleFunc(forwardedUrl.Path, originalAppHandler)
-	return rtr, nil
-}
-
 func (r RouterFactoryService) CreateMuxRouter(proxyRoutes []ProxyRoute, startPath string) (*mux.Router, error) {
 	log.Debug("github.com/orange-cloudfoundry/proxy: Creating handlers ...")
 	startPath = strings.TrimSuffix(startPath, "/")
@@ -119,16 +99,16 @@ func (r RouterFactoryService) CreateMuxRouter(proxyRoutes []ProxyRoute, startPat
 func (r RouterFactoryService) CreateReverseHandler(proxyRoute ProxyRoute) (http.Handler, error) {
 	entry := log.WithField("route_name", proxyRoute.Name)
 	if proxyRoute.ForwardHandler != nil {
-		entry.Debug("orange-cloudfoundry/gobis/proxy: Handler for route will use forward handler provided.")
+		entry.Debug("orange-cloudfoundry/gobis/proxy: Handler for routes will use forward handler provided.")
 		return proxyRoute.ForwardHandler, nil
 	}
 	var err error
 	var fwd *forward.Forwarder
 	if !proxyRoute.NoBuffer {
-		entry.Debug("orange-cloudfoundry/gobis/proxy: Handler for route will use buffer.")
+		entry.Debug("orange-cloudfoundry/gobis/proxy: Handler for routes will use buffer.")
 		fwd, err = forward.New(forward.RoundTripper(r.CreateTransportFunc(proxyRoute)))
 	} else {
-		entry.Debug("orange-cloudfoundry/gobis/proxy: Handler for route will use direct stream.")
+		entry.Debug("orange-cloudfoundry/gobis/proxy: Handler for routes will use direct stream.")
 		fwd, err = forward.New(forward.RoundTripper(r.CreateTransportFunc(proxyRoute)), forward.Stream(true))
 	}
 	if err != nil {

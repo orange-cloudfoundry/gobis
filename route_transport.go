@@ -27,6 +27,7 @@ const (
 func NewRouteTransport(route ProxyRoute) http.RoundTripper {
 	return NewRouteTransportWithHttpTransport(route, NewDefaultTransport())
 }
+
 func NewRouteTransportWithHttpTransport(route ProxyRoute, httpTransport *http.Transport) http.RoundTripper {
 	routeTransport := &RouteTransport{
 		route:         route,
@@ -35,16 +36,19 @@ func NewRouteTransportWithHttpTransport(route ProxyRoute, httpTransport *http.Tr
 	routeTransport.InitHttpTransport()
 	return routeTransport
 }
+
 func (r *RouteTransport) InitHttpTransport() {
 	r.httpTransport.Proxy = r.ProxyFromRouteOrEnv
 	r.httpTransport.TLSClientConfig = &tls.Config{
 		InsecureSkipVerify: r.route.InsecureSkipVerify,
 	}
 }
+
 func (r *RouteTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	r.TransformRequest(req)
 	return r.httpTransport.RoundTrip(req)
 }
+
 func (r *RouteTransport) TransformRequest(req *http.Request) {
 	sensitiveHeaders := r.route.SensitiveHeaders
 	if r.route.RemoveProxyHeaders {
@@ -64,6 +68,7 @@ func (r *RouteTransport) TransformRequest(req *http.Request) {
 		req.Header.Del(sensitiveHeader)
 	}
 }
+
 func (r *RouteTransport) ProxyFromRouteOrEnv(req *http.Request) (*url.URL, error) {
 	if r.route.NoProxy {
 		return nil, nil
@@ -89,6 +94,7 @@ func (r *RouteTransport) ProxyFromRouteOrEnv(req *http.Request) (*url.URL, error
 	}
 	return proxyURL, nil
 }
+
 func NewDefaultTransport() *http.Transport {
 	return &http.Transport{
 		DialContext: (&net.Dialer{
@@ -102,6 +108,7 @@ func NewDefaultTransport() *http.Transport {
 		ExpectContinueTimeout: 1 * time.Second,
 	}
 }
+
 func SetProtectedHeaders(protectHeaders []string) {
 	protectedHeaders = make(map[string]bool)
 	for _, protectHeader := range protectHeaders {
