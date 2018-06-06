@@ -27,6 +27,12 @@
 			"revisionTime": "2018-02-20T23:01:11Z"
 		},
 		{
+			"checksumSHA1": "TvF3ym5sZVNqGlUOS9HgOIl/sZM=",
+			"path": "github.com/satori/go.uuid",
+			"revision": "d41af8bb6a7704f00bc3b7cba9355ae6a5a80048",
+			"revisionTime": "2015-10-28T23:17:19Z"
+		},
+		{
 			"checksumSHA1": "IrdcKbuIdEwYOOmgCZxV4zm6+ag=",
 			"path": "github.com/vulcand/oxy/buffer",
 			"revision": "ddc324225ef568955a8a177086a00f5bfa95896e",
