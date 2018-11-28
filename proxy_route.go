@@ -58,6 +58,8 @@ type ProxyRoute struct {
 	Routes []ProxyRoute `json:"routes" yaml:"routes"`
 	// Set an handler to use to forward request to this handler when using gobis programmatically
 	ForwardHandler http.Handler `json:"-" yaml:"-"`
+	// Will forward directly to proxified route OPTIONS method without using middlewares
+	OptionsPassthrough bool `json:"options_passthrough" yaml:"options_passthrough"`
 }
 
 func (r *ProxyRoute) UnmarshalJSON(data []byte) error {

@@ -25,6 +25,7 @@ var _ = Describe("ProxyRouteBuilder", func() {
 				WithoutProxyHeaders().
 				WithSensitiveHeaders("X-My-Header").
 				WithShowError().
+				WithOptionsPassthrough().
 				Build()
 
 			finalRte := routes[0]
@@ -40,6 +41,7 @@ var _ = Describe("ProxyRouteBuilder", func() {
 			Expect(finalRte.ShowError).Should(BeTrue())
 			Expect(finalRte.Methods[0]).Should(Equal("GET"))
 			Expect(finalRte.SensitiveHeaders[0]).Should(Equal("X-My-Header"))
+			Expect(finalRte.OptionsPassthrough).Should(BeTrue())
 		})
 		It("should create with forward handler when given", func() {
 			routes := builder.AddRouteHandler("/aroute", http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {

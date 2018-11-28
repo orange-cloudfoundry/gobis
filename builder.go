@@ -124,6 +124,12 @@ func (b *ProxyRouteBuilder) WithInsecureSkipVerify() *ProxyRouteBuilder {
 	return b
 }
 
+func (b *ProxyRouteBuilder) WithOptionsPassthrough() *ProxyRouteBuilder {
+	rte := b.currentRoute()
+	rte.OptionsPassthrough = true
+	return b
+}
+
 func (b *ProxyRouteBuilder) WithShowError() *ProxyRouteBuilder {
 	rte := b.currentRoute()
 	rte.ShowError = true

@@ -347,10 +347,8 @@ var _ = Describe("RouterFactory", func() {
 			})
 			rtr, err := muxFactory.CreateMuxRouter(routes, "")
 			Expect(err).NotTo(HaveOccurred())
-			var r *mux.Route
 			index := 0
 			rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-				r = route
 				tpl, _ := route.GetPathTemplate()
 				if index == 0 {
 					Expect(tpl).Should(Equal("/parent"))
