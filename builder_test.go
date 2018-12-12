@@ -1,9 +1,9 @@
 package gobis_test
 
 import (
-	. "github.com/orange-cloudfoundry/gobis"
-	. "github.com/onsi/gomega"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	. "github.com/orange-cloudfoundry/gobis"
 	"net/http"
 )
 
@@ -32,7 +32,7 @@ var _ = Describe("ProxyRouteBuilder", func() {
 			Expect(finalRte.Name).Should(Equal("aname"))
 			Expect(finalRte.ForwardedHeader).Should(Equal("X-Forward"))
 			Expect(finalRte.ForwardHandler).Should(BeNil())
-			Expect(finalRte.Path).Should(Equal("/aroute"))
+			Expect(finalRte.Path.String()).Should(Equal("/aroute"))
 			Expect(finalRte.Url).Should(Equal("http://url.com"))
 			Expect(finalRte.InsecureSkipVerify).Should(BeTrue())
 			Expect(finalRte.NoBuffer).Should(BeTrue())
@@ -51,7 +51,7 @@ var _ = Describe("ProxyRouteBuilder", func() {
 			finalRte := routes[0]
 			Expect(finalRte.Name).ShouldNot(BeEmpty())
 			Expect(finalRte.ForwardHandler).ShouldNot(BeNil())
-			Expect(finalRte.Path).Should(Equal("/aroute"))
+			Expect(finalRte.Path.String()).Should(Equal("/aroute"))
 		})
 	})
 
@@ -109,11 +109,11 @@ var _ = Describe("ProxyRouteBuilder", func() {
 
 			Expect(routes[0].Name).Should(Equal("1"))
 			Expect(routes[0].Url).Should(Equal("http://url1.com"))
-			Expect(routes[0].Path).Should(Equal("/1"))
+			Expect(routes[0].Path.String()).Should(Equal("/1"))
 
 			Expect(routes[1].Name).Should(Equal("2"))
 			Expect(routes[1].Url).Should(Equal("http://url2.com"))
-			Expect(routes[1].Path).Should(Equal("/2"))
+			Expect(routes[1].Path.String()).Should(Equal("/2"))
 		})
 		It("should create all first level routes with all sub routes", func() {
 			routes := builder.
@@ -125,12 +125,12 @@ var _ = Describe("ProxyRouteBuilder", func() {
 
 			Expect(routes[0].Name).Should(Equal("1"))
 			Expect(routes[0].Url).Should(Equal("http://url1.com"))
-			Expect(routes[0].Path).Should(Equal("/1"))
-			Expect(routes[0].Routes[0].Path).Should(Equal("/sub"))
+			Expect(routes[0].Path.String()).Should(Equal("/1"))
+			Expect(routes[0].Routes[0].Path.String()).Should(Equal("/sub"))
 
 			Expect(routes[1].Name).Should(Equal("2"))
 			Expect(routes[1].Url).Should(Equal("http://url2.com"))
-			Expect(routes[1].Path).Should(Equal("/2"))
+			Expect(routes[1].Path.String()).Should(Equal("/2"))
 			Expect(routes[1].Routes).Should(HaveLen(0))
 		})
 	})

@@ -9,10 +9,6 @@ import (
 	"strings"
 )
 
-const (
-	PATH_REGEX = "(?i)^((/[^/\\*]*)*)(/((\\*){1,2}))?$"
-)
-
 type ProxyRoute struct {
 	// Name of your routes
 	Name string `json:"name" yaml:"name"`
@@ -21,7 +17,7 @@ type ProxyRoute struct {
 	//   - appending /* will only make requests available in first level of upstream
 	//   - appending /** will pass everything to upstream
 	// e.g.: /app/**
-	Path string `json:"path" yaml:"path"`
+	Path *PathMatcher `json:"path" yaml:"path"`
 	// Upstream url where all request will be redirected (if ForwardedHeader option not set)
 	// Query parameters can be passed, e.g.: http://localhost?param=1
 	// User and password are given as basic auth too (this is not recommended to use it), e.g.: http://user:password@localhost
@@ -84,16 +80,11 @@ func (r ProxyRoute) Check() error {
 	if r.Name == "" {
 		return fmt.Errorf("You must provide a name to your routes")
 	}
-	if r.Path == "" {
+	if r.Path == nil {
 		return fmt.Errorf("You must provide a path to your routes")
 	}
 	if r.Url == "" && r.ForwardedHeader == "" {
 		return fmt.Errorf("You must provide an url or forwarded header to your routes")
-	}
-
-	reg := regexp.MustCompile(PATH_REGEX)
-	if !reg.MatchString(r.Path) {
-		return fmt.Errorf("Invalid path, e.g.: /api/** to match everything, /api/* to match first level or /api to only match this")
 	}
 
 	_, err := url.Parse(r.HttpProxy)
@@ -121,15 +112,13 @@ func (r ProxyRoute) Check() error {
 }
 
 func (r ProxyRoute) PathAsStartPath() string {
-	startPath := strings.TrimSuffix(r.Path, "/**")
+	startPath := strings.TrimSuffix(r.Path.String(), "/**")
 	startPath = strings.TrimSuffix(startPath, "/*")
 	return startPath
 }
 
 func (r ProxyRoute) CreateRoutePath(finalPath string) string {
-	reg := regexp.MustCompile(PATH_REGEX)
-	sub := reg.FindStringSubmatch(r.Path)
-	return sub[1] + finalPath
+	return r.Path.CreateRoutePath(finalPath)
 }
 
 func (r ProxyRoute) RequestPath(req *http.Request) string {
@@ -165,19 +154,5 @@ func (r ProxyRoute) UpstreamUrl(req *http.Request) *url.URL {
 }
 
 func (r ProxyRoute) RouteMatcher() *regexp.Regexp {
-	return createPathMatcher(r.Path)
-}
-
-func createPathMatcher(path string) *regexp.Regexp {
-	reg := regexp.MustCompile(PATH_REGEX)
-	sub := reg.FindStringSubmatch(path)
-	muxRoute := regexp.QuoteMeta(sub[1])
-	glob := sub[4]
-	if glob == "" {
-		return regexp.MustCompile(muxRoute)
-	}
-	if glob == "*" {
-		return regexp.MustCompile(fmt.Sprintf("^%s(/[^/]*)?$", muxRoute))
-	}
-	return regexp.MustCompile(fmt.Sprintf("^%s(/.*)?$", muxRoute))
+	return r.Path.pathMatcher
 }

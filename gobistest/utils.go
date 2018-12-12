@@ -5,7 +5,6 @@ import (
 	"github.com/orange-cloudfoundry/gobis"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 )
 
 type PackServer struct {
@@ -28,8 +27,7 @@ func (p *PackServer) SetHandler(handler http.Handler) {
 	p.Handler.Handler = handler
 }
 func CreateRequest(proxyRoute gobis.ProxyRoute, methods ...string) *http.Request {
-	reg := regexp.MustCompile(gobis.PATH_REGEX)
-	appPath := reg.FindStringSubmatch(proxyRoute.Path)[1]
+	appPath := proxyRoute.Path.AppPath()
 
 	if appPath == "" {
 		appPath = "/"

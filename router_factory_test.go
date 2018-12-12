@@ -89,7 +89,7 @@ var _ = Describe("RouterFactory", func() {
 				routes := []ProxyRoute{
 					{
 						Name:            "app1",
-						Path:            "/app1/**",
+						Path:            NewPathMatcher("/app1/**"),
 						ForwardedHeader: "X-Forwarded-Url",
 					},
 				}
@@ -111,12 +111,12 @@ var _ = Describe("RouterFactory", func() {
 					routes := []ProxyRoute{
 						{
 							Name:            "app1",
-							Path:            "/app1/**",
+							Path:            NewPathMatcher("/app1/**"),
 							ForwardedHeader: "X-Forwarded-Url",
 						},
 						{
 							Name:            "app2",
-							Path:            "/app2/*",
+							Path:            NewPathMatcher("/app2/*"),
 							ForwardedHeader: "X-Forwarded-Url",
 						},
 					}
@@ -144,13 +144,13 @@ var _ = Describe("RouterFactory", func() {
 					routes := []ProxyRoute{
 						{
 							Name:            "app1",
-							Path:            "/**",
+							Path:            NewPathMatcher("/**"),
 							Url:             "http://localhost",
 							ForwardedHeader: "X-Forwarded-Url",
 						},
 						{
 							Name:            "app2",
-							Path:            "/**",
+							Path:            NewPathMatcher("/**"),
 							Url:             "http://local.com",
 							ForwardedHeader: "X-Forwarded-Url",
 						},
@@ -177,13 +177,13 @@ var _ = Describe("RouterFactory", func() {
 					routes := []ProxyRoute{
 						{
 							Name:            "app1",
-							Path:            "/**",
+							Path:            NewPathMatcher("/**"),
 							Url:             "http://localhost/app1/**",
 							ForwardedHeader: "X-Forwarded-Url",
 						},
 						{
 							Name:            "app2",
-							Path:            "/**",
+							Path:            NewPathMatcher("/**"),
 							Url:             "http://localhost/fakepath",
 							ForwardedHeader: "X-Forwarded-Url",
 						},
@@ -213,12 +213,12 @@ var _ = Describe("RouterFactory", func() {
 				routes := []ProxyRoute{
 					{
 						Name: "app1",
-						Path: "/app1/**",
+						Path: NewPathMatcher("/app1/**"),
 						Url:  "http://my.proxified.api",
 					},
 					{
 						Name: "app2",
-						Path: "/app2/*",
+						Path: NewPathMatcher("/app2/*"),
 						Url:  "http://my.second.proxified.api",
 					},
 				}
@@ -249,12 +249,12 @@ var _ = Describe("RouterFactory", func() {
 				routes := []ProxyRoute{
 					{
 						Name:           "app1",
-						Path:           "/app1/**",
+						Path:           NewPathMatcher("/app1/**"),
 						ForwardHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
 					},
 					{
 						Name:           "app2",
-						Path:           "/app2/*",
+						Path:           NewPathMatcher("/app2/*"),
 						ForwardHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
 					},
 				}
@@ -281,12 +281,12 @@ var _ = Describe("RouterFactory", func() {
 			routes := []ProxyRoute{
 				{
 					Name: "app1",
-					Path: "/app1/**",
+					Path: NewPathMatcher("/app1/**"),
 					Url:  "http://my.proxified.api",
 				},
 				{
 					Name: "app2",
-					Path: "/app2/*",
+					Path: NewPathMatcher("/app2/*"),
 					Url:  "http://my.second.proxified.api",
 				},
 			}
@@ -312,7 +312,7 @@ var _ = Describe("RouterFactory", func() {
 			routes := []ProxyRoute{
 				{
 					Name:    "app1",
-					Path:    "/app1/**",
+					Path:    NewPathMatcher("/app1/**"),
 					Url:     "http://my.proxified.api",
 					Methods: []string{"GET"},
 				},
@@ -337,7 +337,7 @@ var _ = Describe("RouterFactory", func() {
 			routes := []ProxyRoute{
 				{
 					Name:    "app1",
-					Path:    "/app1/**",
+					Path:    NewPathMatcher("/app1/**"),
 					Url:     "http://my.proxified.api",
 					Methods: []string{"GET"},
 				},

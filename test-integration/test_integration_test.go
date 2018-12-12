@@ -36,7 +36,7 @@ var _ = Describe("TestIntegration", func() {
 		BeforeEach(func() {
 			defaultRoute = gobis.ProxyRoute{
 				Name:      "myroute",
-				Path:      "/**",
+				Path:      gobis.NewPathMatcher("/**"),
 				Methods:   []string{"GET"},
 				ShowError: true,
 			}
@@ -59,7 +59,7 @@ var _ = Describe("TestIntegration", func() {
 			Expect(resp.StatusCode).Should(Equal(405))
 		})
 		It("should redirect to backend with gobis header", func() {
-			defaultRoute.Path = "/anypath"
+			defaultRoute.Path = gobis.NewPathMatcher("/anypath")
 			gobisTestHandler = NewSimpleGobisHandlerTest(defaultRoute)
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				defer GinkgoRecover()
@@ -83,7 +83,7 @@ var _ = Describe("TestIntegration", func() {
 			Expect(resp.StatusCode).Should(Equal(200))
 		})
 		It("should redirect to backend with gobis header when path has subpath", func() {
-			defaultRoute.Path = "/apath/**"
+			defaultRoute.Path = gobis.NewPathMatcher("/apath/**")
 			gobisTestHandler = NewSimpleGobisHandlerTest(defaultRoute)
 			routeServer := gobisTestHandler.ServerFirst()
 			routeServer.SetHandler(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -110,7 +110,7 @@ var _ = Describe("TestIntegration", func() {
 		It("should redirect to backend without X-Forwarded-* header when user deactivate it", func() {
 			myroute := gobis.ProxyRoute{
 				Name:               "myroute",
-				Path:               "/**",
+				Path:               gobis.NewPathMatcher("/**"),
 				RemoveProxyHeaders: true,
 			}
 			gobisTestHandler = NewSimpleGobisHandlerTest(myroute)
@@ -138,7 +138,7 @@ var _ = Describe("TestIntegration", func() {
 		It("should not redirect to backend when path is incorrect in request", func() {
 			myroute := gobis.ProxyRoute{
 				Name:               "myroute",
-				Path:               "/apath/**",
+				Path:               gobis.NewPathMatcher("/apath/**"),
 				RemoveProxyHeaders: true,
 			}
 			gobisTestHandler = NewSimpleGobisHandlerTest(myroute)
@@ -187,11 +187,11 @@ var _ = Describe("TestIntegration", func() {
 			It("should redirect correctly to url", func() {
 				firstRoute := gobis.ProxyRoute{
 					Name: "firstRoute",
-					Path: "/firstroute/**",
+					Path: gobis.NewPathMatcher("/firstroute/**"),
 				}
 				secondRoute := gobis.ProxyRoute{
 					Name: "secondRoute",
-					Path: "/secondroute/**",
+					Path: gobis.NewPathMatcher("/secondroute/**"),
 				}
 				gobisTestHandler = NewSimpleGobisHandlerTest(firstRoute, secondRoute)
 				gobisTestHandler.SetBackendHandler(firstRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -212,7 +212,7 @@ var _ = Describe("TestIntegration", func() {
 				Expect(string(content)).Should(Equal("first route"))
 				Expect(resp.StatusCode).Should(Equal(200))
 
-				//second route
+				// second route
 				rr = httptest.NewRecorder()
 				req = CreateRequest(defaultRoute)
 				req.URL.Path = "/secondroute"
@@ -227,11 +227,11 @@ var _ = Describe("TestIntegration", func() {
 			It("should fallback redirect when first match not correspond and the second is wildcard", func() {
 				firstRoute := gobis.ProxyRoute{
 					Name: "firstRoute",
-					Path: "/firstroute/**",
+					Path: gobis.NewPathMatcher("/firstroute/**"),
 				}
 				secondRoute := gobis.ProxyRoute{
 					Name: "secondRoute",
-					Path: "/**",
+					Path: gobis.NewPathMatcher("/**"),
 				}
 				gobisTestHandler = NewSimpleGobisHandlerTest(firstRoute, secondRoute)
 				gobisTestHandler.SetBackendHandler(firstRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -252,7 +252,7 @@ var _ = Describe("TestIntegration", func() {
 				Expect(string(content)).Should(Equal("route"))
 				Expect(resp.StatusCode).Should(Equal(200))
 
-				//second route
+				// second route
 				rr = httptest.NewRecorder()
 				req = CreateRequest(defaultRoute)
 				req.URL.Path = "/anypath"
@@ -270,11 +270,11 @@ var _ = Describe("TestIntegration", func() {
 		It("should chain to sub request when routes is set inside a route", func() {
 			subRoute := gobis.ProxyRoute{
 				Name: "subRoute",
-				Path: "/sub",
+				Path: gobis.NewPathMatcher("/sub"),
 			}
 			route := gobis.ProxyRoute{
 				Name:   "parentRoute",
-				Path:   "/parent/**",
+				Path:   gobis.NewPathMatcher("/parent/**"),
 				Routes: []gobis.ProxyRoute{subRoute},
 			}
 			gobisTestHandler = NewSimpleGobisHandlerTest(route)
@@ -296,7 +296,7 @@ var _ = Describe("TestIntegration", func() {
 			Expect(string(content)).Should(Equal("parent"))
 			Expect(resp.StatusCode).Should(Equal(200))
 
-			//second route
+			// second route
 			rr = httptest.NewRecorder()
 			req = CreateRequest(subRoute)
 			req.URL.Path = "/parent/sub"
@@ -325,7 +325,7 @@ var _ = Describe("TestIntegration", func() {
 			})
 			subRoute := gobis.ProxyRoute{
 				Name: "subRoute",
-				Path: "/sub",
+				Path: gobis.NewPathMatcher("/sub"),
 				MiddlewareParams: CreateInlineTestParams(
 					"subHeaderKey", "X-Sub-Header",
 					"subHeaderValue", "sub",
@@ -333,7 +333,7 @@ var _ = Describe("TestIntegration", func() {
 			}
 			route := gobis.ProxyRoute{
 				Name:   "parentRoute",
-				Path:   "/parent/**",
+				Path:   gobis.NewPathMatcher("/parent/**"),
 				Routes: []gobis.ProxyRoute{subRoute},
 				MiddlewareParams: CreateInlineTestParams(
 					"parentHeaderKey", "X-Parent-Header",
@@ -371,7 +371,7 @@ var _ = Describe("TestIntegration", func() {
 		It("should redirect to backend with gobis header", func() {
 			route := gobis.ProxyRoute{
 				Name:            "myroute",
-				Path:            "/**",
+				Path:            gobis.NewPathMatcher("/**"),
 				ForwardedHeader: forwardedHeader,
 			}
 			gobisTestHandler = NewSimpleGobisHandlerTest(route)
@@ -401,7 +401,7 @@ var _ = Describe("TestIntegration", func() {
 		It("should not redirect to backend when not matching path route param", func() {
 			route := gobis.ProxyRoute{
 				Name:            "myroute",
-				Path:            "/forcepath",
+				Path:            gobis.NewPathMatcher("/forcepath"),
 				ForwardedHeader: forwardedHeader,
 			}
 			gobisTestHandler = NewSimpleGobisHandlerTest(route)
@@ -426,7 +426,7 @@ var _ = Describe("TestIntegration", func() {
 			httpProxy := CreateBackendServer("httpProxy")
 			route := gobis.ProxyRoute{
 				Name:      "myroute",
-				Path:      "/**",
+				Path:      gobis.NewPathMatcher("/**"),
 				HttpProxy: httpProxy.Server.URL,
 			}
 			httpProxy.SetHandler(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -452,7 +452,7 @@ var _ = Describe("TestIntegration", func() {
 			httpsProxy := CreateBackendServer("httpsProxy")
 			route := gobis.ProxyRoute{
 				Name:       "myroute",
-				Path:       "/**",
+				Path:       gobis.NewPathMatcher("/**"),
 				HttpsProxy: httpsProxy.Server.URL,
 			}
 			passThroughProxy := false
@@ -475,7 +475,7 @@ var _ = Describe("TestIntegration", func() {
 		It("should not use reverse proxy but handler instead", func() {
 			route := gobis.ProxyRoute{
 				Name: "myroute",
-				Path: "/**",
+				Path: gobis.NewPathMatcher("/**"),
 				ForwardHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					w.Write([]byte("content forward"))
 				}),
@@ -508,7 +508,7 @@ var _ = Describe("TestIntegration", func() {
 				})
 				route := gobis.ProxyRoute{
 					Name:             "myroute",
-					Path:             "/**",
+					Path:             gobis.NewPathMatcher("/**"),
 					MiddlewareParams: CreateInlineTestParams("key", "value"),
 					ForwardHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 						if r.URL.Path == "/newpath" {
@@ -540,7 +540,7 @@ var _ = Describe("TestIntegration", func() {
 				})
 				route := gobis.ProxyRoute{
 					Name:               "myroute",
-					Path:               "/**",
+					Path:               gobis.NewPathMatcher("/**"),
 					MiddlewareParams:   CreateInlineTestParams("key", "value"),
 					OptionsPassthrough: true,
 				}
@@ -569,7 +569,7 @@ var _ = Describe("TestIntegration", func() {
 				})
 				route := gobis.ProxyRoute{
 					Name:               "myroute",
-					Path:               "/**",
+					Path:               gobis.NewPathMatcher("/**"),
 					MiddlewareParams:   CreateInlineTestParams("key", "value"),
 					OptionsPassthrough: true,
 				}
@@ -600,7 +600,7 @@ var _ = Describe("TestIntegration", func() {
 			})
 			route := gobis.ProxyRoute{
 				Name:             "myroute",
-				Path:             "/**",
+				Path:             gobis.NewPathMatcher("/**"),
 				MiddlewareParams: CreateInlineTestParams("key", "value"),
 			}
 			gobisTestHandler = NewGobisHandlerTest([]gobis.ProxyRoute{route}, NewFakeMiddleware(middleware))
@@ -631,7 +631,7 @@ var _ = Describe("TestIntegration", func() {
 			})
 			route := gobis.ProxyRoute{
 				Name: "myroute",
-				Path: "/**",
+				Path: gobis.NewPathMatcher("/**"),
 				MiddlewareParams: FakeMiddlewareParams{
 					TestParams: map[string]interface{}{
 						"key": "value",
@@ -667,7 +667,7 @@ var _ = Describe("TestIntegration", func() {
 			})
 			route := gobis.ProxyRoute{
 				Name:             "myroute",
-				Path:             "/**",
+				Path:             gobis.NewPathMatcher("/**"),
 				MiddlewareParams: CreateInlineTestParams("key", "value"),
 			}
 			gobisTestHandler = NewGobisHandlerTest(

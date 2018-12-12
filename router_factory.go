@@ -150,7 +150,7 @@ func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute, startPath string
 		if origUpstreamUrl.Path == "" || origUpstreamUrl.Path == "/" {
 			return true
 		}
-		origPathMatcher := createPathMatcher(origUpstreamUrl.Path)
+		origPathMatcher := NewPathMatcher(origUpstreamUrl.Path).pathMatcher
 		return origPathMatcher.MatchString(path)
 	})
 }

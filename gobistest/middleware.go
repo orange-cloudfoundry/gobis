@@ -24,7 +24,7 @@ func NewSimpleMiddlewareTest(middlewareParams interface{}, middlewareHandlers ..
 	routeName := "route_" + strings.ToLower(strings.Join(midNames, "_"))
 	route := gobis.ProxyRoute{
 		Name:             routeName,
-		Path:             "/**",
+		Path:             gobis.NewPathMatcher("/**"),
 		ShowError:        true,
 		MiddlewareParams: middlewareParams,
 	}

@@ -31,7 +31,7 @@ var _ = Describe("ProxyRoute", func() {
 	Context("UpstreamUrl", func() {
 		It("should return original request url if option ForwardedHeader not set", func() {
 			route := ProxyRoute{
-				Path: "/app/**",
+				Path: NewPathMatcher("/app/**"),
 				Url:  "http://my.proxified.api",
 			}
 			req, _ := http.NewRequest("GET", "http://localhost.com/path", nil)
@@ -40,7 +40,7 @@ var _ = Describe("ProxyRoute", func() {
 		})
 		It("should return original request url if option ForwardedHeader is set but not found in request", func() {
 			route := ProxyRoute{
-				Path:            "/app/**",
+				Path:            NewPathMatcher("/app/**"),
 				ForwardedHeader: "X-Forwarded-Url",
 				Url:             "http://my.proxified.api",
 			}
@@ -50,7 +50,7 @@ var _ = Describe("ProxyRoute", func() {
 		})
 		It("should return url without path from header set in option ForwardedHeader if it's set and found", func() {
 			route := ProxyRoute{
-				Path:            "/app/**",
+				Path:            NewPathMatcher("/app/**"),
 				ForwardedHeader: "X-Forwarded-Url",
 				Url:             "http://my.proxified.api",
 			}
@@ -63,7 +63,7 @@ var _ = Describe("ProxyRoute", func() {
 	Context("RequestPath", func() {
 		It("should return original request path if option ForwardedHeader not set", func() {
 			route := ProxyRoute{
-				Path: "/app/**",
+				Path: NewPathMatcher("/app/**"),
 				Url:  "http://my.proxified.api",
 			}
 			req, _ := http.NewRequest("GET", "http://localhost.com/path", nil)
@@ -72,7 +72,7 @@ var _ = Describe("ProxyRoute", func() {
 		})
 		It("should return original request path if option ForwardedHeader is set but not found in request", func() {
 			route := ProxyRoute{
-				Path:            "/app/**",
+				Path:            NewPathMatcher("/app/**"),
 				ForwardedHeader: "X-Forwarded-Url",
 				Url:             "http://my.proxified.api",
 			}
@@ -82,7 +82,7 @@ var _ = Describe("ProxyRoute", func() {
 		})
 		It("should return path from url found in header set in option ForwardedHeader if it's set and found", func() {
 			route := ProxyRoute{
-				Path:            "/app/**",
+				Path:            NewPathMatcher("/app/**"),
 				ForwardedHeader: "X-Forwarded-Url",
 				Url:             "http://my.proxified.api",
 			}
@@ -95,7 +95,7 @@ var _ = Describe("ProxyRoute", func() {
 	Context("Check", func() {
 		It("should complain when no name is provided", func() {
 			route := ProxyRoute{
-				Path: "/app/**",
+				Path: NewPathMatcher("/app/**"),
 				Url:  "http://my.proxified.api",
 			}
 			err := route.Check()
@@ -113,7 +113,7 @@ var _ = Describe("ProxyRoute", func() {
 		})
 		It("should complain when no url is provided", func() {
 			route := ProxyRoute{
-				Path: "/app/**",
+				Path: NewPathMatcher("/app/**"),
 				Name: "my route",
 			}
 			err := route.Check()
@@ -123,7 +123,7 @@ var _ = Describe("ProxyRoute", func() {
 		It("should complain if url is set to localhost", func() {
 			route := ProxyRoute{
 				Name: "my route",
-				Path: "/app/**",
+				Path: NewPathMatcher("/app/**"),
 				Url:  "http://localhost",
 			}
 			err := route.Check()
@@ -133,7 +133,7 @@ var _ = Describe("ProxyRoute", func() {
 		It("should complain if url is set to 127.0.0.1", func() {
 			route := ProxyRoute{
 				Name: "my route",
-				Path: "/app/**",
+				Path: NewPathMatcher("/app/**"),
 				Url:  "http://127.0.0.1",
 			}
 			err := route.Check()
@@ -144,7 +144,7 @@ var _ = Describe("ProxyRoute", func() {
 			It("should match /**", func() {
 				route := ProxyRoute{
 					Name: "my route",
-					Path: "/**",
+					Path: NewPathMatcher("/**"),
 					Url:  "http://my.proxified.api",
 				}
 				err := route.Check()
@@ -156,7 +156,7 @@ var _ = Describe("ProxyRoute", func() {
 			It("should match /*", func() {
 				route := ProxyRoute{
 					Name: "my route",
-					Path: "/*",
+					Path: NewPathMatcher("/*"),
 					Url:  "http://my.proxified.api",
 				}
 				err := route.Check()
@@ -168,7 +168,7 @@ var _ = Describe("ProxyRoute", func() {
 			It("should not match /app/*", func() {
 				route := ProxyRoute{
 					Name: "my route",
-					Path: "/app/*",
+					Path: NewPathMatcher("/app/*"),
 					Url:  "http://my.proxified.api",
 				}
 				err := route.Check()
@@ -182,7 +182,7 @@ var _ = Describe("ProxyRoute", func() {
 			It("should not match /app/**", func() {
 				route := ProxyRoute{
 					Name: "my route",
-					Path: "/app/**",
+					Path: NewPathMatcher("/app/**"),
 					Url:  "http://my.proxified.api",
 				}
 				err := route.Check()
@@ -194,24 +194,10 @@ var _ = Describe("ProxyRoute", func() {
 				Expect(matcher.MatchString("/app/secondlevel/thirdlevel")).Should(BeTrue())
 			})
 			It("should not match /*/app", func() {
-				route := ProxyRoute{
-					Name: "my route",
-					Path: "/*/app",
-					Url:  "http://my.proxified.api",
-				}
-				err := route.Check()
-				Expect(err).Should(HaveOccurred())
-
+				Expect(func() { NewPathMatcher("/*/app") }).Should(Panic())
 			})
 			It("should not match /app/***", func() {
-				route := ProxyRoute{
-					Name: "my route",
-					Path: "/app/***",
-					Url:  "http://my.proxified.api",
-				}
-				err := route.Check()
-				Expect(err).Should(HaveOccurred())
-
+				Expect(func() { NewPathMatcher("/app/***") }).Should(Panic())
 			})
 		})
 	})
