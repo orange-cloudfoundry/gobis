@@ -186,16 +186,19 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute ProxyRoute) (http.
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		req.Header.Set(GobisHeaderName, "true")
+		w.Header().Set(GobisHeaderName, "true")
 		if proxyRoute.OptionsPassthrough &&
 			req.Method == "OPTIONS" &&
 			(req.Header.Get("Access-Control-Request-Method") != "" || req.Header.Get("Access-Control-Request-Headers") != "") {
 			forwardHandler.ServeHTTP(w, req)
 			return
 		}
-
+		if proxyRoute.HostsPassthrough.Match(req.URL.Host) {
+			forwardHandler.ServeHTTP(w, req)
+			return
+		}
 		setRouteName(req, proxyRoute.Name)
-		req.Header.Set(GobisHeaderName, "true")
-		w.Header().Set(GobisHeaderName, "true")
 		defer panicRecover(proxyRoute, w)
 		handler.ServeHTTP(w, req)
 	}), nil

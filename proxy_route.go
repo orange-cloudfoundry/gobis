@@ -56,6 +56,11 @@ type ProxyRoute struct {
 	ForwardHandler http.Handler `json:"-" yaml:"-"`
 	// Will forward directly to proxified route OPTIONS method without using middlewares
 	OptionsPassthrough bool `json:"options_passthrough" yaml:"options_passthrough"`
+	// Will forward directly to proxified route without using middlewares when http header host given match one of host in this list
+	// Wilcard are allowed
+	// E.g.: - *.my.passthroughurl.com -> this will allow all routes matching this wilcard to passthrough middleware
+	// **Warning**: host header can be forged by user, this may be a security issue if not used properly.
+	HostsPassthrough HostMatchers `json:"hosts_passthrough" yaml:"hosts_passthrough"`
 }
 
 func (r *ProxyRoute) UnmarshalJSON(data []byte) error {

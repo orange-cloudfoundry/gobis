@@ -29,6 +29,7 @@ func (b *ProxyRouteBuilder) AddRoute(path, url string) *ProxyRouteBuilder {
 		SensitiveHeaders: []string{},
 		Methods:          []string{},
 		MiddlewareParams: map[string]interface{}{},
+		HostsPassthrough: []*HostMatcher{},
 	})
 	b.index++
 	return b
@@ -42,6 +43,7 @@ func (b *ProxyRouteBuilder) AddRouteHandler(path string, forwardHandler http.Han
 		SensitiveHeaders: []string{},
 		Methods:          []string{},
 		MiddlewareParams: map[string]interface{}{},
+		HostsPassthrough: []*HostMatcher{},
 	})
 	b.index++
 	return b
@@ -84,6 +86,16 @@ func (b *ProxyRouteBuilder) currentRoute() *ProxyRoute {
 func (b *ProxyRouteBuilder) WithSensitiveHeaders(headers ...string) *ProxyRouteBuilder {
 	rte := b.currentRoute()
 	rte.SensitiveHeaders = append(rte.SensitiveHeaders, headers...)
+	return b
+}
+
+func (b *ProxyRouteBuilder) AddHostPassthrough(hostsOrWildcards ...string) *ProxyRouteBuilder {
+	rte := b.currentRoute()
+	hostMatchers := make([]*HostMatcher, len(hostsOrWildcards))
+	for i, hostOrWildcard := range hostsOrWildcards {
+		hostMatchers[i] = NewHostMatcher(hostOrWildcard)
+	}
+	rte.HostsPassthrough = append(rte.HostsPassthrough, hostMatchers...)
 	return b
 }
 

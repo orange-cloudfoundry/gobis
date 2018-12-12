@@ -3,6 +3,7 @@ package gobis
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gobwas/glob"
 	"regexp"
 )
 
@@ -93,8 +94,8 @@ func generatePathMatcher(path string) *regexp.Regexp {
 	reg := regexp.MustCompile(PathRegex)
 	sub := reg.FindStringSubmatch(path)
 	muxRoute := regexp.QuoteMeta(sub[1])
-	glob := sub[4]
-	switch glob {
+	globSub := sub[4]
+	switch globSub {
 	case "*":
 		pathMatcher = regexp.MustCompile(fmt.Sprintf("^%s(/[^/]*)?$", muxRoute))
 	case "**":
@@ -103,4 +104,53 @@ func generatePathMatcher(path string) *regexp.Regexp {
 		pathMatcher = regexp.MustCompile(muxRoute)
 	}
 	return pathMatcher
+}
+
+type HostMatchers []*HostMatcher
+
+func (m HostMatchers) Match(s string) bool {
+	for _, matcher := range m {
+		if matcher.Match(s) {
+			return true
+		}
+	}
+	return false
+}
+
+type HostMatcher struct {
+	glob.Glob
+	raw string
+}
+
+func NewHostMatcher(hostOrWildcard string) *HostMatcher {
+	return &HostMatcher{
+		Glob: glob.MustCompile(hostOrWildcard, '.'),
+		raw:  hostOrWildcard,
+	}
+}
+
+func (re *HostMatcher) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var s string
+	err := unmarshal(&s)
+	if err != nil {
+		return err
+	}
+	re.Glob, err = glob.Compile(s, '.')
+	re.raw = s
+	return err
+}
+
+func (re *HostMatcher) UnmarshalJSON(data []byte) error {
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+	re.Glob, err = glob.Compile(s, '.')
+	re.raw = s
+	return err
+}
+
+func (re HostMatcher) String() string {
+	return re.raw
 }

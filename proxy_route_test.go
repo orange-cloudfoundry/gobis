@@ -18,6 +18,30 @@ var _ = Describe("ProxyRoute", func() {
 			Expect(err).Should(HaveOccurred())
 			Expect(err.Error()).Should(ContainSubstring("name"))
 		})
+		It("should create route when check pass", func() {
+			var route ProxyRoute
+			jsonRoute := `{"path": "/app/**", "url": "http://my.proxified.api", "name": "myroute"}`
+			err := json.Unmarshal([]byte(jsonRoute), &route)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(route.Path.String()).Should(Equal("/app/**"))
+			Expect(route.Url).Should(Equal("http://my.proxified.api"))
+			Expect(route.Name).Should(Equal("myroute"))
+		})
+		Context("with hosts passthrough set", func() {
+			It("should create route when check pass", func() {
+				var route ProxyRoute
+				yamlRoute := `{
+"path": "/app/**", 
+"url": "http://my.proxified.api", 
+"name": "myroute",
+"hosts_passthrough": ["myhost.com", "*.myhost.com"]}`
+				err := yaml.Unmarshal([]byte(yamlRoute), &route)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(route.HostsPassthrough).Should(HaveLen(2))
+				Expect(route.HostsPassthrough[0].String()).Should(Equal("myhost.com"))
+				Expect(route.HostsPassthrough[1].String()).Should(Equal("*.myhost.com"))
+			})
+		})
 	})
 	Context("UnmarshallYAML", func() {
 		It("should complain when check not passing", func() {
@@ -26,6 +50,33 @@ var _ = Describe("ProxyRoute", func() {
 			err := yaml.Unmarshal([]byte(yamlRoute), &route)
 			Expect(err).Should(HaveOccurred())
 			Expect(err.Error()).Should(ContainSubstring("name"))
+		})
+		It("should create route when check pass", func() {
+			var route ProxyRoute
+			yamlRoute := `path: /app/**
+url: http://my.proxified.api
+name: myroute`
+			err := yaml.Unmarshal([]byte(yamlRoute), &route)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(route.Path.String()).Should(Equal("/app/**"))
+			Expect(route.Url).Should(Equal("http://my.proxified.api"))
+			Expect(route.Name).Should(Equal("myroute"))
+		})
+		Context("with hosts passthrough set", func() {
+			It("should create route when check pass", func() {
+				var route ProxyRoute
+				yamlRoute := `path: /app/**
+url: http://my.proxified.api
+name: myroute
+hosts_passthrough:
+- "myhost.com"
+- "*.myhost.com"`
+				err := yaml.Unmarshal([]byte(yamlRoute), &route)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(route.HostsPassthrough).Should(HaveLen(2))
+				Expect(route.HostsPassthrough[0].String()).Should(Equal("myhost.com"))
+				Expect(route.HostsPassthrough[1].String()).Should(Equal("*.myhost.com"))
+			})
 		})
 	})
 	Context("UpstreamUrl", func() {
