@@ -42,21 +42,17 @@ func (re PathMatcher) CreateRoutePath(finalPath string) string {
 	return re.appPath + finalPath
 }
 
+func (re *PathMatcher) UnmarshalCloud(data interface{}) error {
+	return re.load(data.(string))
+}
+
 func (re *PathMatcher) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var s string
 	err := unmarshal(&s)
 	if err != nil {
 		return err
 	}
-
-	err = checkPathMatcher(s)
-	if err != nil {
-		return err
-	}
-	re.pathMatcher = generatePathMatcher(s)
-	re.expr = s
-	re.appPath = generateRawPath(s)
-	return nil
+	return re.load(s)
 }
 
 func (re *PathMatcher) UnmarshalJSON(data []byte) error {
@@ -65,7 +61,11 @@ func (re *PathMatcher) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	err = checkPathMatcher(s)
+	return re.load(s)
+}
+
+func (re *PathMatcher) load(s string) error {
+	err := checkPathMatcher(s)
 	if err != nil {
 		return err
 	}
