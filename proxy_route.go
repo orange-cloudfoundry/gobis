@@ -50,6 +50,9 @@ type ProxyRoute struct {
 	MiddlewareParams interface{} `json:"middleware_params" yaml:"middleware_params"`
 	// Set to true to see errors on web page when there is a panic error on gobis
 	ShowError bool `json:"show_error" yaml:"show_error"`
+	// Set to true to use full path
+	// e.g.: path=/metrics/** and request=/metrics/foo this will be redirected to /metrics/foo on upstream instead of /foo
+	UseFullPath bool `json:"use_full_path" yaml:"use_full_path"`
 	// Chain others routes in a routes
 	Routes []ProxyRoute `json:"routes" yaml:"routes"`
 	// Set an handler to use to forward request to this handler when using gobis programmatically
@@ -139,22 +142,28 @@ func (r ProxyRoute) RequestPath(req *http.Request) string {
 }
 
 func (r ProxyRoute) UpstreamUrl(req *http.Request) *url.URL {
+	origPath := ""
+	if r.UseFullPath {
+		origPath = r.PathAsStartPath() + "/"
+	}
 	if r.ForwardHandler != nil {
-		req.URL.Path = ""
+		req.URL.Path = origPath
 		return req.URL
 	}
 	var upstreamUrl *url.URL
 	if r.ForwardedHeader == "" {
 		upstreamUrl, _ = url.Parse(r.Url)
+		upstreamUrl.Path = origPath + upstreamUrl.Path
 		return upstreamUrl
 	}
 	upstream := req.Header.Get(r.ForwardedHeader)
 	if upstream == "" {
 		upstreamUrl, _ = url.Parse(r.Url)
+		upstreamUrl.Path = origPath + upstreamUrl.Path
 		return upstreamUrl
 	}
 	upstreamUrl, _ = url.Parse(upstream)
-	upstreamUrl.Path = ""
+	upstreamUrl.Path = origPath
 	return upstreamUrl
 }
 

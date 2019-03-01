@@ -50,6 +50,16 @@ var _ = Describe("RouterFactory", func() {
 				Expect(request.Header.Get("Authorization")).ShouldNot(BeEmpty())
 			})
 		})
+		Context("when route have option UseFullPath", func() {
+			It("should set request url with start path from path option", func() {
+				ForwardRequest(ProxyRoute{
+					Path:        NewPathMatcher("/root"),
+					Url:         "http://my.proxified.api",
+					UseFullPath: true,
+				}, request, "")
+				Expect(request.URL.String()).Should(Equal("http://my.proxified.api/root"))
+			})
+		})
 		Context("when route have option ForwardedHeader", func() {
 			It("should set request url to upstream url", func() {
 				req, _ := http.NewRequest("GET", "http://localhost/path", nil)
