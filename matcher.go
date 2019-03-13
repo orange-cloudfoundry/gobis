@@ -101,7 +101,7 @@ func generatePathMatcher(path string) *regexp.Regexp {
 	case "**":
 		pathMatcher = regexp.MustCompile(fmt.Sprintf("^%s(/.*)?$", muxRoute))
 	default:
-		pathMatcher = regexp.MustCompile(muxRoute)
+		pathMatcher = regexp.MustCompile(fmt.Sprintf("^%s$", muxRoute))
 	}
 	return pathMatcher
 }
