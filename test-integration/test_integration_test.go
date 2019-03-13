@@ -308,7 +308,7 @@ var _ = Describe("TestIntegration", func() {
 			Expect(string(content)).Should(Equal("sub"))
 			Expect(resp.StatusCode).Should(Equal(200))
 		})
-		It("should apply middleware from parent and after middleware from sub", func() {
+		It("should apply middleware from middleware from sub and after from parent ", func() {
 			midParent := SimpleTestHandleFunc(func(w http.ResponseWriter, req *http.Request, p FakeMiddlewareParams) {
 				params := p.TestParams.(map[string]interface{})
 				if _, ok := params["parentHeaderKey"]; !ok {
@@ -350,7 +350,7 @@ var _ = Describe("TestIntegration", func() {
 			}))
 			gobisTestHandler.SetBackendHandler(subRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				defer GinkgoRecover()
-				Expect(req.Header.Get("X-Parent-Header")).To(Equal("parent"))
+				Expect(req.Header.Get("X-Parent-Header")).To(Equal(""))
 				Expect(req.Header.Get("X-Sub-Header")).To(Equal("sub"))
 				w.Write([]byte("sub"))
 			}))

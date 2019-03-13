@@ -169,17 +169,17 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute ProxyRoute) (http.
 	var handler http.Handler
 	handler = forwardHandler
 
-	if len(proxyRoute.Routes) > 0 {
-		handler, err = middlewareHandlerToHandler(r.middlewareChain, proxyRoute, proxyRoute.Routes, handler)
+	for i := len(r.MiddlewareHandlers) - 1; i >= 0; i-- {
+		middleware := r.MiddlewareHandlers[i]
+		params := paramsToSchema(proxyRoute.MiddlewareParams, middleware.Schema())
+		handler, err = middlewareHandlerToHandler(middleware, proxyRoute, params, handler)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	for i := len(r.MiddlewareHandlers) - 1; i >= 0; i-- {
-		middleware := r.MiddlewareHandlers[i]
-		params := paramsToSchema(proxyRoute.MiddlewareParams, middleware.Schema())
-		handler, err = middlewareHandlerToHandler(middleware, proxyRoute, params, handler)
+	if len(proxyRoute.Routes) > 0 {
+		handler, err = middlewareHandlerToHandler(r.middlewareChain, proxyRoute, proxyRoute.Routes, handler)
 		if err != nil {
 			return nil, err
 		}
