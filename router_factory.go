@@ -6,11 +6,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
+	"github.com/thoas/go-funk"
 	"github.com/vulcand/oxy/buffer"
 	"github.com/vulcand/oxy/forward"
 	"net/http"
 	"net/url"
 	"reflect"
+	"runtime"
 	"strings"
 )
 
@@ -83,13 +85,10 @@ func (r RouterFactoryService) CreateMuxRouter(proxyRoutes []ProxyRoute, startPat
 			return nil, err
 		}
 
-		routeMux := rtr.NewRoute().
+		rtr.NewRoute().
 			Name(proxyRoute.Name).
 			MatcherFunc(r.routeMatch(proxyRoute, startPath)).
 			Handler(proxyHandler)
-		if len(proxyRoute.Methods) > 0 {
-			routeMux.Methods(proxyRoute.Methods...)
-		}
 		entry.Debug("orange-cloudfoundry/gobis/proxy: Finished handler .")
 	}
 	log.Debug("orange-cloudfoundry/gobis/proxy: Finished creating handlers ...")
@@ -122,6 +121,9 @@ func (r RouterFactoryService) CreateReverseHandler(proxyRoute ProxyRoute) (http.
 
 func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute, startPath string) mux.MatcherFunc {
 	return mux.MatcherFunc(func(req *http.Request, rm *mux.RouteMatch) bool {
+		if len(proxyRoute.Methods) > 0 && !funk.ContainsString(proxyRoute.Methods, req.Method) {
+			return false
+		}
 		path := proxyRoute.RequestPath(req)
 		if startPath != "" {
 			path = strings.TrimPrefix(path, startPath)
@@ -286,5 +288,35 @@ func panicRecover(proxyRoute ProxyRoute, w http.ResponseWriter) {
 		w.Write([]byte(b))
 	}
 	entry := log.WithField("route_name", proxyRoute.Name)
+	identName, identFile := identifyPanic()
+	if identName != "" {
+		entry.WithField("func", identName)
+	}
+	entry.WithField("file", identFile)
 	entry.Error(err)
+}
+
+func identifyPanic() (string, string) {
+	var name, file string
+	var line int
+	var pc [16]uintptr
+
+	n := runtime.Callers(3, pc[:])
+	for _, pc := range pc[:n] {
+		fn := runtime.FuncForPC(pc)
+		if fn == nil {
+			continue
+		}
+		file, line = fn.FileLine(pc)
+		name = fn.Name()
+		if !strings.HasPrefix(name, "runtime.") {
+			break
+		}
+	}
+	filefinal := fmt.Sprintf("%s:%d", file, line)
+	if file == "" && name == "" {
+		return "", fmt.Sprintf("pc:%x", pc)
+	}
+	return name, filefinal
+
 }

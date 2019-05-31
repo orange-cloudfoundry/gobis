@@ -56,7 +56,7 @@ var _ = Describe("TestIntegration", func() {
 			content, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).ShouldNot(Equal("route1 content"))
-			Expect(resp.StatusCode).Should(Equal(405))
+			Expect(resp.StatusCode).Should(Equal(404))
 		})
 		It("should redirect to backend with gobis header", func() {
 			defaultRoute.Path = gobis.NewPathMatcher("/anypath")

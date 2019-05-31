@@ -12,6 +12,7 @@ require (
 	github.com/onsi/gomega v1.4.3
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.3.0
+	github.com/thoas/go-funk v0.4.0
 	github.com/vulcand/oxy v0.0.0-20181130145254-c34b0c501e43
 	github.com/vulcand/predicate v1.1.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2

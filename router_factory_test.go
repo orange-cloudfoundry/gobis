@@ -318,27 +318,6 @@ var _ = Describe("RouterFactory", func() {
 			Expect(index).Should(Equal(len(routes)))
 
 		})
-		It("should create a mux router methods set if route resquested it", func() {
-			routes := []ProxyRoute{
-				{
-					Name:    "app1",
-					Path:    NewPathMatcher("/app1/**"),
-					Url:     "http://my.proxified.api",
-					Methods: []string{"GET"},
-				},
-			}
-			rtr, err := factory.CreateMuxRouter(routes, "")
-			Expect(err).NotTo(HaveOccurred())
-			var r *mux.Route
-			rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-				r = route
-				return nil
-			})
-			methods, _ := r.GetMethods()
-			Expect(methods).Should(HaveLen(1))
-			Expect(methods[0]).Should(Equal("GET"))
-
-		})
 		It("should create a mux router with parent routes", func() {
 			parentMuxRouter := mux.NewRouter()
 			parentMuxRouter.HandleFunc("/parent", func(w http.ResponseWriter, req *http.Request) {
