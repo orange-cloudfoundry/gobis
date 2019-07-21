@@ -35,9 +35,23 @@ func NewHandler(routes []ProxyRoute, middlewareHandlers ...MiddlewareHandler) (G
 	}, middlewareHandlers...)
 }
 
+func NewHandlerWithFactory(routes []ProxyRoute, factory RouterFactory) (GobisHandler, error) {
+	config := DefaultHandlerConfig{
+		Routes: routes,
+	}
+	SetProtectedHeaders(config.ProtectedHeaders)
+	muxRouter, err := generateMuxRouter(config, factory)
+	if err != nil {
+		return nil, err
+	}
+	return &DefaultHandler{
+		muxRouter: muxRouter,
+	}, nil
+}
+
 func NewDefaultHandler(config DefaultHandlerConfig, middlewareHandlers ...MiddlewareHandler) (GobisHandler, error) {
 	SetProtectedHeaders(config.ProtectedHeaders)
-	muxRouter, err := generateMuxRouter(config, NewRouterFactory(middlewareHandlers ...))
+	muxRouter, err := generateMuxRouter(config, NewRouterFactory(middlewareHandlers...))
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +90,7 @@ func generateMuxRouter(config DefaultHandlerConfig, routerFactory RouterFactory)
 
 func NewGobisMiddleware(routes []ProxyRoute, middlewareHandlers ...MiddlewareHandler) (func(next http.Handler) http.Handler, error) {
 	log.Debug("orange-cloudfoundry/gobis/middleware: Creating mux router for routes ...")
-	rtr, err := NewRouterFactory(middlewareHandlers ...).CreateMuxRouter(routes, "")
+	rtr, err := NewRouterFactory(middlewareHandlers...).CreateMuxRouter(routes, "")
 	if err != nil {
 		return nil, err
 	}
