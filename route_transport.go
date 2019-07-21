@@ -39,9 +39,10 @@ func NewRouteTransportWithHttpTransport(route ProxyRoute, httpTransport *http.Tr
 
 func (r *RouteTransport) InitHttpTransport() {
 	r.httpTransport.Proxy = r.ProxyFromRouteOrEnv
-	r.httpTransport.TLSClientConfig = &tls.Config{
-		InsecureSkipVerify: r.route.InsecureSkipVerify,
+	if r.httpTransport.TLSClientConfig == nil {
+		r.httpTransport.TLSClientConfig = &tls.Config{}
 	}
+	r.httpTransport.TLSClientConfig.InsecureSkipVerify = r.route.InsecureSkipVerify
 }
 
 func (r *RouteTransport) RoundTrip(req *http.Request) (*http.Response, error) {
