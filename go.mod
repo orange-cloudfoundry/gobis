@@ -13,7 +13,7 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/thoas/go-funk v0.9.2
-	github.com/vulcand/oxy v1.4.0
+	github.com/vulcand/oxy v1.4.1
 	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f // indirect
 	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
 	golang.org/x/sys v0.0.0-20220412071739-889880a91fd5 // indirect
@@ -24,7 +24,7 @@ require (
 require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
-	github.com/mailgun/multibuf v0.0.0-20150714184110-565402cd71fb // indirect
+	github.com/mailgun/multibuf v0.1.2 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/vulcand/predicate v1.2.0 // indirect
 	golang.org/x/text v0.3.7 // indirect
