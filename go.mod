@@ -1,6 +1,6 @@
 module github.com/orange-cloudfoundry/gobis
 
-go 1.18
+go 1.19
 
 require (
 	github.com/gobwas/glob v0.2.3
@@ -14,16 +14,16 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/thoas/go-funk v0.9.2
 	github.com/vulcand/oxy v1.4.1
-	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
-	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
-	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
-	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
+	golang.org/x/crypto v0.0.0-20220919173607-35f4265a4bc0 // indirect
+	golang.org/x/net v0.0.0-20220921203646-d300de134e69 // indirect
+	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
+	golang.org/x/term v0.0.0-20220919170432-7a66f970e087 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
-	github.com/google/go-cmp v0.5.8 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/mailgun/multibuf v0.1.2 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
