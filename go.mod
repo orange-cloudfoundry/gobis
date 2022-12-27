@@ -12,7 +12,7 @@ require (
 	github.com/onsi/gomega v1.24.2
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/thoas/go-funk v0.9.2
+	github.com/thoas/go-funk v0.9.3
 	github.com/vulcand/oxy v1.4.2
 	golang.org/x/crypto v0.0.0-20220919173607-35f4265a4bc0 // indirect
 	golang.org/x/net v0.4.0 // indirect
