@@ -9,7 +9,7 @@ require (
 	github.com/jonboulle/clockwork v0.3.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.27.0
+	github.com/onsi/gomega v1.27.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/thoas/go-funk v0.9.3
