@@ -1,12 +1,12 @@
 module github.com/orange-cloudfoundry/gobis
 
-go 1.19
+go 1.20
 
 require (
 	github.com/gobwas/glob v0.2.3
 	github.com/gorilla/mux v1.8.0
-	github.com/gravitational/trace v1.2.0 // indirect
-	github.com/jonboulle/clockwork v0.3.0 // indirect
+	github.com/gravitational/trace v1.2.1 // indirect
+	github.com/jonboulle/clockwork v0.4.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.27.6
@@ -14,7 +14,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/thoas/go-funk v0.9.3
 	github.com/vulcand/oxy v1.4.2
-	golang.org/x/crypto v0.4.0 // indirect
+	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
@@ -25,7 +25,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
-	github.com/mailgun/multibuf v0.1.2 // indirect
+	github.com/mailgun/multibuf v0.2.0 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/vulcand/predicate v1.2.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
