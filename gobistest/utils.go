@@ -16,7 +16,7 @@ type ParamHandler struct {
 	Handler http.Handler
 }
 
-var OriginUrl string = "http://local.app.com"
+var OriginUrl = "http://local.app.com"
 
 func (h ParamHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if h.Handler != nil {

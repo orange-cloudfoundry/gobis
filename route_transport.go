@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var protectedHeaders map[string]bool = map[string]bool{}
+var protectedHeaders = map[string]bool{}
 
 type RouteTransport struct {
 	route         ProxyRoute
