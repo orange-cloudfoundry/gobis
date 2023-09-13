@@ -1,6 +1,6 @@
 language: go
 go:
-  - "1.12"
+  - "1.21"
 
 install:
   - go get github.com/onsi/ginkgo/ginkgo
