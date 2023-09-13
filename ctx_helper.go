@@ -1,10 +1,10 @@
 package gobis
 
 import (
-	"net/http"
 	"context"
-	"reflect"
 	"fmt"
+	"net/http"
+	"reflect"
 )
 
 // AddContextValue Add a context value to a http request without having to override request by yourself

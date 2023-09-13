@@ -1,10 +1,10 @@
 package gobis_test
 
 import (
+	"github.com/mitchellh/mapstructure"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/orange-cloudfoundry/gobis"
-	"github.com/mitchellh/mapstructure"
 )
 
 type TestStruct struct {
