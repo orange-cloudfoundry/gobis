@@ -1,8 +1,8 @@
 package gobis
 
 import (
-	"reflect"
 	"encoding/json"
+	"reflect"
 )
 
 func InterfaceToMap(is ...interface{}) map[string]interface{} {

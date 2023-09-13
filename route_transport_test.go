@@ -4,9 +4,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/orange-cloudfoundry/gobis"
-	"os"
 	"net/http"
 	"net/url"
+	"os"
 )
 
 var _ = Describe("RouteTransport", func() {
@@ -23,7 +23,7 @@ var _ = Describe("RouteTransport", func() {
 		Context("With http proxies set in route", func() {
 			It("should use http proxy when request is in http", func() {
 				rt := NewRouteTransport(ProxyRoute{
-					HttpProxy: "http://http.proxy.local",
+					HttpProxy:  "http://http.proxy.local",
 					HttpsProxy: "http://https.proxy.local",
 				}).(*RouteTransport)
 				proxyUrl, err := rt.ProxyFromRouteOrEnv(&http.Request{
@@ -34,7 +34,7 @@ var _ = Describe("RouteTransport", func() {
 			})
 			It("should use https proxy when request is in https", func() {
 				rt := NewRouteTransport(ProxyRoute{
-					HttpProxy: "http://http.proxy.local",
+					HttpProxy:  "http://http.proxy.local",
 					HttpsProxy: "http://https.proxy.local",
 				}).(*RouteTransport)
 				fakeUrl.Scheme = "https"
@@ -100,7 +100,7 @@ var _ = Describe("RouteTransport", func() {
 			request.Header.Add("X-Header-Third", "3")
 			rt := NewRouteTransport(ProxyRoute{
 				RemoveProxyHeaders: true,
-				SensitiveHeaders: []string{"X-Header-First", "X-Header-Second"},
+				SensitiveHeaders:   []string{"X-Header-First", "X-Header-Second"},
 			}).(*RouteTransport)
 			rt.TransformRequest(request)
 			Expect(request.Header.Get("X-Header-First")).Should(Equal(""))
@@ -114,7 +114,7 @@ var _ = Describe("RouteTransport", func() {
 			request.Header.Add("X-Header-Third", "3")
 			rt := NewRouteTransport(ProxyRoute{
 				RemoveProxyHeaders: true,
-				SensitiveHeaders: []string{"X-Header-First", "X-Header-Second"},
+				SensitiveHeaders:   []string{"X-Header-First", "X-Header-Second"},
 			}).(*RouteTransport)
 			rt.TransformRequest(request)
 			Expect(request.Header.Get("X-Header-First")).Should(Equal("1"))

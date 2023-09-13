@@ -1,20 +1,20 @@
 package gobis
 
 import (
-	"net/http"
 	"context"
-	"reflect"
 	"fmt"
+	"net/http"
+	"reflect"
 )
 
-// Add a context value to an http request without having to override request by yourself
+// AddContextValue Add a context value to a http request without having to override request by yourself
 func AddContextValue(req *http.Request, key, val interface{}) {
 	parentContext := req.Context()
 	ctxValueReq := req.WithContext(context.WithValue(parentContext, key, val))
 	*req = *ctxValueReq
 }
 
-// Inject a value from a request context to an interface
+// InjectContextValue Inject a value from a request context to an interface
 // This is the same behaviour as json.Unmarshal
 func InjectContextValue(req *http.Request, key, inject interface{}) error {
 	if reflect.TypeOf(inject).Kind() != reflect.Ptr {

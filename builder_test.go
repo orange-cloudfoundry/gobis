@@ -123,7 +123,6 @@ var _ = Describe("ProxyRouteBuilder", func() {
 			routes := builder.
 				AddRoute("/1", "http://url1.com").WithName("1").
 				AddSubRoute("/sub", "").Finish().
-
 				AddRoute("/2", "http://url2.com").WithName("2").
 				Build()
 
