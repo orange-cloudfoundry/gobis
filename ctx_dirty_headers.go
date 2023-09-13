@@ -17,7 +17,7 @@ type GobisContextKey int
 // Useful to prevent some headers added and used by middleware to not be sent to upstream
 // if oldValue is not empty it will make proxy rewrite header with this value
 func DirtHeader(req *http.Request, header string, oldValue ...string) {
-	var dirtyHeaders map[string]string = make(map[string]string)
+	var dirtyHeaders = make(map[string]string)
 	header = sanitizeHeaderName(header)
 	oldVal := ""
 	dirtyHeadersPtr := DirtyHeaders(req)
