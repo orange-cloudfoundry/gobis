@@ -50,7 +50,7 @@ jobs:
           echo "::warning::tag == ${tag}"
 
       - name: Create tag
-        uses: tvdias/github-tagger@v0.0.1
+        uses: tvdias/github-tagger@v0.0.2
         if: steps.compte_tag.outputs.tag != steps.semver_parser.outputs.fullversion
         with:
           repo-token: "${{ secrets.AUTO_MERGE_TOKEN }}"
