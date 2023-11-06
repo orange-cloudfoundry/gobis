@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/gobwas/glob v0.2.3
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/gravitational/trace v1.3.1 // indirect
 	github.com/jonboulle/clockwork v0.4.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0
