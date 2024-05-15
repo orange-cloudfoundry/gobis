@@ -16,7 +16,7 @@ type ProxyRouteBuilder struct {
 func Builder() *ProxyRouteBuilder {
 	return &ProxyRouteBuilder{
 		routes:   make([]*ProxyRoute, 0),
-		children: make(map[int]*ProxyRouteBuilder, 0),
+		children: make(map[int]*ProxyRouteBuilder),
 		index:    -1,
 	}
 }
