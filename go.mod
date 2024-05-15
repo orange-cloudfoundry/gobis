@@ -9,7 +9,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.33.1
-	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/thoas/go-funk v0.9.3
 	github.com/vulcand/oxy v1.4.2
@@ -17,6 +16,8 @@ require (
 	golang.org/x/sys v0.20.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
+
+require github.com/google/uuid v1.6.0
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
