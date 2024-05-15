@@ -19,7 +19,7 @@ var _ = Describe("RouterFactory", func() {
 		request := &http.Request{}
 		BeforeEach(func() {
 			headers := make(map[string][]string)
-			request.Header = http.Header(headers)
+			request.Header = headers
 			request.URL, _ = url.Parse("http://localhost")
 		})
 		Context("when route doesn't have option ForwardedHeader", func() {

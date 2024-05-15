@@ -75,7 +75,6 @@ func (h GobisHandlerTest) ServerByName(name string) *PackServer {
 		}
 	}
 	panic("Can't found server " + name)
-	return nil
 }
 func (h *GobisHandlerTest) SetBackendHandlerByName(name string, handler http.Handler) {
 	server := h.ServerByName(name)

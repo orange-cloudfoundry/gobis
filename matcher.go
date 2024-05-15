@@ -78,7 +78,7 @@ func (re *PathMatcher) load(s string) error {
 func checkPathMatcher(path string) error {
 	reg := regexp.MustCompile(PathRegex)
 	if !reg.MatchString(path) {
-		return fmt.Errorf("Invalid path, e.g.: /api/** to match everything, /api/* to match first level or /api to only match this")
+		return fmt.Errorf("invalid path, e.g.: /api/** to match everything, /api/* to match first level or /api to only match this")
 	}
 	return nil
 }

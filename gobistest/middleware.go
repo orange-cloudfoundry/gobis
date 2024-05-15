@@ -79,7 +79,7 @@ func (t *MiddlewareTest) AddMiddlewareParamToFirst(key string, value interface{}
 	}
 	rootParams := t.route.MiddlewareParams.(map[string]interface{})
 	var rootKey string
-	for rootKey, _ = range rootParams {
+	for rootKey = range rootParams {
 		break
 	}
 	t.AddMiddlewareParam(rootKey, key, value)

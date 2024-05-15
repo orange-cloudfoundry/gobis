@@ -6,31 +6,25 @@ It's largely inspired by [Netflix/zuul](https://github.com/Netflix/zuul).
 
 ## Summary
 
-- [installation](#installation)
-- [Usage](#usage)
-  - [Headers sent by gobis to reversed app](headers-sent-by-gobis-to-reversed-app)
-  - [Example using gobis as a middleware](#example-using-gobis-as-a-middleware)
-- [Middlewares](#middlewares)
-  - [Create your middleware](#create-your-middleware)
-- [Available middlewares](https://github.com/orange-cloudfoundry/gobis-middlewares)
-  - [basic2token](https://github.com/orange-cloudfoundry/gobis-middlewares#basic2token): Give the ability to connect an user over basic auth, retrieve a token from an oauth2 server with user information and forward the request with this token.
-  - [basic auth](https://github.com/orange-cloudfoundry/gobis-middlewares#basic-auth)
-  - [casbin](https://github.com/orange-cloudfoundry/gobis-middlewares#casbin): An authorization library that supports access control models like ACL, RBAC, ABAC
-  - [circuit breaker](https://github.com/orange-cloudfoundry/gobis-middlewares#circuit-breaker)
-  - [conn limit](https://github.com/orange-cloudfoundry/gobis-middlewares#conn-limit)
-  - [cors](https://github.com/orange-cloudfoundry/gobis-middlewares#cors)
-  - [oauth2](https://github.com/orange-cloudfoundry/gobis-middlewares#oauth2)
-  - [ldap](https://github.com/orange-cloudfoundry/gobis-middlewares#ldap)
-  - [rate limit](https://github.com/orange-cloudfoundry/gobis-middlewares#rate-limit)
-  - [trace](https://github.com/orange-cloudfoundry/gobis-middlewares#trace)
-  - and more see: https://github.com/orange-cloudfoundry/gobis-middlewares
-- [Running a standalone server](#running-a-standalone-server)
-- [Pro tips](#pro-tips)
-- [FAQ](#faq)
+<!-- TOC -->
+* [Gobis ![Build Status](https://travis-ci.org/orange-cloudfoundry/gobis.svg?branch=master) ![GoDoc](https://godoc.org/github.com/orange-cloudfoundry/gobis?status.svg)](#gobis--)
+  * [Summary](#summary)
+  * [Installation](#installation)
+  * [Usage](#usage)
+    * [Headers sent by gobis to reversed app](#headers-sent-by-gobis-to-reversed-app)
+    * [Example using gobis as a middleware](#example-using-gobis-as-a-middleware)
+  * [Middlewares](#middlewares)
+    * [Create your middleware](#create-your-middleware)
+  * [Available middlewares](#available-middlewares)
+  * [Running a standalone server](#running-a-standalone-server)
+  * [Pro tips](#pro-tips)
+  * [FAQ](#faq)
+    * [Why this name ?](#why-this-name-)
+<!-- TOC -->
 
 ## Installation
 
-```
+```shell
 go get github/orange-cloudfoundry/gobis
 ```
 
@@ -92,10 +86,11 @@ Gobis will send some headers to the app when the request is forwarded:
 ```go
 package main
 import (
-	"github.com/orange-cloudfoundry/gobis"
-	"github.com/orange-cloudfoundry/gobis-middlewares/cors"
-	"github.com/gorilla/mux"
-	"net/http"
+
+"github.com/gorilla/mux"
+"github.com/orange-cloudfoundry/gobis"
+"github.com/orange-cloudfoundry/gobis-middlewares/cors"
+"net/http"
 )
 func main() {
 	rtr := mux.NewRouter()
@@ -216,39 +211,42 @@ This server can be ran on cloud like Kubernetes, Cloud Foundry or Heroku.
 ## Pro tips
 
 You can set multiple middleware params programmatically by using a dummy structure containing each config you wanna set, example:
+
 ```go
 package main
+
 import (
-    "github.com/orange-cloudfoundry/gobis-middlewares/trace"
-    "github.com/orange-cloudfoundry/gobis-middlewares/cors"
-    "github.com/orange-cloudfoundry/gobis"
+  "github.com/orange-cloudfoundry/gobis"
+  "github.com/orange-cloudfoundry/gobis-middlewares/cors"
+  "github.com/orange-cloudfoundry/gobis-middlewares/trace"
 )
-func main(){
-    configHandler := gobis.DefaultHandlerConfig{
-            Routes: []gobis.ProxyRoute{
-                {
-                    Name: "myapi",
-                    Path: "/app/**",
-                    Url: "http://www.mocky.io/v2/595625d22900008702cd71e8",
-                    MiddlewareParams: struct {
-                        trace.TraceConfig
-                        cors.CorsConfig
-                    }{
-                        TraceConfig: trace.TraceConfig{
-                            Trace: &trace.TraceOptions{
-                                Enabled: true,
-                            },
-                        },
-                        CorsConfig: cors.CorsConfig{
-                            Cors: &cors.CorsOptions{
-                                Enabled: true,
-                            },
-                        },
-                    },
-                },
+
+func main() {
+  configHandler := gobis.DefaultHandlerConfig{
+    Routes: []gobis.ProxyRoute{
+      {
+        Name: "myapi",
+        Path: "/app/**",
+        Url:  "http://www.mocky.io/v2/595625d22900008702cd71e8",
+        MiddlewareParams: struct {
+          trace.TraceConfig
+          cors.CorsConfig
+        }{
+          TraceConfig: trace.TraceConfig{
+            Trace: &trace.TraceOptions{
+              Enabled: true,
             },
-    }
-    gobisHandler, err := gobis.NewDefaultHandler(configHandler, trace.NewTrace(), cors.NewCors())
+          },
+          CorsConfig: cors.CorsConfig{
+            Cors: &cors.CorsOptions{
+              Enabled: true,
+            },
+          },
+        },
+      },
+    },
+  }
+  gobisHandler, err := gobis.NewDefaultHandler(configHandler, trace.NewTrace(), cors.NewCors())
 }
 ```
 

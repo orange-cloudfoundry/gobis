@@ -3,6 +3,7 @@
 package gobis
 
 import (
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
 )
@@ -16,7 +17,7 @@ type GobisContextKey int
 // DirtHeader Mark a http header as dirty
 // Useful to prevent some headers added and used by middleware to not be sent to upstream
 // if oldValue is not empty it will make proxy rewrite header with this value
-func DirtHeader(req *http.Request, header string, oldValue ...string) {
+func DirtHeader(req *http.Request, header string, _ ...string) {
 	var dirtyHeaders = make(map[string]string)
 	header = sanitizeHeaderName(header)
 	oldVal := ""
@@ -58,7 +59,10 @@ func UndirtHeader(req *http.Request, header string) {
 // DirtyHeaders Retrieve all http headers marked as dirty
 func DirtyHeaders(req *http.Request) *map[string]string {
 	var dirtyHeaders *map[string]string
-	InjectContextValue(req, dirtyHeadersKey, &dirtyHeaders)
+	if err := InjectContextValue(req, dirtyHeadersKey, &dirtyHeaders); err != nil {
+		log.Errorf("got error when getting DirtyHeaders value: %s", err)
+	}
+
 	return dirtyHeaders
 }
 

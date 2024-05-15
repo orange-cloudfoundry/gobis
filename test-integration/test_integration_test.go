@@ -7,7 +7,7 @@ import (
 	"github.com/orange-cloudfoundry/gobis"
 	. "github.com/orange-cloudfoundry/gobis/gobistest"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -53,7 +53,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).ShouldNot(Equal("route1 content"))
 			Expect(resp.StatusCode).Should(Equal(404))
@@ -77,7 +77,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).Should(Equal("route1 content"))
 			Expect(resp.StatusCode).Should(Equal(200))
@@ -102,7 +102,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).Should(Equal("route1 content"))
 			Expect(resp.StatusCode).Should(Equal(200))
@@ -130,7 +130,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).Should(Equal("route1 content"))
 			Expect(resp.StatusCode).Should(Equal(200))
@@ -151,7 +151,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).ShouldNot(Equal("route1 content"))
 			Expect(resp.StatusCode).Should(Equal(404))
@@ -173,7 +173,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			var jsonError gobis.JsonError
 			err = json.Unmarshal(content, &jsonError)
@@ -207,7 +207,7 @@ var _ = Describe("TestIntegration", func() {
 				gobisTestHandler.ServeHTTP(rr, req)
 				resp := rr.Result()
 
-				content, err := ioutil.ReadAll(resp.Body)
+				content, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(content)).Should(Equal("first route"))
 				Expect(resp.StatusCode).Should(Equal(200))
@@ -219,7 +219,7 @@ var _ = Describe("TestIntegration", func() {
 				gobisTestHandler.ServeHTTP(rr, req)
 				resp = rr.Result()
 
-				content, err = ioutil.ReadAll(resp.Body)
+				content, err = io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(content)).Should(Equal("second route"))
 				Expect(resp.StatusCode).Should(Equal(200))
@@ -247,7 +247,7 @@ var _ = Describe("TestIntegration", func() {
 				gobisTestHandler.ServeHTTP(rr, req)
 				resp := rr.Result()
 
-				content, err := ioutil.ReadAll(resp.Body)
+				content, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(content)).Should(Equal("route"))
 				Expect(resp.StatusCode).Should(Equal(200))
@@ -259,7 +259,7 @@ var _ = Describe("TestIntegration", func() {
 				gobisTestHandler.ServeHTTP(rr, req)
 				resp = rr.Result()
 
-				content, err = ioutil.ReadAll(resp.Body)
+				content, err = io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(content)).Should(Equal("fallback"))
 				Expect(resp.StatusCode).Should(Equal(200))
@@ -291,7 +291,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).Should(Equal("parent"))
 			Expect(resp.StatusCode).Should(Equal(200))
@@ -303,7 +303,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp = rr.Result()
 
-			content, err = ioutil.ReadAll(resp.Body)
+			content, err = io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).Should(Equal("sub"))
 			Expect(resp.StatusCode).Should(Equal(200))
@@ -360,14 +360,14 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).Should(Equal("sub"))
 			Expect(resp.StatusCode).Should(Equal(200))
 		})
 	})
 	Context("forwarding with forwarded header", func() {
-		var forwardedHeader string = "X-Forward-Url"
+		var forwardedHeader = "X-Forward-Url"
 		It("should redirect to backend with gobis header", func() {
 			route := gobis.ProxyRoute{
 				Name:            "myroute",
@@ -393,7 +393,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).Should(Equal("route1 content"))
 			Expect(resp.StatusCode).Should(Equal(200))
@@ -415,7 +415,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).ShouldNot(Equal("route1 content"))
 			Expect(resp.StatusCode).Should(Equal(404))
@@ -443,7 +443,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).Should(Equal("proxified"))
 			Expect(resp.StatusCode).Should(Equal(http.StatusTemporaryRedirect))
@@ -489,7 +489,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).Should(Equal("content forward"))
 			Expect(resp.StatusCode).Should(Equal(200))
@@ -524,7 +524,7 @@ var _ = Describe("TestIntegration", func() {
 				gobisTestHandler.ServeHTTP(rr, req)
 				resp := rr.Result()
 
-				content, err := ioutil.ReadAll(resp.Body)
+				content, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(content)).Should(Equal("intercepted forward new path"))
 				Expect(resp.StatusCode).Should(Equal(200))
@@ -555,7 +555,7 @@ var _ = Describe("TestIntegration", func() {
 				gobisTestHandler.ServeHTTP(rr, req)
 				resp := rr.Result()
 
-				content, err := ioutil.ReadAll(resp.Body)
+				content, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(content)).Should(Equal("intercepted"))
 				Expect(resp.StatusCode).Should(Equal(200))
@@ -585,7 +585,7 @@ var _ = Describe("TestIntegration", func() {
 				gobisTestHandler.ServeHTTP(rr, req)
 				resp := rr.Result()
 
-				content, err := ioutil.ReadAll(resp.Body)
+				content, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(content)).Should(Equal("forward"))
 				Expect(resp.StatusCode).Should(Equal(200))
@@ -616,7 +616,7 @@ var _ = Describe("TestIntegration", func() {
 				gobisTestHandler.ServeHTTP(rr, req)
 				resp := rr.Result()
 
-				content, err := ioutil.ReadAll(resp.Body)
+				content, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(content)).Should(Equal("intercepted"))
 				Expect(resp.StatusCode).Should(Equal(200))
@@ -644,7 +644,7 @@ var _ = Describe("TestIntegration", func() {
 				gobisTestHandler.ServeHTTP(rr, req)
 				resp := rr.Result()
 
-				content, err := ioutil.ReadAll(resp.Body)
+				content, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(content)).Should(Equal("forward"))
 				Expect(resp.StatusCode).Should(Equal(200))
@@ -672,16 +672,12 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).Should(Equal("intercepted"))
 			Expect(resp.StatusCode).Should(Equal(200))
 		})
 		It("should pass through middleware before forward when middleware params is a struct", func() {
-			type Astruct struct {
-				Key   string `mapstructure:"key"`
-				Value string `mapstructure:"value"`
-			}
 			middleware := TestHandlerFunc(func(p HandlerParams) {
 				defer GinkgoRecover()
 				params := p.Params.TestParams.(map[string]interface{})
@@ -707,7 +703,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).Should(Equal("intercepted"))
 			Expect(resp.StatusCode).Should(Equal(200))
@@ -747,7 +743,7 @@ var _ = Describe("TestIntegration", func() {
 			gobisTestHandler.ServeHTTP(rr, req)
 			resp := rr.Result()
 
-			content, err := ioutil.ReadAll(resp.Body)
+			content, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).Should(Equal("interceptedforward"))
 			Expect(resp.StatusCode).Should(Equal(200))

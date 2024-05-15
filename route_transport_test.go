@@ -83,7 +83,7 @@ var _ = Describe("RouteTransport", func() {
 		BeforeEach(func() {
 			request.Host = "localhost"
 			headers := make(map[string][]string)
-			request.Header = http.Header(headers)
+			request.Header = headers
 			request.Header.Add(XForwardedHost, "localhost")
 		})
 		It("Shouldn't had X-Forwarded-Host header to request when route remove it", func() {

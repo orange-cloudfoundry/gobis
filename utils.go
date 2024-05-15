@@ -2,6 +2,7 @@ package gobis
 
 import (
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"reflect"
 )
 
@@ -21,7 +22,9 @@ func mergeMap(parent map[string]interface{}, toMerge map[string]interface{}) map
 func interfaceToMap(i interface{}) map[string]interface{} {
 	b, _ := json.Marshal(i)
 	var m map[string]interface{}
-	json.Unmarshal(b, &m)
+	if err := json.Unmarshal(b, &m); err != nil {
+		log.Errorf("unable to unmarshal JSON: %v", err)
+	}
 	return m
 }
 func GetMiddlewareName(i interface{}) string {

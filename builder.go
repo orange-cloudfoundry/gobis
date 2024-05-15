@@ -1,7 +1,7 @@
 package gobis
 
 import (
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"net/http"
 	"reflect"
 )
@@ -16,14 +16,14 @@ type ProxyRouteBuilder struct {
 func Builder() *ProxyRouteBuilder {
 	return &ProxyRouteBuilder{
 		routes:   make([]*ProxyRoute, 0),
-		children: make(map[int]*ProxyRouteBuilder, 0),
+		children: make(map[int]*ProxyRouteBuilder),
 		index:    -1,
 	}
 }
 
 func (b *ProxyRouteBuilder) AddRoute(path, url string) *ProxyRouteBuilder {
 	b.routes = append(b.routes, &ProxyRoute{
-		Name:             uuid.NewV4().String(),
+		Name:             uuid.NewString(),
 		Path:             NewPathMatcher(path),
 		Url:              url,
 		SensitiveHeaders: []string{},
@@ -37,7 +37,7 @@ func (b *ProxyRouteBuilder) AddRoute(path, url string) *ProxyRouteBuilder {
 
 func (b *ProxyRouteBuilder) AddRouteHandler(path string, forwardHandler http.Handler) *ProxyRouteBuilder {
 	b.routes = append(b.routes, &ProxyRoute{
-		Name:             uuid.NewV4().String(),
+		Name:             uuid.NewString(),
 		Path:             NewPathMatcher(path),
 		ForwardHandler:   forwardHandler,
 		SensitiveHeaders: []string{},
