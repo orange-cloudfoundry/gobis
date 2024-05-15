@@ -1,6 +1,9 @@
 package gobis
 
-import "net/http"
+import (
+	log "github.com/sirupsen/logrus"
+	"net/http"
+)
 
 const (
 	GroupContextKey MiddlewareContextKey = iota
@@ -30,7 +33,9 @@ func Username(req *http.Request) string {
 }
 func usernamePtr(req *http.Request) *string {
 	var username *string
-	InjectContextValue(req, UsernameContextKey, &username)
+	if err := InjectContextValue(req, UsernameContextKey, &username); err != nil {
+		log.Errorf("got error when injecting context value: %s", err)
+	}
 	return username
 }
 
@@ -68,7 +73,9 @@ func Groups(req *http.Request) []string {
 }
 func groupsPtr(req *http.Request) *map[string]bool {
 	var groups *map[string]bool
-	InjectContextValue(req, GroupContextKey, &groups)
+	if err := InjectContextValue(req, GroupContextKey, &groups); err != nil {
+		log.Errorf("got error when injecting context value: %s", err)
+	}
 	return groups
 }
 func mapToSlice(m map[string]bool) []string {

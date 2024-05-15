@@ -3,6 +3,7 @@
 package gobis
 
 import (
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
 )
@@ -58,7 +59,10 @@ func UndirtHeader(req *http.Request, header string) {
 // DirtyHeaders Retrieve all http headers marked as dirty
 func DirtyHeaders(req *http.Request) *map[string]string {
 	var dirtyHeaders *map[string]string
-	InjectContextValue(req, dirtyHeadersKey, &dirtyHeaders)
+	if err := InjectContextValue(req, dirtyHeadersKey, &dirtyHeaders); err != nil {
+		log.Errorf("got error when getting DirtyHeaders value: %s", err)
+	}
+
 	return dirtyHeaders
 }
 
