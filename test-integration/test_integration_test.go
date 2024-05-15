@@ -678,10 +678,6 @@ var _ = Describe("TestIntegration", func() {
 			Expect(resp.StatusCode).Should(Equal(200))
 		})
 		It("should pass through middleware before forward when middleware params is a struct", func() {
-			type Astruct struct {
-				Key   string `mapstructure:"key"`
-				Value string `mapstructure:"value"`
-			}
 			middleware := TestHandlerFunc(func(p HandlerParams) {
 				defer GinkgoRecover()
 				params := p.Params.TestParams.(map[string]interface{})
