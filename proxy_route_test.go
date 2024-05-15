@@ -169,7 +169,7 @@ hosts_passthrough:
 			}
 			err := route.Check()
 			Expect(err).Should(HaveOccurred())
-			Expect(err.Error()).Should(ContainSubstring("url"))
+			Expect(err.Error()).Should(ContainSubstring("URL"))
 		})
 		It("should complain if url is set to localhost", func() {
 			route := ProxyRoute{

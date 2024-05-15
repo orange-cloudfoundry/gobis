@@ -86,22 +86,22 @@ func (r *ProxyRoute) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 func (r ProxyRoute) Check() error {
 	if r.Name == "" {
-		return fmt.Errorf("You must provide a name to your routes")
+		return fmt.Errorf("you must provide a name to your routes")
 	}
 	if r.Path == nil {
-		return fmt.Errorf("You must provide a path to your routes")
+		return fmt.Errorf("you must provide a path to your routes")
 	}
 	if r.Url == "" && r.ForwardedHeader == "" {
-		return fmt.Errorf("You must provide an url or forwarded header to your routes")
+		return fmt.Errorf("you must provide an URL or forwarded header to your routes")
 	}
 
 	_, err := url.Parse(r.HttpProxy)
 	if err != nil && r.HttpProxy != "" {
-		return fmt.Errorf("Invalid http_proxy : " + err.Error())
+		return fmt.Errorf("invalid http_proxy : " + err.Error())
 	}
 	_, err = url.Parse(r.HttpsProxy)
 	if err != nil && r.HttpsProxy != "" {
-		return fmt.Errorf("Invalid https_proxy : " + err.Error())
+		return fmt.Errorf("invalid https_proxy : " + err.Error())
 	}
 	if r.Url == "" {
 		return nil
@@ -111,10 +111,10 @@ func (r ProxyRoute) Check() error {
 		return fmt.Errorf("Invalid url : " + err.Error())
 	}
 	if routeUrl.Host == "localhost" || routeUrl.Host == "127.0.0.1" {
-		return fmt.Errorf("Invalid url : host couldn't be localhost or 127.0.0.1")
+		return fmt.Errorf("invalid URL: host couldn't be localhost or 127.0.0.1")
 	}
 	if routeUrl.Scheme == "" {
-		return fmt.Errorf("Invalid url : scheme is missing")
+		return fmt.Errorf("invalid URL: scheme is missing")
 	}
 	return nil
 }

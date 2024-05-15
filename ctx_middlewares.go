@@ -58,7 +58,7 @@ func AddGroups(req *http.Request, groups ...string) {
 	*groupsPtr = origGroups
 }
 
-// retrieve groups from request context
+// Groups retrieve groups from request context
 func Groups(req *http.Request) []string {
 	groupsPtr := groupsPtr(req)
 	if groupsPtr == nil {

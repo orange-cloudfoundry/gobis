@@ -120,7 +120,7 @@ func (r RouterFactoryService) CreateReverseHandler(proxyRoute ProxyRoute) (http.
 }
 
 func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute, startPath string) mux.MatcherFunc {
-	return mux.MatcherFunc(func(req *http.Request, rm *mux.RouteMatch) bool {
+	return func(req *http.Request, rm *mux.RouteMatch) bool {
 		if len(proxyRoute.Methods) > 0 && !funk.ContainsString(proxyRoute.Methods, req.Method) {
 			return false
 		}
@@ -154,7 +154,7 @@ func (r RouterFactoryService) routeMatch(proxyRoute ProxyRoute, startPath string
 		}
 		origPathMatcher := NewPathMatcher(origUpstreamUrl.Path).pathMatcher
 		return origPathMatcher.MatchString(path)
-	})
+	}
 }
 
 func (r RouterFactoryService) CreateForwardHandler(proxyRoute ProxyRoute) (http.HandlerFunc, error) {
@@ -187,7 +187,7 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute ProxyRoute) (http.
 		}
 	}
 
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		req.Header.Set(GobisHeaderName, "true")
 		w.Header().Set(GobisHeaderName, "true")
 		if proxyRoute.OptionsPassthrough &&
@@ -203,7 +203,7 @@ func (r RouterFactoryService) CreateForwardHandler(proxyRoute ProxyRoute) (http.
 		setRouteName(req, proxyRoute.Name)
 		defer panicRecover(proxyRoute, w)
 		handler.ServeHTTP(w, req)
-	}), nil
+	}, nil
 }
 
 func middlewareHandlerToHandler(middleware MiddlewareHandler, proxyRoute ProxyRoute, params interface{}, next http.Handler) (http.Handler, error) {
@@ -285,7 +285,7 @@ func panicRecover(proxyRoute ProxyRoute, w http.ResponseWriter) {
 			RouteName: proxyRoute.Name,
 		}
 		b, _ := json.MarshalIndent(errMsg, "", "\t")
-		w.Write([]byte(b))
+		w.Write(b)
 	}
 	entry := log.WithField("route_name", proxyRoute.Name)
 	identName, identFile := identifyPanic()
