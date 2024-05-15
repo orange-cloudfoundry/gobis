@@ -6,31 +6,25 @@ It's largely inspired by [Netflix/zuul](https://github.com/Netflix/zuul).
 
 ## Summary
 
-- [installation](#installation)
-- [Usage](#usage)
-  - [Headers sent by gobis to reversed app](headers-sent-by-gobis-to-reversed-app)
-  - [Example using gobis as a middleware](#example-using-gobis-as-a-middleware)
-- [Middlewares](#middlewares)
-  - [Create your middleware](#create-your-middleware)
-- [Available middlewares](https://github.com/orange-cloudfoundry/gobis-middlewares)
-  - [basic2token](https://github.com/orange-cloudfoundry/gobis-middlewares#basic2token): Give the ability to connect an user over basic auth, retrieve a token from an oauth2 server with user information and forward the request with this token.
-  - [basic auth](https://github.com/orange-cloudfoundry/gobis-middlewares#basic-auth)
-  - [casbin](https://github.com/orange-cloudfoundry/gobis-middlewares#casbin): An authorization library that supports access control models like ACL, RBAC, ABAC
-  - [circuit breaker](https://github.com/orange-cloudfoundry/gobis-middlewares#circuit-breaker)
-  - [conn limit](https://github.com/orange-cloudfoundry/gobis-middlewares#conn-limit)
-  - [cors](https://github.com/orange-cloudfoundry/gobis-middlewares#cors)
-  - [oauth2](https://github.com/orange-cloudfoundry/gobis-middlewares#oauth2)
-  - [ldap](https://github.com/orange-cloudfoundry/gobis-middlewares#ldap)
-  - [rate limit](https://github.com/orange-cloudfoundry/gobis-middlewares#rate-limit)
-  - [trace](https://github.com/orange-cloudfoundry/gobis-middlewares#trace)
-  - and more see: https://github.com/orange-cloudfoundry/gobis-middlewares
-- [Running a standalone server](#running-a-standalone-server)
-- [Pro tips](#pro-tips)
-- [FAQ](#faq)
+<!-- TOC -->
+* [Gobis ![Build Status](https://travis-ci.org/orange-cloudfoundry/gobis.svg?branch=master) ![GoDoc](https://godoc.org/github.com/orange-cloudfoundry/gobis?status.svg)](#gobis--)
+  * [Summary](#summary)
+  * [Installation](#installation)
+  * [Usage](#usage)
+    * [Headers sent by gobis to reversed app](#headers-sent-by-gobis-to-reversed-app)
+    * [Example using gobis as a middleware](#example-using-gobis-as-a-middleware)
+  * [Middlewares](#middlewares)
+    * [Create your middleware](#create-your-middleware)
+  * [Available middlewares](#available-middlewares)
+  * [Running a standalone server](#running-a-standalone-server)
+  * [Pro tips](#pro-tips)
+  * [FAQ](#faq)
+    * [Why this name ?](#why-this-name-)
+<!-- TOC -->
 
 ## Installation
 
-```
+```shell
 go get github/orange-cloudfoundry/gobis
 ```
 
