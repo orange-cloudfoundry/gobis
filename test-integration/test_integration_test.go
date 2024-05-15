@@ -367,7 +367,7 @@ var _ = Describe("TestIntegration", func() {
 		})
 	})
 	Context("forwarding with forwarded header", func() {
-		var forwardedHeader string = "X-Forward-Url"
+		var forwardedHeader = "X-Forward-Url"
 		It("should redirect to backend with gobis header", func() {
 			route := gobis.ProxyRoute{
 				Name:            "myroute",
