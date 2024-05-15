@@ -73,7 +73,7 @@ func groupsPtr(req *http.Request) *map[string]bool {
 }
 func mapToSlice(m map[string]bool) []string {
 	s := make([]string, 0)
-	for key, _ := range m {
+	for key := range m {
 		s = append(s, key)
 	}
 	return s
