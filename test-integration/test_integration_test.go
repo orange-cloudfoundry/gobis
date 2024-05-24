@@ -45,6 +45,7 @@ var _ = Describe("TestIntegration", func() {
 		It("should not redirect to backend when http method is wrong.", func() {
 			gobisTestHandler = NewSimpleGobisHandlerTest(defaultRoute)
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				//nolint:errcheck
 				w.Write([]byte("route1 content"))
 			}))
 
@@ -69,6 +70,7 @@ var _ = Describe("TestIntegration", func() {
 				Expect(req.Header).To(HaveKey("X-Forwarded-Host"))
 				Expect(req.Header).To(HaveKey("X-Forwarded-Proto"))
 				Expect(req.Header).To(HaveKey("X-Forwarded-Server"))
+				//nolint:errcheck
 				w.Write([]byte("route1 content"))
 			}))
 
@@ -94,6 +96,7 @@ var _ = Describe("TestIntegration", func() {
 				Expect(req.Header).To(HaveKey("X-Forwarded-Host"))
 				Expect(req.Header).To(HaveKey("X-Forwarded-Proto"))
 				Expect(req.Header).To(HaveKey("X-Forwarded-Server"))
+				//nolint:errcheck
 				w.Write([]byte("route1 content"))
 			}))
 
@@ -122,6 +125,7 @@ var _ = Describe("TestIntegration", func() {
 				Expect(req.Header).ToNot(HaveKey("X-Forwarded-Host"))
 				Expect(req.Header).ToNot(HaveKey("X-Forwarded-Proto"))
 				Expect(req.Header).ToNot(HaveKey("X-Forwarded-Server"))
+				//nolint:errcheck
 				w.Write([]byte("route1 content"))
 			}))
 
@@ -143,6 +147,7 @@ var _ = Describe("TestIntegration", func() {
 			}
 			gobisTestHandler = NewSimpleGobisHandlerTest(myroute)
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				//nolint:errcheck
 				w.Write([]byte("route1 content"))
 			}))
 
@@ -165,6 +170,7 @@ var _ = Describe("TestIntegration", func() {
 				NewFakeMiddleware(errorHandler),
 			)
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				//nolint:errcheck
 				w.Write([]byte("route1 content"))
 			}))
 
@@ -195,9 +201,11 @@ var _ = Describe("TestIntegration", func() {
 				}
 				gobisTestHandler = NewSimpleGobisHandlerTest(firstRoute, secondRoute)
 				gobisTestHandler.SetBackendHandler(firstRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					//nolint:errcheck
 					w.Write([]byte("first route"))
 				}))
 				gobisTestHandler.SetBackendHandler(secondRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					//nolint:errcheck
 					w.Write([]byte("second route"))
 				}))
 
@@ -235,9 +243,11 @@ var _ = Describe("TestIntegration", func() {
 				}
 				gobisTestHandler = NewSimpleGobisHandlerTest(firstRoute, secondRoute)
 				gobisTestHandler.SetBackendHandler(firstRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					//nolint:errcheck
 					w.Write([]byte("route"))
 				}))
 				gobisTestHandler.SetBackendHandler(secondRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					//nolint:errcheck
 					w.Write([]byte("fallback"))
 				}))
 
@@ -279,9 +289,11 @@ var _ = Describe("TestIntegration", func() {
 			}
 			gobisTestHandler = NewSimpleGobisHandlerTest(route)
 			gobisTestHandler.SetBackendHandler(route, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				//nolint:errcheck
 				w.Write([]byte("parent"))
 			}))
 			gobisTestHandler.SetBackendHandler(subRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				//nolint:errcheck
 				w.Write([]byte("sub"))
 			}))
 
@@ -346,12 +358,14 @@ var _ = Describe("TestIntegration", func() {
 				NewFakeMiddleware(midSub),
 			)
 			gobisTestHandler.SetBackendHandler(route, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				//nolint:errcheck
 				w.Write([]byte("parent"))
 			}))
 			gobisTestHandler.SetBackendHandler(subRoute, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				defer GinkgoRecover()
 				Expect(req.Header.Get("X-Parent-Header")).To(Equal(""))
 				Expect(req.Header.Get("X-Sub-Header")).To(Equal("sub"))
+				//nolint:errcheck
 				w.Write([]byte("sub"))
 			}))
 
@@ -384,6 +398,7 @@ var _ = Describe("TestIntegration", func() {
 				Expect(req.Header).To(HaveKey("X-Forwarded-Proto"))
 				Expect(req.Header).To(HaveKey("X-Forwarded-Server"))
 				Expect(req.URL.Path).To(Equal("/mypath"))
+				//nolint:errcheck
 				w.Write([]byte("route1 content"))
 			}))
 
@@ -406,6 +421,7 @@ var _ = Describe("TestIntegration", func() {
 			}
 			gobisTestHandler = NewSimpleGobisHandlerTest(route)
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				//nolint:errcheck
 				w.Write([]byte("route1 content"))
 			}))
 
@@ -431,10 +447,12 @@ var _ = Describe("TestIntegration", func() {
 			}
 			httpProxy.SetHandler(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				w.WriteHeader(http.StatusTemporaryRedirect)
+				//nolint:errcheck
 				w.Write([]byte("proxified"))
 			}))
 			gobisTestHandler = NewSimpleGobisHandlerTest(route)
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				//nolint:errcheck
 				w.Write([]byte("route1 content"))
 			}))
 
@@ -461,6 +479,7 @@ var _ = Describe("TestIntegration", func() {
 			}))
 			gobisTestHandler = NewSimpleGobisHandlerTestInSsl(route)
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				//nolint:errcheck
 				w.Write([]byte("route1 content"))
 			}))
 
@@ -477,11 +496,13 @@ var _ = Describe("TestIntegration", func() {
 				Name: "myroute",
 				Path: gobis.NewPathMatcher("/**"),
 				ForwardHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					//nolint:errcheck
 					w.Write([]byte("content forward"))
 				}),
 			}
 			gobisTestHandler = NewSimpleGobisHandlerTestInSsl(route)
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				//nolint:errcheck
 				w.Write([]byte("should not be seen"))
 			}))
 
@@ -502,6 +523,7 @@ var _ = Describe("TestIntegration", func() {
 					defer GinkgoRecover()
 					params := p.Params.TestParams.(map[string]interface{})
 					Expect(params["key"]).Should(Equal("value"))
+					//nolint:errcheck
 					p.W.Write([]byte("intercepted "))
 					gobis.SetPath(p.Req, "/newpath")
 					p.Next.ServeHTTP(p.W, p.Req)
@@ -512,6 +534,7 @@ var _ = Describe("TestIntegration", func() {
 					MiddlewareParams: CreateInlineTestParams("key", "value"),
 					ForwardHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 						if r.URL.Path == "/newpath" {
+							//nolint:errcheck
 							w.Write([]byte("forward new path"))
 						}
 					}),
@@ -536,6 +559,7 @@ var _ = Describe("TestIntegration", func() {
 					defer GinkgoRecover()
 					params := p.Params.TestParams.(map[string]interface{})
 					Expect(params["key"]).Should(Equal("value"))
+					//nolint:errcheck
 					p.W.Write([]byte("intercepted"))
 				})
 				route := gobis.ProxyRoute{
@@ -546,6 +570,7 @@ var _ = Describe("TestIntegration", func() {
 				}
 				gobisTestHandler = NewGobisHandlerTest([]gobis.ProxyRoute{route}, NewFakeMiddleware(middleware))
 				gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					//nolint:errcheck
 					w.Write([]byte("forward"))
 				}))
 
@@ -565,6 +590,7 @@ var _ = Describe("TestIntegration", func() {
 					defer GinkgoRecover()
 					params := p.Params.TestParams.(map[string]interface{})
 					Expect(params["key"]).Should(Equal("value"))
+					//nolint:errcheck
 					p.W.Write([]byte("intercepted"))
 				})
 				route := gobis.ProxyRoute{
@@ -575,6 +601,7 @@ var _ = Describe("TestIntegration", func() {
 				}
 				gobisTestHandler = NewGobisHandlerTest([]gobis.ProxyRoute{route}, NewFakeMiddleware(middleware))
 				gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					//nolint:errcheck
 					w.Write([]byte("forward"))
 				}))
 
@@ -597,6 +624,7 @@ var _ = Describe("TestIntegration", func() {
 					defer GinkgoRecover()
 					params := p.Params.TestParams.(map[string]interface{})
 					Expect(params["key"]).Should(Equal("value"))
+					//nolint:errcheck
 					p.W.Write([]byte("intercepted"))
 				})
 				route := gobis.ProxyRoute{
@@ -607,6 +635,7 @@ var _ = Describe("TestIntegration", func() {
 				}
 				gobisTestHandler = NewGobisHandlerTest([]gobis.ProxyRoute{route}, NewFakeMiddleware(middleware))
 				gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					//nolint:errcheck
 					w.Write([]byte("forward"))
 				}))
 
@@ -626,6 +655,7 @@ var _ = Describe("TestIntegration", func() {
 					defer GinkgoRecover()
 					params := p.Params.TestParams.(map[string]interface{})
 					Expect(params["key"]).Should(Equal("value"))
+					//nolint:errcheck
 					p.W.Write([]byte("intercepted"))
 				})
 				route := gobis.ProxyRoute{
@@ -636,6 +666,7 @@ var _ = Describe("TestIntegration", func() {
 				}
 				gobisTestHandler = NewGobisHandlerTest([]gobis.ProxyRoute{route}, NewFakeMiddleware(middleware))
 				gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					//nolint:errcheck
 					w.Write([]byte("forward"))
 				}))
 
@@ -655,6 +686,7 @@ var _ = Describe("TestIntegration", func() {
 				defer GinkgoRecover()
 				params := p.Params.TestParams.(map[string]interface{})
 				Expect(params["key"]).Should(Equal("value"))
+				//nolint:errcheck
 				p.W.Write([]byte("intercepted"))
 			})
 			route := gobis.ProxyRoute{
@@ -664,6 +696,7 @@ var _ = Describe("TestIntegration", func() {
 			}
 			gobisTestHandler = NewGobisHandlerTest([]gobis.ProxyRoute{route}, NewFakeMiddleware(middleware))
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				//nolint:errcheck
 				w.Write([]byte("forward"))
 			}))
 
@@ -682,6 +715,7 @@ var _ = Describe("TestIntegration", func() {
 				defer GinkgoRecover()
 				params := p.Params.TestParams.(map[string]interface{})
 				Expect(params["key"]).Should(Equal("value"))
+				//nolint:errcheck
 				p.W.Write([]byte("intercepted"))
 			})
 			route := gobis.ProxyRoute{
@@ -695,6 +729,7 @@ var _ = Describe("TestIntegration", func() {
 			}
 			gobisTestHandler = NewGobisHandlerTest([]gobis.ProxyRoute{route}, NewFakeMiddleware(middleware))
 			gobisTestHandler.SetBackendHandlerFirst(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				//nolint:errcheck
 				w.Write([]byte("forward"))
 			}))
 
@@ -712,6 +747,7 @@ var _ = Describe("TestIntegration", func() {
 			middlewareAuth := TestHandlerFunc(func(p HandlerParams) {
 				gobis.SetUsername(p.Req, "me")
 				gobis.AddGroups(p.Req, "group1", "group2")
+				//nolint:errcheck
 				p.W.Write([]byte("intercepted"))
 				p.Next.ServeHTTP(p.W, p.Req)
 			})
@@ -735,6 +771,7 @@ var _ = Describe("TestIntegration", func() {
 				Expect(req.Header.Get(gobis.XGobisUsername)).Should(Equal("me"))
 				Expect(req.Header.Get(gobis.XGobisGroups)).Should(ContainSubstring("group1"))
 				Expect(req.Header.Get(gobis.XGobisGroups)).Should(ContainSubstring("group2"))
+				//nolint:errcheck
 				w.Write([]byte("forward"))
 			}))
 

@@ -105,6 +105,7 @@ var _ = Describe("RouterFactory", func() {
 				}
 				rtr, err := factory.CreateMuxRouter(routes, "")
 				Expect(err).NotTo(HaveOccurred())
+				//nolint:errcheck
 				rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 					req, _ := http.NewRequest("GET", "http://localhost/"+routes[0].Name+"/test/toto", nil)
 					req.Header.Set("X-Forwarded-Url", "http://localhost/"+routes[0].Name+"/test/toto?data=mydata")
@@ -133,6 +134,7 @@ var _ = Describe("RouterFactory", func() {
 					rtr, err := factory.CreateMuxRouter(routes, "")
 					Expect(err).NotTo(HaveOccurred())
 					index := 0
+					//nolint:errcheck
 					rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 						req, _ := http.NewRequest("GET", "http://localhost/"+routes[index].Name+"/test/toto", nil)
 						req.Header.Set("X-Forwarded-Url", "http://localhost/"+routes[index].Name+"/test/toto")
@@ -168,6 +170,7 @@ var _ = Describe("RouterFactory", func() {
 					rtr, err := factory.CreateMuxRouter(routes, "")
 					Expect(err).NotTo(HaveOccurred())
 					index := 0
+					//nolint:errcheck
 					rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 						req, _ := http.NewRequest("GET", "http://localhost/"+routes[index].Name+"/test/toto", nil)
 						req.Header.Set("X-Forwarded-Url", "http://localhost/"+routes[index].Name+"/test/toto")
@@ -201,6 +204,7 @@ var _ = Describe("RouterFactory", func() {
 					rtr, err := factory.CreateMuxRouter(routes, "")
 					Expect(err).NotTo(HaveOccurred())
 					index := 0
+					//nolint:errcheck
 					rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 						req, _ := http.NewRequest("GET", "http://localhost/"+routes[index].Name+"/test/toto", nil)
 						req.Header.Set("X-Forwarded-Url", "http://localhost/"+routes[index].Name+"/test/toto")
@@ -235,6 +239,7 @@ var _ = Describe("RouterFactory", func() {
 				rtr, err := factory.CreateMuxRouter(routes, "/startpath")
 				Expect(err).NotTo(HaveOccurred())
 				index := 0
+				//nolint:errcheck
 				rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 					u, _ := url.Parse("http://localhost/startpath/" + routes[index].Name + "/test/toto")
 					req := &http.Request{URL: u}
@@ -271,6 +276,7 @@ var _ = Describe("RouterFactory", func() {
 				rtr, err := factory.CreateMuxRouter(routes, "")
 				Expect(err).NotTo(HaveOccurred())
 				index := 0
+				//nolint:errcheck
 				rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 					u, _ := url.Parse("http://localhost/" + routes[index].Name + "/test/toto")
 					req := &http.Request{URL: u}
@@ -303,6 +309,7 @@ var _ = Describe("RouterFactory", func() {
 			rtr, err := factory.CreateMuxRouter(routes, "")
 			Expect(err).NotTo(HaveOccurred())
 			index := 0
+			//nolint:errcheck
 			rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 				u, _ := url.Parse("http://localhost/" + routes[index].Name + "/test/toto")
 				req := &http.Request{URL: u}
@@ -337,6 +344,7 @@ var _ = Describe("RouterFactory", func() {
 			rtr, err := muxFactory.CreateMuxRouter(routes, "")
 			Expect(err).NotTo(HaveOccurred())
 			index := 0
+			//nolint:errcheck
 			rtr.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 				tpl, _ := route.GetPathTemplate()
 				if index == 0 {

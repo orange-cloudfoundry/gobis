@@ -12,9 +12,13 @@ import (
 var _ = Describe("RouteTransport", func() {
 	var fakeUrl *url.URL
 	BeforeEach(func() {
+		//nolint:errcheck
 		os.Setenv("https_proxy", "http://https.env.proxy.local")
+		//nolint:errcheck
 		os.Unsetenv("http_proxy")
+		//nolint:errcheck
 		os.Unsetenv("HTTP_PROXY")
+		//nolint:errcheck
 		os.Unsetenv("HTTPS_PROXY")
 		SetProtectedHeaders(make([]string, 0))
 		fakeUrl, _ = url.Parse("http://fake.url.local/path")
