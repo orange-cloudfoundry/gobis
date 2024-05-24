@@ -285,7 +285,9 @@ func panicRecover(proxyRoute ProxyRoute, w http.ResponseWriter) {
 			RouteName: proxyRoute.Name,
 		}
 		b, _ := json.MarshalIndent(errMsg, "", "\t")
-		w.Write(b)
+		if _, err := w.Write(b); err != nil {
+			log.Errorf("write failed: %s", err.Error())
+		}
 	}
 	entry := log.WithField("route_name", proxyRoute.Name)
 	identName, identFile := identifyPanic()

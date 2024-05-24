@@ -2,6 +2,7 @@ package gobistest
 
 import (
 	"github.com/orange-cloudfoundry/gobis"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -29,7 +30,9 @@ func NewSimpleMiddlewareTest(middlewareParams interface{}, middlewareHandlers ..
 		MiddlewareParams: middlewareParams,
 	}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.Write([]byte(DEFAULT_HANDLER_RESPONSE))
+		if _, err := w.Write([]byte(DEFAULT_HANDLER_RESPONSE)); err != nil {
+			log.Errorf("write failed: %s", err.Error())
+		}
 	})
 	return NewMiddlewareTest(route, handler, middlewareHandlers...)
 }
