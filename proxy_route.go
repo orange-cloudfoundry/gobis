@@ -97,18 +97,18 @@ func (r ProxyRoute) Check() error {
 
 	_, err := url.Parse(r.HttpProxy)
 	if err != nil && r.HttpProxy != "" {
-		return fmt.Errorf("invalid http_proxy : " + err.Error())
+		return fmt.Errorf("invalid http_proxy : %s", err.Error())
 	}
 	_, err = url.Parse(r.HttpsProxy)
 	if err != nil && r.HttpsProxy != "" {
-		return fmt.Errorf("invalid https_proxy : " + err.Error())
+		return fmt.Errorf("invalid https_proxy : %s", err.Error())
 	}
 	if r.Url == "" {
 		return nil
 	}
 	routeUrl, err := url.Parse(r.Url)
 	if err != nil {
-		return fmt.Errorf("Invalid url : " + err.Error())
+		return fmt.Errorf("Invalid url : %s", err.Error())
 	}
 	if routeUrl.Host == "localhost" || routeUrl.Host == "127.0.0.1" {
 		return fmt.Errorf("invalid URL: host couldn't be localhost or 127.0.0.1")
