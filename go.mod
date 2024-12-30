@@ -8,11 +8,11 @@ require (
 	github.com/gravitational/trace v1.4.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.36.1
+	github.com/onsi/gomega v1.36.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/thoas/go-funk v0.9.3
 	github.com/vulcand/oxy v1.4.2
-	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
