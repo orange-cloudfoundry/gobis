@@ -108,7 +108,7 @@ func (r ProxyRoute) Check() error {
 	}
 	routeUrl, err := url.Parse(r.Url)
 	if err != nil {
-		return fmt.Errorf("Invalid url : %s", err.Error())
+		return fmt.Errorf("invalid url : %s", err.Error())
 	}
 	if routeUrl.Host == "localhost" || routeUrl.Host == "127.0.0.1" {
 		return fmt.Errorf("invalid URL: host couldn't be localhost or 127.0.0.1")
