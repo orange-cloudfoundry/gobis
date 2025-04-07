@@ -8,7 +8,7 @@ require (
 	github.com/gravitational/trace v1.5.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.36.3
+	github.com/onsi/gomega v1.37.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/thoas/go-funk v0.9.3
 	github.com/vulcand/oxy v1.4.2
