@@ -1,6 +1,6 @@
 module github.com/orange-cloudfoundry/gobis
 
-go 1.24.1
+go 1.25.0
 
 require (
 	github.com/gobwas/glob v0.2.3
