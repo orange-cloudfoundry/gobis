@@ -9,7 +9,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.39.0
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	github.com/thoas/go-funk v0.9.3
 	github.com/vulcand/oxy v1.4.2
 	golang.org/x/net v0.48.0 // indirect
