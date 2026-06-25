@@ -17,7 +17,7 @@ func AddContextValue(req *http.Request, key, val interface{}) {
 // InjectContextValue Inject a value from a request context to an interface
 // This is the same behaviour as json.Unmarshal
 func InjectContextValue(req *http.Request, key, inject interface{}) error {
-	if reflect.TypeOf(inject).Kind() != reflect.Ptr {
+	if reflect.TypeOf(inject).Kind() != reflect.Pointer {
 		return fmt.Errorf("you should pass a pointer")
 	}
 	reflectType := reflect.TypeOf(inject).Elem()
