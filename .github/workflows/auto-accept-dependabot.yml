@@ -1,20 +1,22 @@
 name: auto-accept-dependabot
 
 on:
-  pull_request_target:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   auto-merge:
     if: github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - uses: ahmadnassri/action-dependabot-auto-merge@v2
-        with:
-          config: .github/auto-merge.yml
-          command: "squash and merge"
-          github-token: ${{ secrets.AUTO_MERGE_TOKEN }}
+      - name: Approve and Enable Auto-Merge
+        run: |
+          gh pr review --approve "$PR_URL"
+          gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
