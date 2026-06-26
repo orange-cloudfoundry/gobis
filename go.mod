@@ -1,11 +1,11 @@
 module github.com/orange-cloudfoundry/gobis
 
-go 1.25.5
+go 1.26
 
 require (
 	github.com/gobwas/glob v0.2.3
 	github.com/gorilla/mux v1.8.1
-	github.com/gravitational/trace v1.5.1 // indirect
+	github.com/gravitational/trace v1.5.4 // indirect
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.42.1
@@ -20,7 +20,7 @@ require (
 require github.com/google/uuid v1.6.0
 
 require (
-	github.com/fsnotify/fsnotify v1.9.0 // indirect
+	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/mailgun/multibuf v0.2.0 // indirect
