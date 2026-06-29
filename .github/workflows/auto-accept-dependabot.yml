@@ -1,7 +1,7 @@
 name: auto-accept-dependabot
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 permissions:
@@ -13,10 +13,25 @@ jobs:
     if: github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
+      - name: Debug auth source (non-sensitive)
+        run: |
+          if [ -n "${{ secrets.AUTO_MERGE_TOKEN }}" ]; then
+            echo "GH auth source: secrets.AUTO_MERGE_TOKEN"
+          elif [ -n "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "GH auth source: secrets.GITHUB_TOKEN"
+          elif [ -n "${{ github.token }}" ]; then
+            echo "GH auth source: github.token"
+          else
+            echo "::error::No token available for gh CLI"
+            exit 1
+          fi
+          echo "Actor: ${{ github.actor }}"
+          echo "Event: ${{ github.event_name }}"
+
       - name: Approve and Enable Auto-Merge
         run: |
           gh pr review --approve "$PR_URL"
           gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN || secrets.GITHUB_TOKEN || github.token }}
