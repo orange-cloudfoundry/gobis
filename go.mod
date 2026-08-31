@@ -9,7 +9,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.42.1
-	github.com/sirupsen/logrus v1.10.1
+	github.com/sirupsen/logrus v1.10.2
 	github.com/thoas/go-funk v0.9.3
 	github.com/vulcand/oxy v1.4.2
 	golang.org/x/net v0.56.0 // indirect
@@ -26,7 +26,7 @@ require (
 	github.com/mailgun/multibuf v0.2.0 // indirect
 	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/vulcand/predicate v1.3.0 // indirect
-	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/text v0.38.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )
