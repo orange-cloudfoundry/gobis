@@ -3,7 +3,7 @@ module github.com/orange-cloudfoundry/gobis
 go 1.26
 
 require (
-	github.com/gobwas/glob v0.2.3
+	github.com/gobwas/glob v1.0.0
 	github.com/gorilla/mux v1.8.1
 	github.com/gravitational/trace v1.5.4 // indirect
 	github.com/mitchellh/mapstructure v1.5.0
