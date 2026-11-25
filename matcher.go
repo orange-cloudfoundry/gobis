@@ -3,8 +3,9 @@ package gobis
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gobwas/glob"
 	"regexp"
+
+	"github.com/gobwas/glob"
 )
 
 const (
@@ -118,7 +119,7 @@ func (m HostMatchers) Match(s string) bool {
 }
 
 type HostMatcher struct {
-	glob.Glob
+	Glob *glob.Pattern
 	raw string
 }
 
@@ -127,6 +128,10 @@ func NewHostMatcher(hostOrWildcard string) *HostMatcher {
 		Glob: glob.MustCompile(hostOrWildcard, '.'),
 		raw:  hostOrWildcard,
 	}
+}
+
+func (re HostMatcher) Match(s string) bool {
+	return re.Glob.Match(s)
 }
 
 func (re *HostMatcher) UnmarshalYAML(unmarshal func(interface{}) error) error {
